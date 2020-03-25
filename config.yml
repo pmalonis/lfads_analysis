@@ -1,0 +1,17 @@
+username: "pmalonis"
+datasets:
+  rockstar:
+    train: "205.208.57.121:~/RTP_project/lfads_run/rs_first_attempt/param_xsgZ0x/single_rs1050211_clean_spikes_SNRgt4/backup.lfadsOutput/model_runs_rs1050211_clean_spikes_SNRgt4.h5_train_posterior_sample_and_average"
+    valid: "205.208.57.121:~/RTP_project/lfads_run/rs_first_attempt/param_xsgZ0x/single_rs1050211_clean_spikes_SNRgt4/backup.lfadsOutput/model_runs_rs1050211_clean_spikes_SNRgt4.h5_valid_posterior_sample_and_average"
+    inputInfo: "205.208.57.121:~/RTP_project/lfads_run/rs_first_attempt/param_xsgZ0x/single_rs1050211_clean_spikes_SNRgt4/lfadsInput/inputInfo_rs1050211_clean_spikes_SNRgt4.mat"
+    raw: "205.208.57.121:~/RTP_project/rs1050211_clean_spikes_SNRgt4.mat"
+    
+
+preprocess:
+  #amount of data before and after trial, in bins (miliseconds)
+  win_size: 25 #samples to average over for moving average filter
+
+integration_win_size: 0.200
+#time in seconds post target to examine lfads inputs
+post_target_win_start: 0.050
+post_target_win_stop: 0.3
