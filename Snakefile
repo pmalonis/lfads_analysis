@@ -109,7 +109,7 @@ rule plot_inputs:
 
 rule plot_all_inputs:
     input:
-        expand_filename("figures/input_timing_plots/{dataset}_{param}_{trial_type}.h5")
+        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf")
 
 rule decode_lfads:
     input:
