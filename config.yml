@@ -7,7 +7,23 @@ datasets:
         valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
         train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
-    
+      0cst9g:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_0cst9g/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_0cst9g/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_0cst9g/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+      KKP6eJ:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_KKP6eJ/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_KKP6eJ/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_KKP6eJ/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+      LiKOiv:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_LiKOiv/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_LiKOiv/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_LiKOiv/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+      UMc9vu:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_UMc9vu/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_UMc9vu/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_UMc9vu/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+            
 preprocess:
   #amount of data before and after trial, in bins (miliseconds)
   win_size: 25 #samples to average over for moving average filter

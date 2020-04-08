@@ -26,7 +26,7 @@ def get_input_peaks(data_filename, valid_filename, inputInfo_filename):
 
     df = pd.read_pickle(data_filename)
     dt = 0.010 #TODO read from lfads file
-    
+
     with h5py.File(valid_filename,'r') as h5_file:
         trial_len = h5_file['controller_outputs'].shape[1] * dt
         processed_df = df.loc[valid_inds].groupby('trial').apply(lambda _df: get_targets(_df).loc[:trial_len])
