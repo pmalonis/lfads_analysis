@@ -4,31 +4,45 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import h5py
+from utils import git_savefig
+from matplotlib.backends.backend_pdf import PdfPages
+import subprocess as sp
 
+# %%
 if __name__ == '__main__':
-    data_filename = "data/intermediate/rockstar.p"
-    inputInfo_filename = "data/model_output/rockstar_valid.mat"
-    valid_filename = "data/model_output/rockstar_valid.h5"
-    input_info_file = "data/model_output/rockstar_inputInfo.mat"
+    data_filename = snakemake.input[0]
+    lfads_filename = snakemake.input[1]
+    input_info_file = snakemake.input[2]
+
+    dataset = snakemake.wildcards.dataset
+    trial_type = snakemake.wildcards.trial_type
+    param = snakemake.wildcards.param
+
+    out_directory = 'figures/input_timing_plots/'
+    os.makedirs(out_directory, exist_ok=True)
+
     input_info = io.loadmat(input_info_file)
 
     #subtracting to convert to 0-based indexing
-    train_inds = input_info['trainInds'][0] - 1
-    valid_inds = input_info['validInds'][0] - 1
+    if snakemake.wildcards.trial_type == 'train':
+        used_inds = input_info['trainInds'][0] - 1
+    elif snakemake.wildcards.trial_type == 'valid':
+        used_inds = input_info['validInds'][0] - 1
 
     df = pd.read_pickle(data_filename)
-    dt = 0.010
+    trial_len_ms = input_info['seq_timeVector'][-1][-1]
+    trial_len = trial_len_ms/1000
 
-    with h5py.File(valid_filename,'r') as h5_file:
-        trial_len = h5_file['controller_outputs'].shape[1] * dt
-        os.makedirs('param_xsgZ0x_input_timing_plots/valid/', exist_ok=True)
-        for i in range(h5_file['controller_outputs'].shape[0]):
-            #input = abs(h5_file['controller_outputs'][i,:,0]) +  abs(h5_file['controller_outputs'][i,:,1])
-            input1 = h5_file['controller_outputs'][i,:,0]
-            input2 = h5_file['controller_outputs'][i,:,1]
-            targets = df.loc[valid_inds[i]].kinematic.loc[:trial_len].query('hit_target').index.values
-            t = np.arange(0, trial_len, dt)
-            try:
+    commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    #out_directory + "%s_param%s_%s.pdf"%(dataset, param, trial_type)
+    with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
+        with h5py.File(lfads_filename,'r') as h5_file:
+            dt = np.round(trial_len_ms/h5_file['controller_outputs'].shape[1])/1000
+            for i in range(h5_file['controller_outputs'].shape[0]):
+                input1 = h5_file['controller_outputs'][i,:,0]
+                input2 = h5_file['controller_outputs'][i,:,1]
+                targets = df.loc[used_inds[i]].kinematic.loc[:trial_len].query('hit_target').index.values
+                t = np.arange(0, trial_len, dt)[:-1]
                 fig = plt.figure()
                 plt.plot(t, input1)
                 plt.plot(t, input2)
@@ -36,7 +50,6 @@ if __name__ == '__main__':
                 plt.xlabel("Time (s)")
                 plt.ylabel("Input value")
                 plt.legend(["Input 1", "Input 2"])
-                plt.savefig('param_xsgZ0x_input_timing_plots/valid/valid_%03d'%i)
+                plt.title("%s trial %03d"%(param, i))
+                pdf.savefig(fig)
                 plt.close()
-            except:
-                import pdb;pdb.set_trace()
