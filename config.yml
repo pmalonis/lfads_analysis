@@ -1,15 +1,17 @@
 username: "pmalonis"
 datasets:
   rockstar:
-    train: "205.208.57.121:~/RTP_project/lfads_run/rs_first_attempt/param_xsgZ0x/single_rs1050211_clean_spikes_SNRgt4/backup.lfadsOutput/model_runs_rs1050211_clean_spikes_SNRgt4.h5_train_posterior_sample_and_average"
-    valid: "205.208.57.121:~/RTP_project/lfads_run/rs_first_attempt/param_xsgZ0x/single_rs1050211_clean_spikes_SNRgt4/backup.lfadsOutput/model_runs_rs1050211_clean_spikes_SNRgt4.h5_valid_posterior_sample_and_average"
-    inputInfo: "205.208.57.121:~/RTP_project/lfads_run/rs_first_attempt/param_xsgZ0x/single_rs1050211_clean_spikes_SNRgt4/lfadsInput/inputInfo_rs1050211_clean_spikes_SNRgt4.mat"
     raw: "205.208.57.121:~/RTP_project/rs1050211_clean_spikes_SNRgt4.mat"
+    params:
+      xsgZ0x:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
     
-
 preprocess:
   #amount of data before and after trial, in bins (miliseconds)
   win_size: 25 #samples to average over for moving average filter
+  post_trial_pad: 0.500
 
 integration_win_size: 0.200
 #time in seconds post target to examine lfads inputs
