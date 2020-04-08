@@ -15,7 +15,7 @@ PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
 PACKAGES = glob(os.environ["CONDA_PREFIX"] + "/conda-meta/*")
 
-if sp.check_output(["git", "status", "-s", "Snakefile config.yml environment.yml", *PYTHON_SCRIPTS, *NOTEBOOKS]):
+if sp.check_output(["git", "status", "-s"]):
     to_run = input("There are uncommitted changes. Run anyway? (y/n):")
     if to_run.lower() == 'n':
         sys.exit()
