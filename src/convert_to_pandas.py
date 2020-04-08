@@ -45,8 +45,10 @@ def get_area(mat_data):
     neuron_area[neuron_area=='MI'] = 'M1'
     return neuron_area
 
-def raw_to_dataframe(data):
-    '''Converts raw data from .mat file to pandas dataframe with processed kinematics'''
+def raw_to_dataframe(data, input_info):
+    '''Converts raw data from .mat file to pandas dataframe with processed kinematics. 
+    
+    *Only includes trials used in LFADS run*'''
 
     win_size = cfg['preprocess']['win_size'] #samples to average over for moving average filter
 
@@ -55,11 +57,18 @@ def raw_to_dataframe(data):
     x_norm = data['x'][:,1] - np.mean(data['x'][:,1])
     y_norm = data['y'][:,1] - np.mean(data['y'][:,1])
 
+    trial_len = input_info['seq_timeVector'][-1][-1]/1000
+
     ntrials = data['cpl_st_trial_rew'].shape[0]
     trial_dfs = []
+    used_trial_counter = 0
     for i in range(ntrials):
         start = data['cpl_st_trial_rew'][i,0].real
-        stop = data['cpl_st_trial_rew'][i,1].real
+        stop = data['cpl_st_trial_rew'][i,1].real 
+        if stop - start < trial_len:
+            continue
+
+        stop += cfg['preprocess']['post_trial_pad']
 
         data_idx = np.logical_and(data['x'][:,0] >= start, data['x'][:,0] < stop)
         
@@ -95,7 +104,7 @@ def raw_to_dataframe(data):
         x_vel = np.gradient(x, t)
         y_vel = np.gradient(y, t)
 
-        trial_index = np.ones(len(t), dtype=int) * i
+        trial_index = np.ones(len(t), dtype=int) * used_trial_counter
 
         t -= data['cpl_st_trial_rew'][i,0].real #making time relative to trial start
 
@@ -111,6 +120,8 @@ def raw_to_dataframe(data):
                             keys=['kinematic', 'neural'])
 
         trial_dfs.append(trial_df)
+
+        used_trial_counter += 1
         if i%10==0:
             print("Processed trial %d of %d"%(i,ntrials))
 
@@ -118,7 +129,9 @@ def raw_to_dataframe(data):
 
     return df
 
+
 if __name__=='__main__':
     data = io.loadmat(snakemake.input[0])
-    df = raw_to_dataframe(data)
+    input_info = io.loadmat(snakemake.input[1])
+    df = raw_to_dataframe(data, input_info)
     df.to_pickle(snakemake.output[0])
