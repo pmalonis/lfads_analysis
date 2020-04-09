@@ -34,7 +34,6 @@ if __name__ == '__main__':
     trial_len = trial_len_ms/1000
 
     commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
-    #out_directory + "%s_param%s_%s.pdf"%(dataset, param, trial_type)
     with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
         with h5py.File(lfads_filename,'r') as h5_file:
             dt = np.round(trial_len_ms/h5_file['controller_outputs'].shape[1])/1000
@@ -47,6 +46,7 @@ if __name__ == '__main__':
                 plt.plot(t, input1)
                 plt.plot(t, input2)
                 plt.vlines(targets, *fig.axes[0].get_ylim())
+                plt.ylim([-1.5, 1.5])
                 plt.xlabel("Time (s)")
                 plt.ylabel("Input value")
                 plt.legend(["Input 1", "Input 2"])
