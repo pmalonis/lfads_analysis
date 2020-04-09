@@ -109,7 +109,8 @@ rule plot_inputs:
 
 rule plot_all_inputs:
     input:
-        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf")
+        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}_decode_from_output.pdf")
+        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}_decode_from_factors.pdf")
 
 rule decode_lfads:
     input:
@@ -119,6 +120,7 @@ rule decode_lfads:
         "src/decode_lfads.py"
     output:
         "figures/decode_from_lfads_output/{dataset}_{param}_{trial_type}_decode_from_output.pdf"
+        "figures/decode_from_lfads_output/{dataset}_{param}_{trial_type}_decode_from_factors.pdf"
     script:
         "src/decode_lfads.py"
 

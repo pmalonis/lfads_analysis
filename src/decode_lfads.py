@@ -50,18 +50,6 @@ elif snakemake.wildcards.trial_type == 'valid':
     used_inds = input_info['validInds'][0] - 1
 
 kinematic_vars = ['x', 'y', 'x_vel', 'y_vel']
-
-with h5py.File(lfads_file,'r') as h5_file:
-    trial_len = h5_file['output_dist_params'].shape[1] * dt #trial length cutoff used 
-    factors = h5_file['output_dist_params'][:,:,:]
-    X = factors.reshape((factors.shape[0]*factors.shape[1], -1))
-    X = np.hstack((X, np.ones((X.shape[0],1))))
-    Y = np.zeros(h5_file['output_dist_params'].shape[:2] + (len(kinematic_vars),))
-
-
-midpoint_idx = 4 #midpoint of lfads time step to take for downsampling kinematics
-downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
-Y = downsampled_kinematics.loc[used_inds].values
     
 X_lfads = np.copy(X)
 X = []
@@ -74,34 +62,45 @@ for i in used_inds:
 X_smoothed = np.vstack(X)
 X_smoothed = np.hstack((X_smoothed, np.ones((X_smoothed.shape[0],1))))  
 
-## Fitting
-n_splits = 5
-smoothed_rs = get_rs(X_smoothed, Y, n_splits)
-lfads_rs = get_rs(X_lfads, Y, n_splits)
+for fig_idx, predictor in ['output_dist_params', 'factors']:
+    with h5py.File(lfads_file,'r') as h5_file:
+        trial_len = h5_file[predictor].shape[1] * dt #trial length cutoff used 
+        factors = h5_file[predictor][:,:,:]
+        X = factors.reshape((factors.shape[0]*factors.shape[1], -1))
+        X = np.hstack((X, np.ones((X.shape[0],1))))
+        Y = np.zeros(h5_file[predictor].shape[:2] + (len(kinematic_vars),))
 
-## Plotting
-commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    midpoint_idx = 4 #midpoint of lfads time step to take for downsampling kinematics
+    downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
+    Y = downsampled_kinematics.loc[used_inds].values
 
-with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
-    for plot_idx, k in enumerate(kinematic_vars):
-        # this just re-arranges data into dataframe for seaborn pointplot 
-        rs = []
-        data_type = []
-        idx = []
-        for i in range(n_splits*2):
-            if i < n_splits:
-                rs.append(lfads_rs[k][i])
-                data_type.append('LFADS')
-                idx.append(i)
-            else:
-                rs.append(smoothed_rs[k][i - n_splits])
-                data_type.append('Smoothed Spikes')
-                idx.append(i - n_splits)
+    ## Fitting
+    n_splits = 5
+    smoothed_rs = get_rs(X_smoothed, Y, n_splits)
+    lfads_rs = get_rs(X_lfads, Y, n_splits)
 
-        r_df = pd.DataFrame(zip(*[rs, data_type, idx]),
-                            columns = ['Performance', 'Predictor', 'Train Test Split Index'])
-        fig = plt.figure()
-        sns.pointplot(x='Predictor', y='Performance', hue='Train Test Split Index', data=r_df)
-        plt.title(k)
-        pdf.savefig(fig)
-        plt.close()
+    ## Plotting
+    commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    with PdfPages(snakemake.output[fig_idx], metadata={'commit':commit}) as pdf:
+        for plot_idx, k in enumerate(kinematic_vars):
+            # this just re-arranges data into dataframe for seaborn pointplot 
+            rs = []
+            data_type = []
+            idx = []
+            for i in range(n_splits*2):
+                if i < n_splits:
+                    rs.append(lfads_rs[k][i])
+                    data_type.append('LFADS')
+                    idx.append(i)
+                else:
+                    rs.append(smoothed_rs[k][i - n_splits])
+                    data_type.append('Smoothed Spikes')
+                    idx.append(i - n_splits)
+
+            r_df = pd.DataFrame(zip(*[rs, data_type, idx]),
+                                columns = ['Performance', 'Predictor', 'Train Test Split Index'])
+            fig = plt.figure()
+            sns.pointplot(x='Predictor', y='Performance', hue='Train Test Split Index', data=r_df)
+            plt.title(k)
+            pdf.savefig(fig)
+            plt.close()
