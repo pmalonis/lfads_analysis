@@ -22,7 +22,7 @@ def get_rs(X, Y, n_splits, kinematic_vars=['x', 'y', 'x_vel', 'y_vel']):
         Y_train, Y_test = Y[train_idx], Y[test_idx]
         Y_est = X_test.dot(np.linalg.lstsq(X_train, Y_train)[0])
         for i, variable in enumerate(kinematic_vars):
-            rs[variable][k] = np.corrcoef(Y_est[:,i],Y_test[:,i])[1,0]
+            rs[variable][k] = np.corrcoef(Y_est[:,i],Y_test[:,i])[1,0]**2
 
     return rs
 
@@ -99,9 +99,9 @@ for fig_idx, predictor in enumerate(['output_dist_params', 'factors']):
                     idx.append(i - n_splits)
 
             r_df = pd.DataFrame(zip(*[rs, data_type, idx]),
-                                columns = ['Performance', 'Predictor', 'Train Test Split Index'])
+                                columns = ['Performance (r^2)', 'Predictor', 'Train Test Split Index'])
             fig = plt.figure()
-            sns.pointplot(x='Predictor', y='Performance', hue='Train Test Split Index', data=r_df)
+            sns.pointplot(x='Predictor', y='Performance (r^2)', hue='Train Test Split Index', data=r_df)
             plt.title(k)
             pdf.savefig(fig)
             plt.close()
