@@ -51,7 +51,6 @@ elif snakemake.wildcards.trial_type == 'valid':
 
 kinematic_vars = ['x', 'y', 'x_vel', 'y_vel']
     
-X_lfads = np.copy(X)
 X = []
 for i in used_inds:
     smoothed = data.loc[i].neural.rolling(window=300, min_periods=1, win_type='gaussian', center=True).mean(std=50)
@@ -70,9 +69,11 @@ for fig_idx, predictor in ['output_dist_params', 'factors']:
         X = np.hstack((X, np.ones((X.shape[0],1))))
         Y = np.zeros(h5_file[predictor].shape[:2] + (len(kinematic_vars),))
 
+    X_lfads = np.copy(X)
     midpoint_idx = 4 #midpoint of lfads time step to take for downsampling kinematics
     downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
     Y = downsampled_kinematics.loc[used_inds].values
+    
 
     ## Fitting
     n_splits = 5
