@@ -50,27 +50,27 @@ elif snakemake.wildcards.trial_type == 'valid':
     used_inds = input_info['validInds'][0] - 1
 
 kinematic_vars = ['x', 'y', 'x_vel', 'y_vel']
-    
-X = []
-for i in used_inds:
-    smoothed = data.loc[i].neural.rolling(window=300, min_periods=1, win_type='gaussian', center=True).mean(std=50)
-    smoothed = smoothed.loc[:trial_len].iloc[midpoint_idx::win]
-    smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values
-    X.append(smoothed)
 
-X_smoothed = np.vstack(X)
-X_smoothed = np.hstack((X_smoothed, np.ones((X_smoothed.shape[0],1))))  
-
-for fig_idx, predictor in ['output_dist_params', 'factors']:
+for fig_idx, predictor in enumerate(['output_dist_params', 'factors']):
     with h5py.File(lfads_file,'r') as h5_file:
+        X = []
         trial_len = h5_file[predictor].shape[1] * dt #trial length cutoff used 
+        midpoint_idx = 4 #midpoint of lfads time step to take for downsampling kinematics
+        for i in used_inds:
+            smoothed = data.loc[i].neural.rolling(window=300, min_periods=1, win_type='gaussian', center=True).mean(std=50)
+            smoothed = smoothed.loc[:trial_len].iloc[midpoint_idx::win]
+            smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values
+            X.append(smoothed)
+
+        X_smoothed = np.vstack(X)
+        X_smoothed = np.hstack((X_smoothed, np.ones((X_smoothed.shape[0],1))))  
+
         factors = h5_file[predictor][:,:,:]
         X = factors.reshape((factors.shape[0]*factors.shape[1], -1))
         X = np.hstack((X, np.ones((X.shape[0],1))))
         Y = np.zeros(h5_file[predictor].shape[:2] + (len(kinematic_vars),))
 
     X_lfads = np.copy(X)
-    midpoint_idx = 4 #midpoint of lfads time step to take for downsampling kinematics
     downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
     Y = downsampled_kinematics.loc[used_inds].values
     
