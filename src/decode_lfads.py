@@ -76,8 +76,8 @@ X_smoothed = np.hstack((X_smoothed, np.ones((X_smoothed.shape[0],1))))
 
 ## Fitting
 n_splits = 5
-lfads_rs = get_rs(X_smoothed, Y, n_splits)
-smoothed_rs = get_rs(X_lfads, Y, n_splits)
+smoothed_rs = get_rs(X_smoothed, Y, n_splits)
+lfads_rs = get_rs(X_lfads, Y, n_splits)
 
 ## Plotting
 commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
@@ -102,6 +102,6 @@ with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
                             columns = ['Performance', 'Predictor', 'Train Test Split Index'])
         fig = plt.figure()
         sns.pointplot(x='Predictor', y='Performance', hue='Train Test Split Index', data=r_df)
-        pdf.savefig(fig)
         plt.title(k)
+        pdf.savefig(fig)
         plt.close()
