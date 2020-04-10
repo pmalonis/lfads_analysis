@@ -39,7 +39,20 @@ datasets:
         valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
         train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
         inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+      GIdLfI:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsInput/inputInfo_rockstar.mat"      
+      Zd8jKE:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+      kuGTbO:
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
         
+
 preprocess:
   #amount of data before and after trial, in bins (miliseconds)
   win_size: 25 #samples to average over for moving average filter
