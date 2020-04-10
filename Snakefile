@@ -89,7 +89,6 @@ rule convert_pandas:
     input:
         RAW_DIR + "{dataset}.mat",
         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
-        "config.yml",
         "src/convert_to_pandas.py"
     output:
         INTERMEDIATE_DIR + "{dataset}.p"
