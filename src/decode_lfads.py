@@ -102,7 +102,7 @@ for fig_idx, predictor in enumerate(['output_dist_params', 'factors']):
                                 columns = ['Performance (r^2)', 'Predictor', 'Train Test Split Index'])
             fig = plt.figure()
             sns.pointplot(x='Predictor', y='Performance (r^2)', hue='Train Test Split Index', data=r_df)
-            plt.ylim([.5, .9])
+            plt.ylim([.45, 1])
             plt.title(k)
             pdf.savefig(fig)
             plt.close()
