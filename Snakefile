@@ -111,8 +111,8 @@ rule plot_inputs:
 
 rule plot_all_inputs:
     input:
-        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}_decode_from_output.pdf"),
-        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}_decode_from_factors.pdf")
+        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf"),
+        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf")
 
 rule decode_lfads:
     input:
