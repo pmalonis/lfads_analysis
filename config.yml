@@ -24,32 +24,32 @@ datasets:
       #   train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_UMc9vu/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
       #   inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_UMc9vu/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
       D8sM37:
-        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_D8sM37/single_rockstar/lfadsInput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_D8sM37/single_rockstar/lfadsInput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_D8sM37/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_D8sM37/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_D8sM37/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
       E6-7PE:
-        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_E6-7PE/single_rockstar/lfadsInput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_E6-7PE/single_rockstar/lfadsInput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_E6-7PE/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_E6-7PE/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_E6-7PE/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
       SL47iu:
-        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_SL47iu/single_rockstar/lfadsInput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_SL47iu/single_rockstar/lfadsInput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_SL47iu/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_SL47iu/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_SL47iu/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
       X3dR3w:
-        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsInput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsInput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_co_dim_sweep/param_X3dR3w/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
       GIdLfI:
-        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsInput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_GIdLfI/single_rockstar/lfadsInput/inputInfo_rockstar.mat"      
       Zd8jKE:
-        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_Zd8jKE/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
       kuGTbO:
-        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
-        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/model_runs_rockstar.h5_train_posterior_sample_and_average"
+        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
+        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
         
 
