@@ -67,7 +67,8 @@ rule download_model:
     output:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"
     shell:
-        "scp -T {config[username]}@{params.source} {output}"
+        #"scp -T {config[username]}@{params.source} {output}"
+        "scp -T {params.source} {output}"
 
 rule download_raw:
     params:
@@ -75,6 +76,7 @@ rule download_raw:
     output:
         RAW_DIR + "{dataset}.mat"
     shell:
+        #"scp -T {config[username]}@{params.source} {output}"
         "scp -T {config[username]}@{params.source} {output}"
 
 rule download_inputInfo:
@@ -83,7 +85,8 @@ rule download_inputInfo:
     output:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"
     shell:
-        "scp -T {config[username]}@{params.source} {output}"
+        #"scp -T {config[username]}@{params.source} {output}"
+        "scp -T {params.source} {output}"
 
 rule convert_pandas:
     input:
