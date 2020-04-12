@@ -155,6 +155,17 @@ rule notebook_to_html:
         with open(output[0], 'w') as write_file:
             write_file.write(html_text)
             
+rule movies_with_inputs:
+    input:
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
+        RAW_DIR + "{dataset}.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        "src/kinematics_and_input.py"
+    output:
+        "figures/kinematics_movies_with_inputs/{dataset}_{param}_{trial_type}.mp4"
+    script:
+        "src/kinematics_and_input.py"
+
 # rule input_analysis:
 #     input:
 #         "data/intermediate/rockstar.p",

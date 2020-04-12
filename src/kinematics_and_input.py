@@ -5,11 +5,18 @@ from matplotlib import animation
 from scipy import io
 import h5py
 import os
+from glob import glob
 
 lfads_file = 'data/model_output/rockstar_valid.h5'
 filename = 'data/raw/rockstar.mat'
 input_info_file = 'data/model_output/rockstar_inputInfo.mat'
 out_directory = '/home/pmalonis/lfads_analysis/figures/'
+
+lfads_file = snakemake.input[0]
+filename = snakemake.input[1]
+input_info_file = snakemake.input[2]
+out_directory = os.path.dirname(out_directory)
+
 os.makedirs(out_directory, exist_ok=True)
 
 fps = 250 #frame rate at which to read data
@@ -17,7 +24,10 @@ playback_ratio = .20  # speed of playback (1 indicates real speed)
 kinematic_fs = 500 #frame rame of kinematic data
 
 input_info = io.loadmat(input_info_file)
-valid_inds = input_info['validInds'][0] - 1
+if snakemake.wildcards.trial_type == 'train':
+    used_inds = input_info['trainInds'][0] - 1
+elif snakemake.wildcards.trial_type == 'valid':
+    used_inds = input_info['validInds'][0] - 1
 
 with h5py.File(lfads_file) as h5file:
     dt = 0.01    
@@ -27,7 +37,7 @@ with h5py.File(lfads_file) as h5file:
     data = io.loadmat(filename)
     used_trials =  np.where(np.diff(data['cpl_st_trial_rew'].real, axis=1) > trial_len)[0]
 
-    for video_idx, plotted_trial in enumerate(used_trials[valid_inds]):
+    for video_idx, plotted_trial in enumerate(used_trials[used_inds]):
         t_start = data['cpl_st_trial_rew'][plotted_trial,0].real
         t_end = t_start + trial_len
         fig, ax = plt.subplots(2, figsize=(8,12))
@@ -36,6 +46,7 @@ with h5py.File(lfads_file) as h5file:
         ax[0].set_ylim(100, 300)
         ax[0].set_xticks([])
         ax[0].set_yticks([])
+        ax[0].set_title("Trial %03d"%plotted_trial)
         cursor_ln, = ax[0].plot([], [], 'r.', markersize=8)
         target_ln, = ax[0].plot([], [], marker='s', color='b', markersize=8)
 
@@ -48,6 +59,7 @@ with h5py.File(lfads_file) as h5file:
         time_ln = ax[1].vlines(0, time_ymin, time_ymax)
 
         ax[1].set_ylim(time_ymin, time_ymax)
+        ax[1].set_xlabel('Time(s)')
 
         target_pos = ([], [])
         hit_target_idx = 0
@@ -129,6 +141,16 @@ with h5py.File(lfads_file) as h5file:
         playback_ratio = .25
         writer_fps = fps*playback_ratio
         FFWriter = animation.FFMpegWriter(fps=writer_fps, extra_args=['-vcodec', 'libx264'])
-        anim.save(out_directory + 'trial_%d.mp4'%plotted_trial, writer=FFWriter)
+        anim.save(out_directory + 'trial_%03d.mp4'%plotted_trial, writer=FFWriter)
         plt.close()
         print("Video %d is done"%video_idx)
+
+    file_list = glob(out_directory + "trial_*.mp4")
+    with open(out_directory + "/temp_input_kinematics_movie_file_list.txt", 'w') as f:
+        f.writelines(["file \'%s\'"%filename for filename in file_list])
+
+    #os.system("for f in %s/trial_*.mp4; do echo \"\'$f\'\" >> temp_input_kinematics_movie_file_list.txt; done"%out_directory)
+    os.system("ffmpeg -f concat -safe 0 -i %s/temp_input_kinematics_movie_file_list.txt -c copy %s"%(out_directory, snakemake.output[0]))
+    os.remove(out_directory + "/temp_input_kinematics_movie_file_list.txt")
+    for filename in file_list:
+        os.remove(filename)
