@@ -153,8 +153,8 @@ rule notebook_to_html:
         commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
         html_text = "<!-- commit: %s-->\n"%commit + html_text
         with open(output[0], 'w') as write_file:
-            write_file.write(html_text)
-            
+            write_file.write(html_text)        
+
 rule movies_with_inputs:
     input:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
@@ -162,18 +162,37 @@ rule movies_with_inputs:
         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
         "src/kinematics_and_input.py"
     output:
-        "figures/kinematics_movies_with_inputs/{dataset}_{param}_{trial_type}.mp4"
+        dynamic("figures/kinematics_movies_with_inputs/{dataset}_{param}_{trial_type}/trial_{trial_number}.mp4")
     script:
         "src/kinematics_and_input.py"
 
-# rule input_analysis:
-#     input:
-#         "data/intermediate/rockstar.p",
-#         "data/model_output/rockstar_inputInfo.mat",
-#         "data/model_output/rockstar_valid.h5",
-#         SRC_DIR + "process_inputs.py",
-#         "{input_type}_analysis.ipynb"
-#     output:
-#         "{input_type}_analysis.html"
-#     shell:
-#         "jupyter nbconvert --to notebook --inplace --execute {input[4]} && jupyter nbconvert --to html {input[4]}" 
+def get_movie_filenames(wildcards):
+    out_directory = "figures/kinematics_movies_with_inputs/%s_%s_%s/"%(wildcards.dataset, wildcards.param, wildcards.trial_type)
+    filenames = glob(out_directory + "trial_*.mp4")
+    if len(filenames) == 0:
+        filenames.append(out_directory + "trial_000.mp4")
+
+    return filenames
+
+rule concatenate_movies:
+    input:
+        get_movie_filenames 
+    output:
+        "figures/kinematics_movies_with_inputs/concatenated_{dataset}_{param}_{trial_type}.mp4"
+    run:
+        out_directory = os.path.dirname(output[0])        
+        file_list = out_directory + "/temp_input_kinematics_movie_file_list.txt"
+        filenames = []
+        for ip in input:
+            directory, base = os.path.split(ip)
+            rel_dir = os.path.basename(directory)
+            filenames.append(rel_dir + '/' + base)
+
+        with open(file_list, 'w') as f:
+            f.writelines(["file \'%s\'\n"%filename for filename in filenames])
+        shell("ffmpeg -f concat -safe 0 -i %s -c copy %s"%(file_list, output[0]))
+        shell("rm %s"%(file_list))
+
+rule make_all_movies:
+    input:
+        expand_filename("figures/kinematics_movies_with_inputs/concatenated_{dataset}_{param}_{trial_type}.mp4")

@@ -15,7 +15,7 @@ out_directory = '/home/pmalonis/lfads_analysis/figures/'
 lfads_file = snakemake.input[0]
 filename = snakemake.input[1]
 input_info_file = snakemake.input[2]
-out_directory = os.path.dirname(out_directory)
+out_directory = os.path.dirname(snakemake.output[0])
 
 os.makedirs(out_directory, exist_ok=True)
 
@@ -24,10 +24,12 @@ playback_ratio = .20  # speed of playback (1 indicates real speed)
 kinematic_fs = 500 #frame rame of kinematic data
 
 input_info = io.loadmat(input_info_file)
-if snakemake.wildcards.trial_type == 'train':
-    used_inds = input_info['trainInds'][0] - 1
-elif snakemake.wildcards.trial_type == 'valid':
-    used_inds = input_info['validInds'][0] - 1
+# if snakemake.wildcards.trial_type == 'train':
+#     used_inds = input_info['trainInds'][0] - 1
+# elif snakemake.wildcards.trial_type == 'valid':
+#     used_inds = input_info['validInds'][0] - 1
+
+used_inds = input_info['validInds'][0] - 1
 
 with h5py.File(lfads_file) as h5file:
     dt = 0.01    
@@ -141,16 +143,16 @@ with h5py.File(lfads_file) as h5file:
         playback_ratio = .25
         writer_fps = fps*playback_ratio
         FFWriter = animation.FFMpegWriter(fps=writer_fps, extra_args=['-vcodec', 'libx264'])
-        anim.save(out_directory + 'trial_%03d.mp4'%plotted_trial, writer=FFWriter)
+        anim.save(out_directory + '/trial_%03d.mp4'%plotted_trial, writer=FFWriter)
         plt.close()
         print("Video %d is done"%video_idx)
 
-    file_list = glob(out_directory + "trial_*.mp4")
-    with open(out_directory + "/temp_input_kinematics_movie_file_list.txt", 'w') as f:
-        f.writelines(["file \'%s\'"%filename for filename in file_list])
+    # file_list = glob(out_directory + "/trial_*.mp4")
+    # with open(out_directory + "/temp_input_kinematics_movie_file_list.txt", 'w') as f:
+    #     f.writelines(["file \'%s\'"%filename for filename in file_list])
 
     #os.system("for f in %s/trial_*.mp4; do echo \"\'$f\'\" >> temp_input_kinematics_movie_file_list.txt; done"%out_directory)
-    os.system("ffmpeg -f concat -safe 0 -i %s/temp_input_kinematics_movie_file_list.txt -c copy %s"%(out_directory, snakemake.output[0]))
-    os.remove(out_directory + "/temp_input_kinematics_movie_file_list.txt")
-    for filename in file_list:
-        os.remove(filename)
+    # os.system("ffmpeg -f concat -safe 0 -i %s/temp_input_kinematics_movie_file_list.txt -c copy %s"%(out_directory, snakemake.output[0]))
+    # os.remove(out_directory + "/temp_input_kinematics_movie_file_list.txt")
+    # for filename in file_list:
+    #     os.remove(filename)
