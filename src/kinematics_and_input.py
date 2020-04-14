@@ -7,10 +7,10 @@ import h5py
 import os
 from glob import glob
 
-lfads_file = 'data/model_output/rockstar_valid.h5'
-filename = 'data/raw/rockstar.mat'
-input_info_file = 'data/model_output/rockstar_inputInfo.mat'
-out_directory = '/home/pmalonis/lfads_analysis/figures/'
+# lfads_file = 'data/model_output/rockstar_valid.h5'
+# filename = 'data/raw/rockstar.mat'
+# input_info_file = 'data/model_output/rockstar_inputInfo.mat'
+# out_directory = '/home/pmalonis/'
 
 lfads_file = snakemake.input[0]
 filename = snakemake.input[1]
@@ -24,12 +24,21 @@ playback_ratio = .20  # speed of playback (1 indicates real speed)
 kinematic_fs = 500 #frame rame of kinematic data
 
 input_info = io.loadmat(input_info_file)
-# if snakemake.wildcards.trial_type == 'train':
-#     used_inds = input_info['trainInds'][0] - 1
-# elif snakemake.wildcards.trial_type == 'valid':
-#     used_inds = input_info['validInds'][0] - 1
+if snakemake.wildcards.trial_type == 'train':
+    used_inds = input_info['trainInds'][0] - 1
+elif snakemake.wildcards.trial_type == 'valid':
+    used_inds = input_info['validInds'][0] - 1
+    
+# used_inds = input_info['validInds'][0] - 1
 
-used_inds = input_info['validInds'][0] - 1
+def update_target(data, t):
+    '''finds the next target in data dictionary and returns its index and position'''
+    hit_target_idx = np.where(data['hit_target'] - t > 0)[0][0]
+    t_next_target = data['hit_target'][hit_target_idx]
+    idx = np.argmin(np.abs(t_next_target - data['x'][:,0]))
+    target_pos = (data['x'][idx,1], data['y'][idx,1])
+    return hit_target_idx, target_pos
+
 
 with h5py.File(lfads_file) as h5file:
     dt = 0.01    
@@ -63,19 +72,10 @@ with h5py.File(lfads_file) as h5file:
         ax[1].set_ylim(time_ymin, time_ymax)
         ax[1].set_xlabel('Time(s)')
 
-        target_pos = ([], [])
-        hit_target_idx = 0
-        endmv_idx = 0
-        st_trial_idx = 0
-
-        def update_target(data, t):
-            '''finds the next target in data dictionary and returns its index and position'''
-            hit_target_idx = np.where(data['hit_target'] - t > 0)[0][0]
-            t_next_target = data['hit_target'][hit_target_idx]
-            idx = np.argmin(np.abs(t_next_target - data['x'][:,0]))
-            target_pos = (data['x'][idx,1], data['y'][idx,1])
-            return hit_target_idx, target_pos
-
+        hit_target_idx, target_pos = update_target(data, t_start)
+        st_trial_idx = np.where(data['st_trial'] - t_start > 0)[0][0]
+        endmv_idx = np.where(data['endmv'] - t_start > 0)[0][0]
+        
         def init():
             cursor_ln.set_data([], [])
             target_ln.set_data([], [])
@@ -89,7 +89,7 @@ with h5py.File(lfads_file) as h5file:
 
             # plotting cursor
             if np.min(data['x'][:,0]) < t < np.max(data['x'][:,0]):
-                i = int((t - data['x'][0,0]) * kinematic_fs)
+                i = np.argmin(np.abs(t - data['x'][:,0]))
                 cursor_ln.set_data(data['x'][i,1], data['y'][i,1])
             else:
                 raise ValueError("t out of range of experiment time")
