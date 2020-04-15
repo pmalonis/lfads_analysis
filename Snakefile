@@ -141,6 +141,17 @@ rule input_analysis:
     notebook:
         "notebooks/integral_analysis.ipynb"
 
+rule peak_analysis:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
+        SRC_DIR + "process_inputs.py",
+    log:
+        notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_peak_analysis.ipynb"
+    notebook:
+        "notebooks/peak_analysis.ipynb"
+
 rule notebook_to_html:
     input:
         "notebooks/processed/{filename}.ipynb"
