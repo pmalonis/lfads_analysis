@@ -6,6 +6,7 @@ import time
 import gc
 import os
 import yaml
+import scipy.signal as sg
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -80,18 +81,13 @@ def raw_to_dataframe(data, input_info):
 
         hit_target = bin_trial(data['hit_target'].real, t)
         hit_target[0] = True
-        
-        #padding kinematics index for moving average filter
-        pad = np.floor(win_size/2).astype(int)
-        start_idx = np.where(data_idx)[0][0] - pad
-        stop_idx = np.where(data_idx)[0][-1] + pad + 1
 
-        x_raw = x_norm[start_idx:stop_idx]
-        y_raw = y_norm[start_idx:stop_idx]
+        x_raw = x_norm[data_idx]
+        y_raw = y_norm[data_idx]
 
-        win = np.ones(win_size)/win_size
-        x_smooth = np.convolve(x_raw, win, 'valid')
-        y_smooth = np.convolve(y_raw, win, 'valid')
+        b,a = sg.butter(cfg['preprocess']['filter_order'], cfg['preprocess']['cutoff'], fs=500) #500 kinematic frequency of sampling
+        x_smooth = sg.filtfilt(b, a, x_raw)
+        y_smooth = sg.filtfilt(b, a, y_raw)
 
         x = upsample_2x(x_smooth)
         y = upsample_2x(y_smooth)

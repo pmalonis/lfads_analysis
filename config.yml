@@ -57,6 +57,8 @@ preprocess:
   #amount of data before and after trial, in bins (miliseconds)
   win_size: 25 #samples to average over for moving average filter
   post_trial_pad: 0.500
+  filter_order: 3 #order of butterworth filter for kinematics
+  cutoff: 20 #cutoff frequency when filtering kinematics
 
 integration_win_size: 0.200
 #time in seconds post target to examine lfads inputs
