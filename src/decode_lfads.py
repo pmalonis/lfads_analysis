@@ -10,6 +10,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import subprocess as sp
+from utils import get_indices
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -43,11 +44,7 @@ win = int(dt/kin_dt)
 
 input_info = io.loadmat(inputInfo_file)
 
-#subtracting to convert to 0-based indexing
-if snakemake.wildcards.trial_type == 'train':
-    used_inds = input_info['trainInds'][0] - 1
-elif snakemake.wildcards.trial_type == 'valid':
-    used_inds = input_info['validInds'][0] - 1
+used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
 
 kinematic_vars = ['x', 'y', 'x_vel', 'y_vel']
 

@@ -48,8 +48,8 @@ with h5py.File(lfads_file) as h5file:
     data = io.loadmat(filename)
     used_trials =  np.where(np.diff(data['cpl_st_trial_rew'].real, axis=1) > trial_len)[0]
 
-    for video_idx, plotted_trial in enumerate(used_trials[used_inds]):
-        t_start = data['cpl_st_trial_rew'][plotted_trial,0].real
+    for video_idx, plotted_trial in enumerate(used_inds):
+        t_start = data['cpl_st_trial_rew'][used_trials[plotted_trial],0].real
         t_end = t_start + trial_len
         fig, ax = plt.subplots(2, figsize=(8,12))
 
@@ -63,7 +63,7 @@ with h5py.File(lfads_file) as h5file:
 
         input_lns = []
         for input_idx in range(h5file['controller_outputs'].shape[2]):
-            ax[1].plot(trial_t, h5file['controller_outputs'][video_idx,:,input_idx])
+            ax[1].plot(trial_t, h5file['controller_outputs'][plotted_trial,:,input_idx])
             
         time_ymin = -0.75
         time_ymax = 0.75

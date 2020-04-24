@@ -62,5 +62,9 @@ preprocess:
 
 integration_win_size: 0.200
 #time in seconds post target to examine lfads inputs
-post_target_win_start: 0.050
-post_target_win_stop: 0.3
+post_target_win_start: 0.050 # time after target appearance to stop recording inputs
+post_target_win_stop: 0.3  # time after target appearance to start recording inputs
+
+peri_target_kinematics_start: -0.1 #time relative to target to start recording kinematics
+peri_target_kinematics_stop: 0
+

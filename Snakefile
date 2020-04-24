@@ -9,11 +9,12 @@ configfile: "config.yml"
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["train", "valid"]
+TRIAL_TYPES = ["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
 PACKAGES = glob(os.environ["CONDA_PREFIX"] + "/conda-meta/*")
+TRIAL_SETS = ["train", "valid"]
 
 if sp.check_output(["git", "status", "-s"]):
     to_run = input("There are uncommitted changes. Run anyway? (y/n):")
@@ -59,13 +60,15 @@ rule download_all:
     input:
         expand_filename(RAW_DIR + "{dataset}.mat"),
         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5")
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
 
 rule download_model:
     params:
-         source = lambda wildcards: config["datasets"][wildcards.dataset]["params"][wildcards.param][wildcards.trial_type]
+         source = lambda wildcards: config["datasets"][wildcards.dataset]["params"][wildcards.param][wildcards.trial_set]
     output:
-        MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_set}.h5"
+    wildcard_constraints:
+        trial_set="train|valid"
     shell:
         #"scp -T {config[username]}@{params.source} {output}"
         "scp -T {params.source} {output}"
@@ -203,6 +206,44 @@ rule concatenate_movies:
             f.writelines(["file \'%s\'\n"%filename for filename in filenames])
         shell("ffmpeg -f concat -safe 0 -i %s -c copy %s"%(file_list, output[0]))
         shell("rm %s"%(file_list))
+
+rule process_inputs:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
+        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        "src/process_inputs.py"
+    output:
+        "data/processed_inputs/{dataset}_{param}_{trial_type}.p"
+    script:
+        "src/process_inputs.py"
+
+rule process_all_inputs:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "processed_inputs/processed_inputs_{dataset}_{param}_{trial_type}.p")
+
+rule combine_trials:
+    input:
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_train.h5",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_valid.h5",
+        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        "src/combine_lfads_output.py"
+    output:
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"
+    script:
+        "src/combine_lfads_output.py"
+
+rule random_forest_predict:
+    input:
+        "data/processed_inputs/rockstar_kuGTbO_all.p"
+
+    output:
+        "figures/r^2 Target Prediction.png",
+        "figures/Mean distance (mm) Target Prediction.png",
+        "figures/Categorical Accuracy (%) Target Prediction.png"
+
+    script:
+        "src/predict_targets.py"
 
 rule make_all_movies:
     input:
