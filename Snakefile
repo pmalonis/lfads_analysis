@@ -94,7 +94,7 @@ rule download_inputInfo:
 rule convert_pandas:
     input:
         RAW_DIR + "{dataset}.mat",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/convert_to_pandas.py"
     output:
         INTERMEDIATE_DIR + "{dataset}.p"
