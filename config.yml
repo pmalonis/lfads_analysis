@@ -52,7 +52,7 @@ datasets:
         train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
   raju:
-    raw: 
+    raw: "205.208.57.121:~/lfads_analysis/data/raw/raju.mat"
     params:
       ttL-GX:
         valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju/param_ttL-GX/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average"
