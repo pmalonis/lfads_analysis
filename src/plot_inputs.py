@@ -24,10 +24,7 @@ if __name__ == '__main__':
     input_info = io.loadmat(input_info_file)
 
     #subtracting to convert to 0-based indexing
-    if snakemake.wildcards.trial_type == 'train':
-        used_inds = input_info['trainInds'][0] - 1
-    elif snakemake.wildcards.trial_type == 'valid':
-        used_inds = input_info['validInds'][0] - 1
+    used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
 
     df = pd.read_pickle(data_filename)
     trial_len_ms = input_info['seq_timeVector'][-1][-1]
