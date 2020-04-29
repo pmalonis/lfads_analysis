@@ -2,6 +2,7 @@ username: "pmalonis"
 datasets:
   rockstar:
     raw: "205.208.57.121:~/RTP_project/rs1050211_clean_spikes_SNRgt4.mat"
+    inputInfo: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/data_Fk5pGm/single_rockstar/inputInfo_rockstar.mat"
     params:
       # xsgZ0x:
       #   valid: "205.208.57.121:~/lfads_analysis/data/model_output/lfads_factor_sweep/param_xsgZ0x/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
@@ -51,13 +52,14 @@ datasets:
         valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average"
         train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average"
         inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/lfads_l2_sweep/param_kuGTbO/single_rockstar/lfadsInput/inputInfo_rockstar.mat"
+        
   raju:
     raw: "205.208.57.121:~/lfads_analysis/data/raw/raju.mat"
+    inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju/data_Fk5pGm/single_raju/inputInfo_raju.mat"
     params:
       ttL-GX:
         valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju/param_ttL-GX/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average"
         train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju/param_ttL-GX/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average"
-        inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju/param_ttL-GX/single_raju/lfadsInput/inputInfo_raju.mat"
 
 preprocess:
   #amount of data before and after trial, in bins (miliseconds)
