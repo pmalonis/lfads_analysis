@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import h5py
-from utils import git_savefig
+from utils import git_savefig, get_indices
 from matplotlib.backends.backend_pdf import PdfPages
 import subprocess as sp
 
