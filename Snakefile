@@ -113,7 +113,6 @@ rule plot_inputs:
 
 rule plot_all_inputs:
     input:
-        expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf"),
         expand_filename("figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf")
 
 rule decode_lfads:
@@ -234,12 +233,10 @@ rule combine_trials:
 
 rule random_forest_predict:
     input:
-        "data/processed_inputs/rockstar_kuGTbO_all.p"
+        "data/processed_inputs/{dataset}_{param}_{trial_type}.p"
 
     output:
-        "figures/r^2 Target Prediction.png",
-        "figures/Mean distance (mm) Target Prediction.png",
-        "figures/Categorical Accuracy (%) Target Prediction.png"
+        "figures/target_prediction/{dataset}_{param}_{trial_type}.pdf"
 
     script:
         "src/predict_targets.py"

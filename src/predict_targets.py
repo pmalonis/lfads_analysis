@@ -4,7 +4,8 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split, KFold
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils import git_savefig
+import subprocess as sp
+from matplotlib.backends.backend_pdf import PdfPages
 
 def bin_y(Y):
      _,bins0 = np.histogram(Y[:,0], bins=3)
@@ -39,56 +40,58 @@ references = ['Allocentric', 'Hand-centric']
 
 classifiers = [',\n '.join([kin, ref]) for kin in include_kins for ref in references]
 
-for fig_idx, metric in enumerate(metrics):
-    av_performance = []
-    for include_kin in include_kins:
-        if include_kin == 'Kinematic + LFADS predictor':
-            X = np.hstack((X_input, kin))
-        else:
-            X = np.copy(X_input)
+commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
+with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
+    for fig_idx, metric in enumerate(metrics):
+        av_performance = []
+        for include_kin in include_kins:
+            if include_kin == 'Kinematic + LFADS predictor':
+                X = np.hstack((X_input, kin))
+            else:
+                X = np.copy(X_input)
 
-        for reference in references:
-            # if include_kin == 'Kinematic + LFADS predictor' and reference == 'Hand-centric':
-            #     continue
+            for reference in references:
+                # if include_kin == 'Kinematic + LFADS predictor' and reference == 'Hand-centric':
+                #     continue
 
-            if reference == 'Hand-centric':
-                Y = df[['target_x', 'target_y']].values - df[['x','y']].values
-            elif reference == 'Allocentric':
-                Y = df[['target_x', 'target_y']].values
-            # Y[:,0] -= np.min(Y[:,0])
-            # # Y[:,1] -= np.min(Y[:,1])
-            # Y = np.sqrt(Y)
-            kf=KFold(n_splits=n_splits, shuffle=True, random_state=0)
-            
-            i = 0
-            for train_idx, test_idx in kf.split(X):
-                X_train, X_test = X[train_idx], X[test_idx]
-                Y_train, Y_test = Y[train_idx], Y[test_idx]
-            
+                if reference == 'Hand-centric':
+                    Y = df[['target_x', 'target_y']].values - df[['x','y']].values
+                elif reference == 'Allocentric':
+                    Y = df[['target_x', 'target_y']].values
+                # Y[:,0] -= np.min(Y[:,0])
+                # # Y[:,1] -= np.min(Y[:,1])
+                # Y = np.sqrt(Y)
+                kf=KFold(n_splits=n_splits, shuffle=True, random_state=0)
+                
+                i = 0
+                for train_idx, test_idx in kf.split(X):
+                    X_train, X_test = X[train_idx], X[test_idx]
+                    Y_train, Y_test = Y[train_idx], Y[test_idx]
+                
 
-                if metric == 'r^2':       
-                    model = RandomForestRegressor()
-                    model.fit(X_train, Y_train)
-                    prediction = model.predict(X_test)             
-                    performance[i] = np.corrcoef(prediction.flatten(), Y_test.flatten())[1,0]**2
-                elif metric == 'Mean distance (mm)':
-                    model = RandomForestRegressor()
-                    model.fit(X_train, Y_train)
-                    prediction = model.predict(X_test)
-                    performance[i] = np.mean(np.linalg.norm(Y_test-prediction,axis=1))
-                elif metric == 'Categorical Accuracy (%)':
-                    cat_model = RandomForestClassifier()
-                    cat_model.fit(X_train, bin_y(Y_train))
-                    cat_prediction = cat_model.predict(X_test)
-                    accuracy = np.sum(cat_prediction == bin_y(Y_test))/Y_test.shape[0]
-                    performance[i] = accuracy
-                i += 1
+                    if metric == 'r^2':       
+                        model = RandomForestRegressor()
+                        model.fit(X_train, Y_train)
+                        prediction = model.predict(X_test)             
+                        performance[i] = np.corrcoef(prediction.flatten(), Y_test.flatten())[1,0]**2
+                    elif metric == 'Mean distance (mm)':
+                        model = RandomForestRegressor()
+                        model.fit(X_train, Y_train)
+                        prediction = model.predict(X_test)
+                        performance[i] = np.mean(np.linalg.norm(Y_test-prediction,axis=1))
+                    elif metric == 'Categorical Accuracy (%)':
+                        cat_model = RandomForestClassifier()
+                        cat_model.fit(X_train, bin_y(Y_train))
+                        cat_prediction = cat_model.predict(X_test)
+                        accuracy = np.sum(cat_prediction == bin_y(Y_test))/Y_test.shape[0]
+                        performance[i] = accuracy
+                    i += 1
 
-            av_performance.append(np.mean(performance))
-    fig = plt.figure(figsize=(12,4))
-    plt.plot(av_performance, 'r.-')
-    plt.title('Target Prediction')
-    plt.xlabel('Classifier')
-    plt.ylabel(metric)
-    plt.xticks(ticks=np.arange(len(av_performance)), labels=classifiers, fontsize=10)
-    git_savefig(fig, snakemake.output[fig_idx])
+                av_performance.append(np.mean(performance))
+        fig = plt.figure(figsize=(12,4))
+        plt.plot(av_performance, 'r.-')
+        plt.title('Target Prediction')
+        plt.xlabel('Classifier')
+        plt.ylabel(metric)
+        plt.xticks(ticks=np.arange(len(av_performance)), labels=classifiers, fontsize=10)
+        pdf.savefig(fig)

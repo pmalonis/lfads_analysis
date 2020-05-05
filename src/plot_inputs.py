@@ -34,11 +34,12 @@ if __name__ == '__main__':
     with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
         with h5py.File(lfads_filename,'r') as h5_file:
             dt = np.round(trial_len_ms/h5_file['controller_outputs'].shape[1])/1000
+            trial_len = np.round(trial_len/dt) * dt
             for i in range(h5_file['controller_outputs'].shape[0]):
                 input1 = h5_file['controller_outputs'][i,:,0]
                 input2 = h5_file['controller_outputs'][i,:,1]
                 targets = df.loc[used_inds[i]].kinematic.loc[:trial_len].query('hit_target').index.values
-                t = np.arange(0, trial_len, dt)[:-1]
+                t = np.arange(0, trial_len, dt)
                 fig = plt.figure()
                 plt.plot(t, input1)
                 plt.plot(t, input2)
