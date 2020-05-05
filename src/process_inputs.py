@@ -9,14 +9,14 @@ from utils import get_indices
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
-def get_targets(_df):
+def get_targets(_df, trial_len):
     n_targets = 6
     target_df = _df.loc[_df.index[0][0]].kinematic.query('hit_target')
 
     target_df['target_x'] = np.append(target_df['x'].iloc[1:].values, np.nan)
     target_df['target_y'] = np.append(target_df['y'].iloc[1:].values, np.nan)
 
-    return target_df.iloc[1:n_targets] #leaving out first target
+    return target_df.iloc[1:n_targets].loc[:trial_len] #leaving out first target
 
 if __name__=='__main__':  
     data_filename = snakemake.input[0]
@@ -43,7 +43,7 @@ if __name__=='__main__':
         trial_len = h5_file['controller_outputs'].shape[1] * dt
         
         # getting target locations
-        processed_df = df.loc[used_inds].groupby('trial').apply(lambda _df: get_targets(_df).loc[:trial_len])
+        processed_df = df.loc[used_inds].groupby('trial').apply(lambda _df: get_targets(_df))
         processed_df['target_dist'] = np.sqrt((processed_df['x']-processed_df['target_x'])**2 + (processed_df['y']-processed_df['target_y'])**2)
 
         # removing targets that are closer to the end than the extent of the window
@@ -61,7 +61,11 @@ if __name__=='__main__':
         k = 0
         for i in range(h5_file['controller_outputs'].shape[0]):
             inputs = h5_file['controller_outputs'][i,:,:]
-            target_times = processed_df.loc[used_inds[i]].index.values
+            try:
+                target_times = processed_df.loc[used_inds[i]].index.values
+            except KeyError:
+                continue
+
             t = np.arange(0, trial_len, dt)
             for target in target_times:
                 idx = np.logical_and(t >= target + cfg['post_target_win_start'], t < target + cfg['post_target_win_stop'])
