@@ -241,6 +241,10 @@ rule random_forest_predict:
     script:
         "src/predict_targets.py"
 
+rule predict_all:
+    input:
+        expand_filename("figures/target_prediction/{dataset}_{param}_{trial_type}.pdf")
+
 rule make_all_movies:
     input:
         expand_filename("figures/kinematics_movies_with_inputs/concatenated_{dataset}_{param}_{trial_type}.mp4")
