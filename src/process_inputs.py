@@ -43,7 +43,7 @@ if __name__=='__main__':
         trial_len = h5_file['controller_outputs'].shape[1] * dt
         
         # getting target locations
-        processed_df = df.loc[used_inds].groupby('trial').apply(lambda _df: get_targets(_df))
+        processed_df = df.loc[used_inds].groupby('trial').apply(lambda _df: get_targets(_df, trial_len))
         processed_df['target_dist'] = np.sqrt((processed_df['x']-processed_df['target_x'])**2 + (processed_df['y']-processed_df['target_y'])**2)
 
         # removing targets that are closer to the end than the extent of the window
