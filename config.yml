@@ -75,14 +75,17 @@ datasets:
     inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/data_Fk5pGm/single_raju_M1/inputInfo_raju_M1.mat"
     params:
       4Nk01d:
-        "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/param_4Nk01d/single_raju_M1/lfadsOutput/model_runs_raju_M1.h5_train_posterior_sample_and_average"
+        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/param_4Nk01d/single_raju_M1/lfadsOutput/model_runs_raju_M1.h5_train_posterior_sample_and_average"
+        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/param_4Nk01d/single_raju_M1/lfadsOutput/model_runs_raju_M1.h5_train_posterior_sample_and_average"
+
 
   raju_PMd:
     raw: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/raju_PMd.mat"
     inputInfo: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/data_Fk5pGm/single_raju_PMd/inputInfo_raju_PMd.mat"
     params:
       4Nk01d:
-        "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/param_4Nk01d/single_raju_PMd/lfadsOutput/model_runs_raju_PMd.h5_train_posterior_sample_and_average"
+        train: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/param_4Nk01d/single_raju_PMd/lfadsOutput/model_runs_raju_PMd.h5_train_posterior_sample_and_average"
+        valid: "macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/raju_area_split/param_4Nk01d/single_raju_PMd/lfadsOutput/model_runs_raju_PMd.h5_valid_posterior_sample_and_average"
 
 
 
