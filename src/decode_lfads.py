@@ -15,6 +15,9 @@ from utils import get_indices
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
+y_min = 0
+y_max = 1
+
 def get_rs(X, Y, n_splits, kinematic_vars=['x', 'y', 'x_vel', 'y_vel']):
     rs = {k:np.zeros(n_splits) for k in kinematic_vars} 
     kf = KFold(n_splits=n_splits)
@@ -99,7 +102,7 @@ for fig_idx, predictor in enumerate(['output_dist_params', 'factors']):
                                 columns = ['Performance (r^2)', 'Predictor', 'Train Test Split Index'])
             fig = plt.figure()
             sns.pointplot(x='Predictor', y='Performance (r^2)', hue='Train Test Split Index', data=r_df)
-            plt.ylim([.45, 1])
+            plt.ylim([0, 1])
             plt.title(k)
             pdf.savefig(fig)
             plt.close()
