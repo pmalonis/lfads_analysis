@@ -1,0 +1,3 @@
+ f=h5py.File('/home/pmalonis/model_runs_rockstar.h5_train_posterior_push_mean','r')  
+ gen=GenGRU(hps['gen_dim'],input_weight_scale=hps['gen_cell_input_weight_scale'],rec_weight_scale=hps['gen_cell_input_weight_scale'],clip_value=hps['cell_clip_value']) 
+ t=h_1[0].eval({'GenGRU/Gates/h_2_ru/W:0':W_hru, 'GenGRU/Gates/h_2_ru/b:0':b_hru, 'GenGRU/Candidate/rh_2_c/b:0':b_rhc, 'GenGRU/Candidate/rh_2_c/W:0':W_rhc,'Variable:0':g0},session=sess) 
