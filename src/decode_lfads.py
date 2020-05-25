@@ -59,7 +59,7 @@ for fig_idx, predictor in enumerate(['output_dist_params', 'factors']):
         for i in used_inds:
             smoothed = data.loc[i].neural.rolling(window=300, min_periods=1, win_type='gaussian', center=True).mean(std=50)
             smoothed = smoothed.loc[:trial_len].iloc[midpoint_idx::win]
-            smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values
+            smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values #removing rows with all values null (edge values of smoothing)
             X.append(smoothed)
 
         X_smoothed = np.vstack(X)
@@ -70,10 +70,9 @@ for fig_idx, predictor in enumerate(['output_dist_params', 'factors']):
         X = np.hstack((X, np.ones((X.shape[0],1))))
         Y = np.zeros(h5_file[predictor].shape[:2] + (len(kinematic_vars),))
 
-    X_lfads = np.copy(X)
-    downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
-    Y = downsampled_kinematics.loc[used_inds].values
-    
+        X_lfads = np.copy(X)
+        downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
+        Y = downsampled_kinematics.loc[used_inds].values
 
     ## Fitting
     n_splits = 5
