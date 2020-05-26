@@ -2,7 +2,7 @@ import fabric
 from parse import parse
 import yaml
 
-server = "macleanlab@205.208.22.225"
+server = "macleanlab@205.208.22.226"
 run_path = "~/peter/lfads_analysis/data/model_output/controller_params_sweep/"
 raw_data_path = "~/peter/lfads_analysis/data/raw/"
 config_file = "config.yml"
@@ -21,9 +21,10 @@ with connect.cd(run_path):
     for dset_name,dset_dir in zip(dset_names, dset_dirs):
         if dset_name not in config["datasets"].keys():
             config["datasets"][dset_name] = {}
-            config["datasets"][dset_name]["raw"] = server + ":" + raw_data_path + "/" + dset_name + ".mat"
-            config["datasets"][dset_name]["inputInfo"] = server + ":" + raw_data_path + "/" + dset_name + ".mat"
-        
+            config["datasets"][dset_name]["raw"] = server + ":" + raw_data_path + dset_name + ".mat"
+            inputInfo_path = connect.run("ls data_*/single_%s/inputInfo_%s.mat"%(dset_name,dset_name)).stdout.split()[0]
+            config["datasets"][dset_name]["inputInfo"] = server + ":" + run_path + "/" + inputInfo_path
+
         if "params" not in config["datasets"][dset_name].keys():
             config["datasets"][dset_name]["params"] = {}
 
