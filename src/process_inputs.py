@@ -19,15 +19,15 @@ def get_targets(_df, trial_len):
     return target_df.iloc[1:n_targets].loc[:trial_len] #leaving out first target
 
 if __name__=='__main__':  
-    # data_filename = snakemake.input[0]
-    # lfads_filename = snakemake.input[1]
-    # inputInfo_filename = snakemake.input[2]
-    # output_filename = snakemake.output[0]
+    data_filename = snakemake.input[0]
+    lfads_filename = snakemake.input[1]
+    inputInfo_filename = snakemake.input[2]
+    output_filename = snakemake.output[0]
 
-    data_filename = "data/intermediate/rockstar.p"
-    inputInfo_filename = "data/model_output/rockstar_UMc9vu_inputInfo.mat"
-    lfads_filename = "data/model_output/rockstar_UMc9vu_valid.h5"
-    output_filename = "data/model_output/rockstar_input_pulses.p"
+    # data_filename = "data/intermediate/rockstar.p"
+    # inputInfo_filename = "data/model_output/rockstar_UMc9vu_inputInfo.mat"
+    # lfads_filename = "data/model_output/rockstar_UMc9vu_valid.h5"
+    # output_filename = "data/model_output/rockstar_input_pulses.p"
 
     input_info = io.loadmat(inputInfo_filename)
 
