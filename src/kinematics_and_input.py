@@ -6,6 +6,7 @@ from scipy import io
 import h5py
 import os
 from glob import glob
+from utils import get_indices
 
 # lfads_file = 'data/model_output/rockstar_valid.h5'
 # filename = 'data/raw/rockstar.mat'
@@ -24,12 +25,7 @@ playback_ratio = .20  # speed of playback (1 indicates real speed)
 kinematic_fs = 500 #frame rame of kinematic data
 
 input_info = io.loadmat(input_info_file)
-if snakemake.wildcards.trial_type == 'train':
-    used_inds = input_info['trainInds'][0] - 1
-elif snakemake.wildcards.trial_type == 'valid':
-    used_inds = input_info['validInds'][0] - 1
-    
-# used_inds = input_info['validInds'][0] - 1
+used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
 
 def update_target(data, t):
     '''finds the next target in data dictionary and returns its index and position'''
