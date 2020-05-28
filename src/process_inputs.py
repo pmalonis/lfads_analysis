@@ -68,6 +68,17 @@ if __name__=='__main__':
 
             t = np.arange(0, trial_len, dt)
             for target in target_times:
+                # dropping targets that are followed too closely by another target
+                if k < len(processed_df.index) - 1:
+                    next_target = processed_df.index[k+1][1]
+                    if next_target - target < cfg['post_target_win_stop']:
+                        processed_df.drop(processed_df.index[k], axis=0, inplace=True)
+                        input_sig = np.delete(input_sig, k, axis=0)
+                        input_integral = np.delete(input_integral, k, axis=0)
+                        input_peaks = np.delete(input_peaks, k, axis=0)
+                        kinematics = np.delete(kinematics, k, axis=0)
+                        continue
+
                 idx = np.logical_and(t >= target + cfg['post_target_win_start'], t < target + cfg['post_target_win_stop'])
                 for j in range(n_inputs):
                     peak = np.argmax(np.ma.masked_array(np.abs(inputs[:,j]), mask=~idx))
