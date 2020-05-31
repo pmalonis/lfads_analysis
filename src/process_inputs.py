@@ -31,8 +31,7 @@ if __name__=='__main__':
 
     input_info = io.loadmat(inputInfo_filename)
 
-    #used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
-    used_inds = get_indices(input_info, 'all')
+    used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
 
     df = pd.read_pickle(data_filename)
     dt = 0.010 #TODO read from lfads file
