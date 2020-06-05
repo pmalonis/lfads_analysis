@@ -36,7 +36,11 @@ if __name__=='__main__':
     df = pd.read_pickle(data_filename)
     dt = 0.010 #TODO read from lfads file
     kin_dt = 0.001
-    n_win = int((cfg['post_target_win_stop'] - cfg['post_target_win_start'])/dt)
+    if cfg['align_peaks']:
+        n_win = int((cfg['post_peak_win']*2)/dt)
+    else:
+        n_win = int((cfg['post_target_win_stop'] - cfg['post_target_win_start'])/dt)
+    
     kinematic_vars = ['x', 'y']
     with h5py.File(lfads_filename,'r') as h5_file:
         trial_len = h5_file['controller_outputs'].shape[1] * dt
@@ -54,9 +58,9 @@ if __name__=='__main__':
         n_kinematic = int((cfg['peri_target_kinematics_stop'] - cfg['peri_target_kinematics_start'])/kin_dt)
 
         n_inputs = h5_file['controller_outputs'].shape[2]
-        input_sig = np.zeros((processed_df.shape[0], n_win*n_inputs))
         kinematics = np.zeros((processed_df.shape[0], len(kinematic_vars)*n_kinematic))
 
+        input_sig = np.zeros((processed_df.shape[0], n_win*n_inputs))
         k = 0
         for i in range(h5_file['controller_outputs'].shape[0]):
             inputs = h5_file['controller_outputs'][i,:,:]
@@ -85,7 +89,21 @@ if __name__=='__main__':
                     integral_idx = np.arange(max(0, peak - cfg['integration_win_size']/2/dt), 
                                              min(trial_len/dt, peak + cfg['integration_win_size']/2/dt), dtype=int)
                     input_integral[k,j] = np.sum(inputs[integral_idx,j])*dt
-                    input_sig[k,n_win*j:n_win*(j+1)] = inputs[idx, j]
+                    try:
+                        if cfg['align_peaks']:
+                            peak = peak/(1/dt)
+                            input_idx = np.logical_and(t >= np.round((peak - cfg['post_peak_win'])/dt)*dt, 
+                                                       t < np.round((peak + cfg['post_peak_win'])/dt)*dt)
+                            if peak - cfg['post_peak_win'] < 0:
+                                input_sig[k,n_win*j:n_win*(j+1)] = np.concatenate((np.zeros(n_win - np.sum(input_idx)), inputs[input_idx, j]))
+                            elif peak + cfg['post_peak_win'] >= trial_len:
+                                input_sig[k,n_win*j:n_win*(j+1)] = np.concatenate((inputs[input_idx, j], np.zeros(n_win - np.sum(input_idx))))
+                            else:
+                                input_sig[k,n_win*j:n_win*(j+1)] = inputs[input_idx, j]                          
+                        else:
+                            input_sig[k,n_win*j:n_win*(j+1)] = inputs[idx, j]
+                    except:
+                        import pdb;pdb.set_trace()
 
                     for i_var,v in enumerate(kinematic_vars):
                         kinematics[k,i_var*n_kinematic:(i_var+1)*n_kinematic] = df.loc[used_inds[i]].kinematic[v].loc[target+cfg['peri_target_kinematics_start']:].iloc[:n_kinematic]
