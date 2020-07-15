@@ -17,7 +17,6 @@ sig = lambda x: 1/(1+np.exp(-x))
 with h5py.File(push_mean_file) as push_mean:
     h = np.array([push_mean['gen_ics'][0,:]])
     gen_states = np.zeros_like(push_mean['gen_states'][0,:])
-    #gen_states[0,:] = h
     for i in range(gen_states.shape[0]):
         weight_scale = 1#/np.sqrt(len(h))
         r=sig(weight_scale*h.dot(W_hru)[0,:200] + b_hru[0,:200])

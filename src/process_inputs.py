@@ -18,7 +18,7 @@ def get_targets(_df, trial_len):
 
     return target_df.iloc[1:n_targets].loc[:trial_len] #leaving out first target
 
-if __name__=='__main__':  
+if __name__=='__main__':
     data_filename = snakemake.input[0]
     lfads_filename = snakemake.input[1]
     inputInfo_filename = snakemake.input[2]

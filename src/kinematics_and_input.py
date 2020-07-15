@@ -128,7 +128,7 @@ with h5py.File(lfads_file) as h5file:
             lfads_idx = np.digitize(t-t_start, trial_t) - 1 #assumes t_start is trial start
             time_ln.set_segments([np.array([[trial_t[lfads_idx], time_ymin], [trial_t[lfads_idx], time_ymax]])])
             for input_idx, input_ln in enumerate(input_lns):
-                input_ln.set_data(trial_t[lfads_idx], h5file['controller_outputs'][video_idx, lfads_idx, input_idx])
+                input_ln.set_data(trial_t[lfads_idx], h5file['controller_outputs'][video_idx, :, input_idx])
 
             return (cursor_ln, target_ln, *input_lns)
 
