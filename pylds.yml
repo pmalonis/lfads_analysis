@@ -1,0 +1,23 @@
+name: pylds
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - h5py=2.10.0=nompi_py36h513d04c_102
+  - ipython=7.15.0=py36h9f0ad1d_0
+  - jupyter_client=6.1.5=py_0
+  - jupyter_core=4.6.3=py36h9f0ad1d_1
+  - notebook=6.0.3=py36h9f0ad1d_0
+  - numpy=1.18.5=py36h7314795_0
+  - pandas=1.0.4=py36h830a2c2_0
+  - python=3.6.10=h8356626_1011_cpython
+  - scikit-learn=0.23.1=py36h0e1014b_0
+  - seaborn=0.10.1=1
+  - seaborn-base=0.10.1=py_1
+  - pip:
+    - matplotlib==3.2.1
+    - pylds==0.0.5
+    - pypolyagamma==1.2.2
+    - scipy==1.4.1
+prefix: /home/pmalonis/miniconda3/envs/pylds
+
