@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import h5py
-from pylds.models import DefaultPoissonLDS
+from pylds.models import DefaultPoissonLDS, DefaultLDS
 from pickle import dump
 from sklearn.model_selection import train_test_split
 
@@ -60,6 +60,29 @@ def train_model(df, co, n_steps, filename=None, bin_size=bin_size):
 
     return model, ll
 
+def train_model_gaussian(df, co, n_steps, filename=None, bin_size=bin_size):
+    
+    counts = segment_spike_counts(df, co, bin_size)
+    train_counts, test_counts = split_segments(counts)
+
+    n_neurons = df.neural.shape[1]
+    model = DefaultPoissonLDS(n_neurons, D_latent)
+    for segment in train_counts:
+        model.add_data(segment)
+
+    ll = np.zeros(n_steps)
+    for i in range(n_steps):
+        model.EM_step()
+        ll[i] = model.log_likelihood()
+
+    try:
+        if filename is not None:
+            dump(model, open(filename, 'wb'))
+    except:
+        pass
+    
+    return model, ll
+
 def bin_dataframe(df, bin_size, smooth=False, std=default_std):
     '''if smooth, then downsample according to bin_size'''
     if smooth:
@@ -70,7 +93,7 @@ def bin_dataframe(df, bin_size, smooth=False, std=default_std):
         else:
             min_periods = 1
         
-        return df.rolling(winsize, center=True, win_type='gaussian', min_periods=min_periods).sum(std=std).dropna(axis=0).values[::bin_size]
+        return df.rolling(winsize, win_type='gaussian', min_periods=min_periods).sum(std=std).dropna(axis=0).values[::bin_size]
     else:
         return df.rolling(bin_size).sum().values[bin_size-1::bin_size]
 
@@ -105,11 +128,11 @@ def segment_spike_counts(df, co, bin_size=bin_size, smooth=False, std=default_st
     for i in range(co.shape[0]):
         starts, stops = get_trial_segments(abs_co[i,:], thresh, min_segment_idx=min_segment_idx)
         for start, stop in zip(starts, stops):
-            if start*lfads_dt <= 3*std/1000:
+            if start*lfads_dt <= 6*std/1000:
                 continue
             if pad_interval:
-                padded_start_t = start*lfads_dt - 3*std/1000
-                padded_stop_t = stop*lfads_dt + 3*std/1000
+                padded_start_t = start*lfads_dt - 6*std/1000
+                padded_stop_t = stop*lfads_dt
                 if padded_start_t < 0:
                     import pdb;pdb.set_trace()
                 segment_spikes = df.loc[i].neural.loc[padded_start_t:padded_stop_t]
@@ -173,4 +196,3 @@ if __name__=='__main__':
         co = np.array(h5file['controller_outputs'])
 
     df = pd.read_pickle(data_filename)
-
