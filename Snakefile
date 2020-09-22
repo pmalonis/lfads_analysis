@@ -77,18 +77,35 @@ rule download_raw:
     params:
         source = lambda wildcards: config["datasets"][wildcards.dataset]["raw"]
     output:
-        RAW_DIR + "{dataset}.mat"
+        #constrain wildcard to not contain forward slash (doesn't represent file in subdirectory)
+        RAW_DIR + "{dataset, ^(?!.*/).*$}.mat"
     shell:
-        #"scp -T {config[username]}@{params.source} {output}"
-        "scp -T {config[username]}@{params.source} {output}"
+        "scp -T {params.source} {output}"
+
+rule download_center_out:
+    params:
+        source = lambda wildcards: config["center_out"][wildcards.dataset]
+    output:
+        RAW_DIR + "center_out/{dataset}.mat"
+    shell:
+        "scp -T {params.source} {output}"
 
 rule download_inputInfo:
     params:
-         source = lambda wildcards: config["datasets"][wildcards.dataset]["inputInfo"]
+        source = lambda wildcards: config["datasets"][wildcards.dataset]["inputInfo"]
     output:
         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"
     shell:
         "scp -T {params.source} {output}"
+
+rule preprocess_center_out:
+    input:
+        RAW_DIR + "center_out/{dataset}.mat",
+        "src/create_xarray.py"
+    output:
+        INTERMEDIATE_DIR + "center_out/{dataset}.nc"
+    script:
+        "src/create_xarray.py"
 
 rule convert_pandas:
     input:
@@ -153,6 +170,16 @@ rule peak_analysis:
     notebook:
         "notebooks/peak_analysis.ipynb"
 
+rule simulated_data_notebook:
+    input:
+        SRC_DIR + "lds_regression.py",
+        SRC_DIR + "evaluate_all_datasets.py",
+        SRC_DIR + "glds.py"
+    log:
+        notebook = "notebooks/processed/simulated_data.ipynb"
+    notebook:
+        "notebooks/simulated_data.ipynb"
+        
 rule notebook_to_html:
     input:
         "notebooks/processed/{filename}.ipynb"

@@ -238,6 +238,9 @@ datasets:
         train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
         valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
     raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/rockstar.mat
+
+center_out:
+  rockstar: pmalonis@205.208.57.121:~/center_out/rs1050225_clean_SNRgt4.mat
 integration_win_size: 0.2
 peri_target_kinematics_start: -0.1
 peri_target_kinematics_stop: 0

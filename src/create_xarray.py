@@ -22,9 +22,10 @@ def get_neurons(mat_data):
     return neurons, neuron_area
 
 if __name__=='__main__':
-    filename = '../data/raw/rs1050225_clean_SNRgt4.mat'
+    filename = snakemake.input[0]
     bin_size = 0.002
     data = loadmat(filename)
+    min_spikes = 100 #drop neurons with fewer spikes
 
     cond_keys = [k for k in data.keys() if 'deg' in k and k.count('_')==1]
     
@@ -62,12 +63,12 @@ if __name__=='__main__':
 
     time_labels = np.arange(max_start, max_stop, bin_size) + bin_size/2
 
-    neural = xr.DataArray(np.zeros((n_trials, n_bins, n_neurons), dtype=np.int8), 
+    neural = xr.DataArray(np.zeros((n_trials, n_bins, n_neurons)), 
                           dims=['trial', 'time', 'neuron'], 
                           coords= {'trial':range(n_trials), 
                                    'time':time_labels, 
                                    'neuron':range(n_neurons)})
-    kinematics = xr.DataArray(np.zeros((n_trials, n_bins, 2), dtype=bool), 
+    kinematics = xr.DataArray(np.zeros((n_trials, n_bins, 2)), 
                               dims=['trial', 'time', 'variable'], 
                               coords= {'trial':range(n_trials), 
                                        'time':time_labels, 
@@ -84,8 +85,8 @@ if __name__=='__main__':
         mask = (abs_times < trial_start) | (abs_times <= trial_stop)
         for j,n in enumerate(neuron_names):
             spks = data[n][(data[n] >= trial_start) & (data[n] < trial_stop)]
-            binned = np.histogram(spks, bins=bins)[0].astype(np.int8)
-            binned[~mask] = -127
+            binned = np.histogram(spks, bins=bins)[0].astype(np.float)
+            binned[~mask] = np.nan #-127
             neural[i,:,j] = binned
 
         x_raw = interp_x(abs_times)
@@ -99,4 +100,10 @@ if __name__=='__main__':
         kinematics[i,:,1] = y_smooth
 
     dataset = xr.Dataset({'neural':neural, 'kinematics':kinematics})
-    dataset.to_netcdf('test.nc')
+    for k in events.keys():
+        dataset[k] = ('trial', events[k]-events[ref])
+
+    dataset.attrs['dt'] = 0.002
+    spk_sum = dataset.neural.sum(['trial', 'time'])
+    dataset = dataset.drop_sel(neuron = np.where(spk_sum < min_spikes)[0])
+    dataset.to_netcdf(snakemake.output[0])
