@@ -260,13 +260,21 @@ rule combine_trials:
 
 rule random_forest_predict:
     input:
-        "data/processed_inputs/{dataset}_{param}_{trial_type}.p"
-
+        "data/processed_inputs/{dataset}_{param}_{trial_type}.p",
+        "src/predict_targets_control.py"
     output:
         "figures/target_prediction/{dataset}_{param}_{trial_type}.pdf"
-
     script:
         "src/predict_targets.py"
+
+rule random_forest_predict_control:
+    input:
+        "data/processed_inputs/{dataset}_{param}_{trial_type}.p",
+        "src/predict_targets_control.py"
+    output:
+        "figures/target_prediction_control/{dataset}_{param}_{trial_type}.pdf"
+    script:
+        "src/predict_targets_control.py"
 
 rule predict_all:
     input:

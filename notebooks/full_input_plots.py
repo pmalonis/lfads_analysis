@@ -76,7 +76,7 @@ with h5py.File(lfads_filename) as h5file:
         y_tang_velocity = y_vel/speed
         normal_accel = np.sqrt(np.gradient(x_tang_velocity, data_t)**2 + np.gradient(y_tang_velocity, data_t)**2)
         plt.figure(figsize=(12,4))
-        plt.plot(data_t, angle, 'g')
+        plt.plot(data_t, speed, 'g')
         plt.xlabel("time (s)")
         plt.legend(['deviation'])
         ax1 = plt.gca()

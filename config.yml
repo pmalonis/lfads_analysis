@@ -1,4 +1,4 @@
-align_peaks: false
+align_peaks: true
 datasets:
   raju:
     inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep//data_Fk5pGm/single_raju/inputInfo_raju.mat
@@ -48,10 +48,10 @@ datasets:
       226_8QTVEk:
         train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
         valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-      226_OqO1c4:
+      OqO1c4:
         train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_OqO1c4/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
         valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_OqO1c4/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-      226_Ud-Q0k:
+      Ud-Q0k:
         train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
         valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
       226_ViMCmc:
