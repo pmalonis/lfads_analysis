@@ -293,7 +293,7 @@ rule split_playback:
         "data/raw/Playback-NN/split_condition/{dataset}/prop_pb.mat",
         "data/raw/Playback-NN/split_condition/{dataset}/dual_pb.mat"
     script:
-        "data/src/playback_to_lfads.py"
+        "src/playback_to_lfads.py"
 
 rule all_split_playback:
     input:
