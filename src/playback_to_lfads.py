@@ -44,5 +44,5 @@ for i, unit in enumerate(data['units'][0]):
         spikes = spikes[(spikes >= min_t) & (spikes < max_t)]
         condition_dict[neuron_name] = spikes
 
-for condition_dict in condition_dicts:
+for i, condition_dict in enumerate(condition_dicts):
     io.savemat(snakemake.output[0], condition_dict)
