@@ -297,10 +297,37 @@ rule split_playback:
 
 rule all_split_playback:
     input:
-        "data/raw/Playback-NN/P-b080723_M1.mat",
-        "data/raw/Playback-NN/P-b080725_M1.mat",
-        "data/raw/Playback-NN/P-b080905_M1.mat",
-        "data/raw/Playback-NN/P-mk080729_M1m.mat",
-        "data/raw/Playback-NN/P-mk080730_M1m.mat",
-        "data/raw/Playback-NN/P-mk080731_M1m.mat",
-        "data/raw/Playback-NN/P-mk080828_M1.mat"
+        "data/raw/Playback-NN/split_condition/b080723_M1/active.mat",
+        "data/raw/Playback-NN/split_condition/b080723_M1/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080723_M1/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080723_M1/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/b080725_M1/active.mat",
+        "data/raw/Playback-NN/split_condition/b080725_M1/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080725_M1/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080725_M1/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/b080905_M1/active.mat",
+        "data/raw/Playback-NN/split_condition/b080905_M1/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080905_M1/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080905_M1/dual_pb.mat"
+
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/dual_pb.mat"
+
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/dual_pb.mat"
