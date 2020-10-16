@@ -283,3 +283,24 @@ rule predict_all:
 rule make_all_movies:
     input:
         expand_filename("figures/kinematics_movies_with_inputs/concatenated_{dataset}_{param}_{trial_type}.mp4")
+
+rule split_playback:
+    input:
+        "data/raw/Playback-NN/P-{dataset}.mat"
+    output:
+        "data/raw/Playback-NN/split_condition/{dataset}/active.mat",
+        "data/raw/Playback-NN/split_condition/{dataset}/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/{dataset}/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/{dataset}/dual_pb.mat"
+    script:
+        "data/src/playback_to_lfads.py"
+
+rule all_split_playback:
+    input:
+        "data/raw/Playback-NN/P-b080723_M1.mat",
+        "data/raw/Playback-NN/P-b080725_M1.mat",
+        "data/raw/Playback-NN/P-b080905_M1.mat",
+        "data/raw/Playback-NN/P-mk080729_M1m.mat",
+        "data/raw/Playback-NN/P-mk080730_M1m.mat",
+        "data/raw/Playback-NN/P-mk080731_M1m.mat",
+        "data/raw/Playback-NN/P-mk080828_M1.mat"
