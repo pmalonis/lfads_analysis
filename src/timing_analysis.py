@@ -1,6 +1,8 @@
 import numpy as np
 import h5py
 import pandas as pd
+from scipy import io
+import utils
 from scipy import signal
 
 # trial_type = 'all'
@@ -13,7 +15,7 @@ from scipy import signal
 # input_info = io.loadmat(inputInfo_filename)
 # with h5py.File(lfads_filename) as h5file:
 #     co = h5file['controller_outputs'].value
-#     
+    
 
 # used_inds = utils.get_indices(input_info, trial_type)
 
@@ -35,11 +37,11 @@ def get_targets(df, used_inds=None):
     if used_inds is not None:
         targets = df.loc[used_inds].kinematic.query('hit_target')
     else:
-        targets = df.loc.kinematic.query('hit_target')
+        targets = df.kinematic.query('hit_target')
 
     return targets
 
-def get_peaks(co, dt, min_height, min_distance):
+def get_peaks(co, dt, min_height, min_distance=5):
     '''
     Returns times of peaks of contorller outputs
 
@@ -55,13 +57,15 @@ def get_peaks(co, dt, min_height, min_distance):
 
     min_distance: minimum distance to neighboring peak, as given to 
     scipy.signal.find_peaks as the "distance" argument. As with min_height, 
-    can be a float or a vector.
+    can be a float or a vector. the unit of the distance is the index ste
+    (1ms for the processed dataframes)
 
     Returns:
     peaks: object array of shape (trial X outputs). Each entry is a 
     lists of floats representing time in trial, in seconds, of each peak 
-    in controller output that mean specifications given by min_height
+    in controller output that meet specifications given by min_height
     and min_distance
+    peak_vals: 
     '''
     peaks = np.empty(shape=(co.shape[0], co.shape[2]), dtype='object')
     # filling array with empty lists. The default object is None, but empty list is simpler 
@@ -70,17 +74,29 @@ def get_peaks(co, dt, min_height, min_distance):
     t_lfads = np.arange(co.shape[1]) * dt #time labels of lfads input
     for trial_idx in range(co.shape[0]):
         for input_idx in range(co.shape[2]):
-            p, _ = signal.find_peaks(np.abs(co[i, :, input_idx]), 
-                            height=min_heights[input_idx])
+            if isinstance(min_height, (int, float)):
+                height_arg = min_height
+            elif isinstance(min_height, list):
+                height_arg = min_height[input_idx]
+        
+            if isinstance(min_distance, int):
+                distance_arg = min_distance
+            elif isinstance(min_distance, list):
+                distance_arg = min_distance[input_idx]
+            
+            p, _ = signal.find_peaks(np.abs(co[trial_idx, :, input_idx]), 
+                            height=height_arg, distance=distance_arg)
             peaks[trial_idx, input_idx] = t_lfads[p]
  
     return peaks
 
 def assign_target_column(_df):
-    _df['target_x'] = np.append(_df['x'].iloc[1:].values, np.nan)
-    _df['target_y'] = np.append(_df['y'].iloc[1:].values, np.nan)
+    trial_df = _df.loc[_df.index[0][0]]
+    #import pdb;pdb.set_trace()
+    trial_df['target_x'] = np.append(trial_df['x'].iloc[1:].values, np.nan)
+    trial_df['target_y'] = np.append(trial_df['y'].iloc[1:].values, np.nan)
 
-    return _df
+    return trial_df
 
 def get_latencies(targets, peaks, win_start, win_stop):
     '''
@@ -111,19 +127,66 @@ def get_latencies(targets, peaks, win_start, win_stop):
     n_trials_targets = targets.index[-1][0] + 1
     n_trials_peaks = peaks.shape[0]
     assert(n_trials_targets == n_trials_peaks)
-    
+    n_inputs = peaks.shape[1]
     n_trials = n_trials_targets
+    latency = [[] for i in range(n_inputs)]
+    target_peaks = targets
+    target_peaks = target_peaks.groupby('trial').apply(assign_target_column)
+
+    # counts of peaks for each input which are in window around target appearance
+    peak_count = np.zeros(n_inputs)
+    for input_idx in range(n_inputs):
+        target_peaks['latency_%d'%input_idx] = np.nan
     for trial_idx in range(n_trials):
         t_targets = targets.loc[trial_idx].index
-        for input_idx in range(peaks.shape[1]):
+        for input_idx in range(n_inputs):
+            prev_ti = -1
             t_peaks = peaks[trial_idx, input_idx]
             for tp in t_peaks:
                 if any((tp - t_targets >= win_start) & (tp - t_targets < win_stop)):
+                    peak_count[input_idx] += 1
                     diff_targets = tp - t_targets
-                    latency = np.min(diff_targets[diff_targets>0])
+                    diff_targets = np.ma.MaskedArray(diff_targets, 
+                    (diff_targets < win_start) | (diff_targets >= win_stop)) #masking values outside window
+                    target_idx = np.argmin(np.abs(diff_targets))
+                    if target_idx == prev_ti:
+                        continue
+                    else:
+                        target_peaks.loc[trial_idx]['latency_%d'%input_idx].iloc[target_idx] = diff_targets[target_idx]
+                    
+                    prev_ti = target_idx
 
-            
-    
+    return target_peaks, peak_count
+
+def get_target_peak_counts(target_peaks, input_idx, all_inputs=False):
+    '''
+    Counts of targets with and without peak for each lfads input
+
+    Parameters:
+    target_peaks: dataframe as returned by get_latencies
+
+    input_idx: controller index or indices to count. Can be int, or if multiple 
+    controller inputs are to be counted, a list
+
+    all_inputs: if True, all inputs must have a peak to be counted (default: False)
+
+    Return:
+    targets_with_peak
+    '''
+    if not isinstance(input_idx, list):
+        input_idx = [input_idx]
+
+    #making sure all inputs exist
+    inputs_exist = np.all(['latency_%d'%idx in target_peaks.columns for idx in input_idx])
+    assert(inputs_exist, 'input_idx argument does not match columns in target_peaks argument')
+
+    if all_inputs:
+        targets_with_peak = np.sum(target_peaks[['latency_%d'%i for i in input_idx]].isnull().all(axis=1))
+    else:
+        targets_with_peak = np.sum(target_peaks[['latency_%d'%i for i in input_idx]].isnull().any(axis=1))
+
+    return targets_with_peak
+
 def get_peak_latencies(df, co, min_heights, dt, used_inds,
                         min_height, win_start=0, win_stop=0.5):
     '''
