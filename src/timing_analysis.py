@@ -5,19 +5,19 @@ from scipy import io
 import utils
 from scipy import signal
 
-# trial_type = 'all'
+trial_type = 'all'
 
-# lfads_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_8QTVEk_%s.h5"%trial_type
-# data_filename = "/home/pmalonis/lfads_analysis/data/intermediate/rockstar.p"
-# inputInfo_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_inputInfo.mat"
+lfads_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_8QTVEk_%s.h5"%trial_type
+data_filename = "/home/pmalonis/lfads_analysis/data/intermediate/rockstar.p"
+inputInfo_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_inputInfo.mat"
 
-# df = pd.read_pickle(data_filename)
-# input_info = io.loadmat(inputInfo_filename)
-# with h5py.File(lfads_filename) as h5file:
-#     co = h5file['controller_outputs'].value
+df = pd.read_pickle(data_filename)
+input_info = io.loadmat(inputInfo_filename)
+with h5py.File(lfads_filename) as h5file:
+    co = h5file['controller_outputs'].value
     
 
-# used_inds = utils.get_indices(input_info, trial_type)
+used_inds = utils.get_indices(input_info, trial_type)
 
 
 def get_targets(df, used_inds=None):
@@ -98,7 +98,7 @@ def assign_target_column(_df):
 
     return trial_df
 
-def get_latencies(targets, peaks, win_start, win_stop):
+def get_latencies(targets, peaks, win_start, win_stop, trial_len):
     '''
     Calculates latencies between target appearance and nearest peak of each
     input
@@ -156,6 +156,9 @@ def get_latencies(targets, peaks, win_start, win_stop):
                     
                     prev_ti = target_idx
 
+    #removing targets that occur when lfads not run
+    target_peaks = target_peaks.iloc[np.where(target_peaks.index.get_level_values('time')< trial_len)]
+    
     return target_peaks, peak_count
 
 def get_target_peak_counts(target_peaks, input_idx, all_inputs=False):
@@ -181,9 +184,9 @@ def get_target_peak_counts(target_peaks, input_idx, all_inputs=False):
     assert(inputs_exist, 'input_idx argument does not match columns in target_peaks argument')
 
     if all_inputs:
-        targets_with_peak = np.sum(target_peaks[['latency_%d'%i for i in input_idx]].isnull().all(axis=1))
+        targets_with_peak = target_peaks[['latency_%d'%i for i in input_idx]].isnull().all(axis=1)
     else:
-        targets_with_peak = np.sum(target_peaks[['latency_%d'%i for i in input_idx]].isnull().any(axis=1))
+        targets_with_peak = target_peaks[['latency_%d'%i for i in input_idx]].isnull().any(axis=1)
 
     return targets_with_peak
 
