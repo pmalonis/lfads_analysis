@@ -15,7 +15,7 @@ if __name__=='__main__':
     datasets = cfg['datasets']
     for dset in dsets:
         for cond in conds:
-            raw_path = raw_root + dset + '/' cond + '.mat'
+            raw_path = raw_root + dset + '/' + cond + '.mat'
             param_dict = {}
             for param in params:
                 for trial_type in ['valid', 'train']:
