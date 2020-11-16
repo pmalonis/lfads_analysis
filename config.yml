@@ -3,14 +3,14 @@ center_out:
   rockstar: pmalonis@205.208.57.121:~/center_out/rs1050225_clean_SNRgt4.mat
 datasets:
   mk080729_active:
-    inputInfo: /home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_active/lfadsInput/inputInfo_active.mat
+    inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_active/lfadsInput/inputInfo_active.mat
     params:
       kWj--O:
         train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_active/lfadsOutput/model_runs_active.h5_train_posterior_sample_and_average
         valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_active/lfadsOutput/model_runs_active.h5_valid_posterior_sample_and_average
     raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/Playback-NN/split_condition/mk080729_M1m/active.mat
   mk080729_dual_pb:
-    inputInfo: /home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_dual_pb/lfadsInput/inputInfo_dual_pb.mat
+    inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_dual_pb/lfadsInput/inputInfo_dual_pb.mat
     params:
       kWj--O:
         train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_dual_pb/lfadsOutput/model_runs_active.h5_train_posterior_sample_and_average
