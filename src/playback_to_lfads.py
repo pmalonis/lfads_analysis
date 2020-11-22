@@ -25,24 +25,31 @@ for k in condition_keys:
 
 elect_unit_idx = 0 #index of unit on each electrode
 neuron_names = []
-for i, unit in enumerate(data['units'][0]):
-    neuron_name = 'Chan%03d'%unit['chan'][0]
-    if i > 0:
-        if neuron_name==neuron_names[-1][:7]:
-            elect_unit_idx += 1
-        else:
-            elect_unit_idx = 0
-            
-    neuron_name += string.ascii_lowercase[elect_unit_idx]
-    neuron_names.append(neuron_name)
+hit_target = data['events']['times'][0,3].flatten()
+for condition_dict in condition_dicts:
+    min_t = np.min(condition_dict['cpl_st_trial_rew'])
+    max_t = np.max(condition_dict['cpl_st_trial_rew'])
+    tx = data['xK'][:,0]
+    ty = data['yK'][:,0]
+    condition_dict['x'] = data['xK'][(tx >= min_t) & (tx < max_t),:]
+    condition_dict['y'] = data['yK'][(ty >= min_t) & (ty < max_t),:]
+    condition_dict['hit_target'] = hit_target[(hit_target >= min_t) & (hit_target < max_t)]
+    for i, unit in enumerate(data['units'][0]):
+        neuron_name = 'Chan%03d'%unit['chan'][0]
+        if i > 0:
+            if neuron_name==neuron_names[-1][:7]:
+                elect_unit_idx += 1
+            else:
+                elect_unit_idx = 0
+                
+        neuron_name += string.ascii_lowercase[elect_unit_idx]
+        neuron_names.append(neuron_name)
 
-    for condition_dict in condition_dicts:
         #eliminating spikes outside range of trials    
         spikes = unit['stamps']
-        min_t = np.min(condition_dict['cpl_st_trial_rew'])
-        max_t = np.max(condition_dict['cpl_st_trial_rew'])
+
         spikes = spikes[(spikes >= min_t) & (spikes < max_t)]
         condition_dict[neuron_name] = spikes
 
 for i, condition_dict in enumerate(condition_dicts):
-    io.savemat(snakemake.output[0], condition_dict)
+    io.savemat(snakemake.output[i], condition_dict)
