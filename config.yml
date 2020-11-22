@@ -40,44 +40,6 @@ datasets:
         train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_dual_pb/lfadsOutput/model_runs_dual_pb.h5_train_posterior_sample_and_average
         valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_dual_pb/lfadsOutput/model_runs_dual_pb.h5_valid_posterior_sample_and_average
     raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/Playback-NN/split_condition/mk080729_M1m/dual_pb.mat
-  mk080729_prop_pb:
-    inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_0zkwXe/single_prop_pb/lfadsInput/inputInfo_prop_pb.mat
-    params:
-      0zkwXe:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_0zkwXe/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_0zkwXe/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_valid_posterior_sample_and_average
-      Dtxvqt:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_Dtxvqt/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_Dtxvqt/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_valid_posterior_sample_and_average
-      kWJ--O:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_valid_posterior_sample_and_average
-      nu5eVb:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_nu5eVb/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_nu5eVb/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_valid_posterior_sample_and_average
-      r2YiSn:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_prop_pb/lfadsOutput/model_runs_prop_pb.h5_valid_posterior_sample_and_average
-    raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/Playback-NN/split_condition/mk080729_M1m/prop_pb.mat
-  mk080729_vis_pb:
-    inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_0zkwXe/single_vis_pb/lfadsInput/inputInfo_vis_pb.mat
-    params:
-      0zkwXe:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_0zkwXe/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_0zkwXe/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_valid_posterior_sample_and_average
-      Dtxvqt:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_Dtxvqt/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_Dtxvqt/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_valid_posterior_sample_and_average
-      kWJ--O:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_kWJ--O/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_valid_posterior_sample_and_average
-      nu5eVb:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_nu5eVb/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_nu5eVb/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_valid_posterior_sample_and_average
-      r2YiSn:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_valid_posterior_sample_and_average
-    raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/Playback-NN/split_condition/mk080729_M1m/vis_pb.mat
   # raju:
   #   inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep//data_Fk5pGm/single_raju/inputInfo_raju.mat
   #   params:
