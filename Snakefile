@@ -139,8 +139,8 @@ rule input_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_integral_analysis.ipynb"
-    notebook:
-        "notebooks/integral_analysis.ipynb"
+    #notebook:
+     #   "notebooks/integral_analysis.ipynb"
 
 rule peak_analysis:
     input:
@@ -150,8 +150,8 @@ rule peak_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_peak_analysis.ipynb"
-    notebook:
-        "notebooks/peak_analysis.ipynb"
+#    notebook:
+ #       "notebooks/peak_analysis.ipynb"
 
 rule notebook_to_html:
     input:
