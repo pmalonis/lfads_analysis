@@ -60,7 +60,7 @@ rule download_all:
     input:
         expand_filename(RAW_DIR + "{dataset}.mat"),
         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"),
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5")
 
 rule download_model:
     params:
@@ -78,7 +78,7 @@ rule download_raw:
         source = lambda wildcards: config["datasets"][wildcards.dataset]["raw"]
     output:
         #constrain wildcard to not contain forward slash (doesn't represent file in subdirectory)
-        RAW_DIR + "{dataset, ^(?!.*/).*$}.mat"
+        RAW_DIR + "{dataset}.mat"
     shell:
         "scp -T {params.source} {output}"
 
