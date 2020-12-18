@@ -34,13 +34,15 @@ if __name__=='__main__':
     used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
 
     df = pd.read_pickle(data_filename)
+    n_neurons = df.loc[0].neural.shape[1]
     dt = 0.010 #TODO read from lfads file
     kin_dt = 0.001
     if cfg['align_peaks']:
         n_win = int((cfg['post_peak_win']*2)/dt)
     else:
         n_win = int((cfg['post_target_win_stop'] - cfg['post_target_win_start'])/dt)
-    
+        
+    n_spikes = n_win * int(dt/kin_dt) #length of window of spikes to extract
     kinematic_vars = ['x', 'y']
     with h5py.File(lfads_filename,'r') as h5_file:
         trial_len = h5_file['controller_outputs'].shape[1] * dt
@@ -55,10 +57,12 @@ if __name__=='__main__':
         input_peaks = np.zeros((processed_df.shape[0], h5_file['controller_outputs'].shape[2]))
         input_integral = np.zeros((processed_df.shape[0], h5_file['controller_outputs'].shape[2]))
 
-        n_kinematic = int((cfg['peri_target_kinematics_stop'] - cfg['peri_target_kinematics_start'])/kin_dt)
+        n_kinematic = int((cfg['peri_target_kinematics_stop'] - cfg['peri_target_kinematics_start'])/kin_dt) #length of window of kinematics to extract
 
         n_inputs = h5_file['controller_outputs'].shape[2]
         kinematics = np.zeros((processed_df.shape[0], len(kinematic_vars)*n_kinematic))
+
+        spikes = np.zeros((processed_df.shape[0], n_spikes, n_neurons))
 
         input_sig = np.zeros((processed_df.shape[0], n_win*n_inputs))
         k = 0
@@ -80,6 +84,7 @@ if __name__=='__main__':
                         input_integral = np.delete(input_integral, k, axis=0)
                         input_peaks = np.delete(input_peaks, k, axis=0)
                         kinematics = np.delete(kinematics, k, axis=0)
+                        spikes = np.delete(spikes, k, axis=0)
                         continue
 
                 idx = np.logical_and(t >= target + cfg['post_target_win_start'], t < target + cfg['post_target_win_stop'])
@@ -92,30 +97,33 @@ if __name__=='__main__':
                     try:
                         if cfg['align_peaks']:
                             peak = peak/(1/dt)
-                            input_idx = np.logical_and(t >= np.round((peak - cfg['post_peak_win'])/dt)*dt, 
+                            idx = np.logical_and(t >= np.round((peak - cfg['post_peak_win'])/dt)*dt, 
                                                        t < np.round((peak + cfg['post_peak_win'])/dt)*dt)
                             if peak - cfg['post_peak_win'] < 0:
-                                input_sig[k,n_win*j:n_win*(j+1)] = np.concatenate((np.zeros(n_win - np.sum(input_idx)), inputs[input_idx, j]))
+                                input_sig[k,n_win*j:n_win*(j+1)] = np.concatenate((np.zeros(n_win - np.sum(idx)), inputs[idx, j]))
                             elif peak + cfg['post_peak_win'] >= trial_len:
-                                input_sig[k,n_win*j:n_win*(j+1)] = np.concatenate((inputs[input_idx, j], np.zeros(n_win - np.sum(input_idx))))
+                                input_sig[k,n_win*j:n_win*(j+1)] = np.concatenate((inputs[idx, j], np.zeros(n_win - np.sum(idx))))
                             else:
-                                input_sig[k,n_win*j:n_win*(j+1)] = inputs[input_idx, j]                          
+                                input_sig[k,n_win*j:n_win*(j+1)] = inputs[idx, j]                          
                         else:
                             input_sig[k,n_win*j:n_win*(j+1)] = inputs[idx, j]
                     except:
                         import pdb;pdb.set_trace()
 
-                    for i_var,v in enumerate(kinematic_vars):
-                        kinematics[k,i_var*n_kinematic:(i_var+1)*n_kinematic] = df.loc[used_inds[i]].kinematic[v].loc[target+cfg['peri_target_kinematics_start']:].iloc[:n_kinematic]
-                    
+                for i_var,v in enumerate(kinematic_vars):
+                    kinematics[k,i_var*n_kinematic:(i_var+1)*n_kinematic] = df.loc[used_inds[i]].kinematic[v].loc[target+cfg['peri_target_kinematics_start']:].iloc[:n_kinematic]
+                
+                # getting spikes in same window as inputs
+                spikes[k,:,:] = df.loc[k].neural.loc[t[idx][0]:].iloc[:n_spikes].values
+
                 k += 1
 
     processed_df['peak_input_1'] = input_peaks[:,0]
     processed_df['peak_input_2'] = input_peaks[:,1]
     processed_df['integral_input_1'] = input_integral[:,0]
     processed_df['integral_input_2'] = input_integral[:,1]
-
     processed_df['input'] = input_sig.tolist()
     processed_df['kinematics'] = kinematics.tolist()
+    processed_df['spikes'] = spikes.tolist()
 
     processed_df.to_pickle(output_filename)

@@ -77,18 +77,35 @@ rule download_raw:
     params:
         source = lambda wildcards: config["datasets"][wildcards.dataset]["raw"]
     output:
-        RAW_DIR + "{dataset}.mat"
+        #constrain wildcard to not contain forward slash (doesn't represent file in subdirectory)
+        RAW_DIR + "{dataset, ^(?!.*/).*$}.mat"
     shell:
-        #"scp -T {config[username]}@{params.source} {output}"
-        "scp -T {config[username]}@{params.source} {output}"
+        "scp -T {params.source} {output}"
+
+rule download_center_out:
+    params:
+        source = lambda wildcards: config["center_out"][wildcards.dataset]
+    output:
+        RAW_DIR + "center_out/{dataset}.mat"
+    shell:
+        "scp -T {params.source} {output}"
 
 rule download_inputInfo:
     params:
-         source = lambda wildcards: config["datasets"][wildcards.dataset]["inputInfo"]
+        source = lambda wildcards: config["datasets"][wildcards.dataset]["inputInfo"]
     output:
         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"
     shell:
         "scp -T {params.source} {output}"
+
+rule preprocess_center_out:
+    input:
+        RAW_DIR + "center_out/{dataset}.mat",
+        "src/create_xarray.py"
+    output:
+        INTERMEDIATE_DIR + "center_out/{dataset}.nc"
+    script:
+        "src/create_xarray.py"
 
 rule convert_pandas:
     input:
@@ -153,6 +170,16 @@ rule peak_analysis:
 #    notebook:
  #       "notebooks/peak_analysis.ipynb"
 
+rule simulated_data_notebook:
+    input:
+        SRC_DIR + "lds_regression.py",
+        SRC_DIR + "evaluate_all_datasets.py",
+        SRC_DIR + "glds.py"
+    log:
+        notebook = "notebooks/processed/simulated_data.ipynb"
+    notebook:
+        "notebooks/simulated_data.ipynb"
+        
 rule notebook_to_html:
     input:
         "notebooks/processed/{filename}.ipynb"
@@ -233,13 +260,21 @@ rule combine_trials:
 
 rule random_forest_predict:
     input:
-        "data/processed_inputs/{dataset}_{param}_{trial_type}.p"
-
+        "data/processed_inputs/{dataset}_{param}_{trial_type}.p",
+        "src/predict_targets_control.py"
     output:
         "figures/target_prediction/{dataset}_{param}_{trial_type}.pdf"
-
     script:
         "src/predict_targets.py"
+
+rule random_forest_predict_control:
+    input:
+        "data/processed_inputs/{dataset}_{param}_{trial_type}.p",
+        "src/predict_targets_control.py"
+    output:
+        "figures/target_prediction_control/{dataset}_{param}_{trial_type}.pdf"
+    script:
+        "src/predict_targets_control.py"
 
 rule predict_all:
     input:
@@ -248,3 +283,51 @@ rule predict_all:
 rule make_all_movies:
     input:
         expand_filename("figures/kinematics_movies_with_inputs/concatenated_{dataset}_{param}_{trial_type}.mp4")
+
+rule split_playback:
+    input:
+        "data/raw/Playback-NN/P-{dataset}.mat"
+    output:
+        "data/raw/Playback-NN/split_condition/{dataset}/active.mat",
+        "data/raw/Playback-NN/split_condition/{dataset}/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/{dataset}/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/{dataset}/dual_pb.mat"
+    script:
+        "src/playback_to_lfads.py"
+
+rule all_split_playback:
+    input:
+        "data/raw/Playback-NN/split_condition/b080723_M1/active.mat",
+        "data/raw/Playback-NN/split_condition/b080723_M1/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080723_M1/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080723_M1/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/b080725_M1/active.mat",
+        "data/raw/Playback-NN/split_condition/b080725_M1/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080725_M1/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080725_M1/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/b080905_M1/active.mat",
+        "data/raw/Playback-NN/split_condition/b080905_M1/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080905_M1/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/b080905_M1/dual_pb.mat"
+
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080729_M1m/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080730_M1m/dual_pb.mat"
+        
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080731_M1m/dual_pb.mat"
+
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/active.mat",
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/vis_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/prop_pb.mat",
+        "data/raw/Playback-NN/split_condition/mk080828_M1m/dual_pb.mat"

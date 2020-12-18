@@ -11,6 +11,14 @@ import scipy.signal as sg
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
+def filter_kinematics(x_raw, y_raw):
+    #TODO: try sosfilt, see if it obviates need to filter both velocity and position
+    b,a = sg.butter(cfg['preprocess']['filter_order'], cfg['preprocess']['cutoff'], fs=500) #500 kinematic frequency of sampling
+    x_smooth = sg.filtfilt(b, a, x_raw)
+    y_smooth = sg.filtfilt(b, a, y_raw)
+
+    return x_smooth, y_smooth
+
 def upsample_2x(s):
     '''Upsample a time series by a factor of 2'''
     out = np.zeros(len(s) * 2 - 1)
@@ -85,9 +93,7 @@ def raw_to_dataframe(data, input_info):
         x_raw = x_norm[data_idx]
         y_raw = y_norm[data_idx]
 
-        b,a = sg.butter(cfg['preprocess']['filter_order'], cfg['preprocess']['cutoff'], fs=500) #500 kinematic frequency of sampling
-        x_smooth = sg.filtfilt(b, a, x_raw)
-        y_smooth = sg.filtfilt(b, a, y_raw)
+        x_smooth, y_smooth = filter_kinematics(x_raw, y_raw)
 
         x = upsample_2x(x_smooth)
         y = upsample_2x(y_smooth)
@@ -99,6 +105,9 @@ def raw_to_dataframe(data, input_info):
 
         x_vel = np.gradient(x, t)
         y_vel = np.gradient(y, t)
+
+        # filtering velocity, again
+        x_vel, y_vel = filter_kinematics(x_vel, y_vel)
 
         trial_index = np.ones(len(t), dtype=int) * used_trial_counter
 
