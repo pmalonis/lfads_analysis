@@ -16,9 +16,7 @@ input_info = io.loadmat(inputInfo_filename)
 with h5py.File(lfads_filename) as h5file:
     co = h5file['controller_outputs'].value
     
-
 used_inds = utils.get_indices(input_info, trial_type)
-
 
 def get_targets(df, used_inds=None):
     '''
@@ -41,7 +39,7 @@ def get_targets(df, used_inds=None):
 
     return targets
 
-def get_peaks(co, dt, min_height, min_distance=5):
+def get_peaks(co, dt, min_height, min_distance=5, exclude_post_target=None, df=None):
     '''
     Returns times of peaks of contorller outputs
 
@@ -86,7 +84,20 @@ def get_peaks(co, dt, min_height, min_distance=5):
             
             p, _ = signal.find_peaks(np.abs(co[trial_idx, :, input_idx]), 
                             height=height_arg, distance=distance_arg)
-            peaks[trial_idx, input_idx] = t_lfads[p]
+            if (exclude_post_target is not None) and (df is not None): #TODO used_indx
+                times = []
+                for i in range(len(p)):
+                    t = t_lfads[p[i]]
+                    t_targets = df.loc[trial_idx].kinematic.query('hit_target').index
+                    if np.any((t - t_targets < exclude_post_target) & (t - t_targets > 0)):
+                        continue
+                    else:
+                        times.append(t)
+                times = np.array(times)
+            else:
+                times = t_lfads[p]
+
+            peaks[trial_idx, input_idx] = times
  
     return peaks
 
@@ -138,7 +149,12 @@ def get_latencies(targets, peaks, win_start, win_stop, trial_len):
     for input_idx in range(n_inputs):
         target_peaks['latency_%d'%input_idx] = np.nan
     for trial_idx in range(n_trials):
-        t_targets = targets.loc[trial_idx].index
+        #if no events in trial, continue
+        try:
+            t_targets = targets.loc[trial_idx].index
+        except:
+            continue
+
         for input_idx in range(n_inputs):
             prev_ti = -1
             t_peaks = peaks[trial_idx, input_idx]

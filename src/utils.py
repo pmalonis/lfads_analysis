@@ -1,5 +1,6 @@
 import subprocess as sp
 import numpy as np
+import matplotlib.pyplot as plt
 
 def print_commit():
     '''saves matplotlib figure with hash of current git commit as metadata'''
@@ -31,3 +32,33 @@ def get_dt(lfads_h5file, input_info):
     dt = dt_ms/1000
 
     return dt
+
+def get_trial_len(lfads_h5file, input_info):
+    '''Gets trial length'''
+    dt = get_dt(lfads_h5file, input_info)
+    trial_len_ms = input_info['seq_timeVector'][-1][-1]
+    trial_len = trial_len_ms/1000
+    trial_len = np.floor(trial_len/dt)*dt
+
+    return trial_len
+
+def polar_hist(data, N):
+    '''
+    Plots polar histogram
+    
+    Parameters:
+    data: data to plot in histogram, must be in radians
+    N: number of bins in histogram
+
+    Returns:
+    ax: axis with polar histogram
+    '''
+    data = data%(2*np.pi)
+    bins = np.linspace(0, 2*np.pi, N+1)
+    counts,_ = np.histogram(data, bins)
+    bin_centers = (bins[:-1] + bins[1:])/2
+    width = 2*np.pi/N
+    ax = plt.subplot(111, polar=True)
+    ax.bar(bin_centers, counts, width=width)
+    
+    return ax
