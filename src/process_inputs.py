@@ -12,7 +12,6 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 def get_targets(_df, trial_len):
     n_targets = 6
     target_df = _df.loc[_df.index[0][0]].kinematic.query('hit_target')
-
     target_df['target_x'] = np.append(target_df['x'].iloc[1:].values, np.nan)
     target_df['target_y'] = np.append(target_df['y'].iloc[1:].values, np.nan)
 

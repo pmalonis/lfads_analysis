@@ -35,11 +35,11 @@ def get_rs(X, Y, n_splits, kinematic_vars=['x', 'y', 'x_vel', 'y_vel']):
 
     return rs
 
-experiment_file = '../data/intermediate/raju.p'
-lfads_file = '../data/model_output/raju_8QTVEk_all.h5'
-inputInfo_file = '../data/model_output/raju_inputInfo.mat'
-input_info = io.loadmat(inputInfo_file)
-used_inds = get_indices(input_info, 'all')
+# experiment_file = '../data/intermediate/raju.p'
+# lfads_file = '../data/model_output/raju_8QTVEk_all.h5'
+# inputInfo_file = '../data/model_output/raju_inputInfo.mat'
+# input_info = io.loadmat(inputInfo_file)
+# used_inds = get_indices(input_info, 'all')
 
 
 def fit_smooth(lfads_file, n_splits = 5):
@@ -68,17 +68,17 @@ def fit_smooth(lfads_file, n_splits = 5):
 
 if __name__=='__main__':
 
-    # experiment_file = snakemake.input[0]
-    # lfads_file = snakemake.input[1]
-    # inputInfo_file = snakemake.input[2]
+    experiment_file = snakemake.input[0]
+    lfads_file = snakemake.input[1]
+    inputInfo_file = snakemake.input[2]
 
     # experiment_file = '../data/intermediate/rockstar.p'
     # lfads_file = '../data/model_output/rockstar_xsgZ0x_valid.h5'
     # inputInfo_file = '../data/model_output/rockstar_xsgZ0x_inputInfo.mat'
 
-    #input_info = io.loadmat(inputInfo_file)
+    input_info = io.loadmat(inputInfo_file)
 
-    #used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
+    used_inds = get_indices(input_info, snakemake.wildcards.trial_type)
     data = pd.read_pickle(experiment_file)
     kinematic_vars = ['x', 'y', 'x_vel', 'y_vel']
 

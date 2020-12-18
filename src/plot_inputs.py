@@ -34,7 +34,7 @@ if __name__ == '__main__':
     with PdfPages(snakemake.output[0], metadata={'commit':commit}) as pdf:
         with h5py.File(lfads_filename,'r') as h5_file:
             dt = np.round(trial_len_ms/h5_file['controller_outputs'].shape[1])/1000
-            trial_len = np.round(trial_len/dt) * dt
+            trial_len = np.floor(trial_len/dt) * dt
             for i in range(h5_file['controller_outputs'].shape[0]):
                 input1 = h5_file['controller_outputs'][i,:,0]
                 input2 = h5_file['controller_outputs'][i,:,1]
