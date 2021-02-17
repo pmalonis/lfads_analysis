@@ -112,8 +112,8 @@ if __name__=='__main__':
                 for i_var,v in enumerate(kinematic_vars):
                     kinematics[k,i_var*n_kinematic:(i_var+1)*n_kinematic] = df.loc[used_inds[i]].kinematic[v].loc[target+cfg['peri_target_kinematics_start']:].iloc[:n_kinematic]
                 
-                # getting spikes in same window as inputs
-                spikes[k,:,:] = df.loc[k].neural.loc[t[idx][0]:].iloc[:n_spikes].values
+                # getting spikes in same window as inputs            
+                #spikes[k,:,:] = df.loc[k].neural.loc[t[idx][0]:].iloc[:n_spikes].values
 
                 k += 1
 
@@ -123,6 +123,6 @@ if __name__=='__main__':
     processed_df['integral_input_2'] = input_integral[:,1]
     processed_df['input'] = input_sig.tolist()
     processed_df['kinematics'] = kinematics.tolist()
-    processed_df['spikes'] = spikes.tolist()
+    #processed_df['spikes'] = spikes.tolist()
 
     processed_df.to_pickle(output_filename)
