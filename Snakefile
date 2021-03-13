@@ -9,7 +9,7 @@ configfile: "config.yml"
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["train", "valid", "all"]
+TRIAL_TYPES = ["all"]#["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
@@ -156,8 +156,8 @@ rule input_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_integral_analysis.ipynb"
-    notebook:
-        "notebooks/integral_analysis.ipynb"
+ #   notebook:
+ #       "notebooks/integral_analysis.ipynb"
 
 rule peak_analysis:
     input:
@@ -167,8 +167,8 @@ rule peak_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_peak_analysis.ipynb"
-    notebook:
-        "notebooks/peak_analysis.ipynb"
+#    notebook:
+#        "notebooks/peak_analysis.ipynb"
 
 rule simulated_data_notebook:
     input:
@@ -177,8 +177,8 @@ rule simulated_data_notebook:
         SRC_DIR + "glds.py"
     log:
         notebook = "notebooks/processed/simulated_data.ipynb"
-    notebook:
-        "notebooks/simulated_data.ipynb"
+#    notebook:
+#        "notebooks/simulated_data.ipynb"
         
 rule notebook_to_html:
     input:
