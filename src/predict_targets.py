@@ -94,7 +94,7 @@ if __name__=='__main__':
     kin = pca_kin.transform(kin)
 
     metrics = ['r^2', 'Mean distance (mm)', 'Categorical Accuracy (%)']
-    include_kins = ['LFADS predictor', 'Kinematic + LFADS predictor']
+    include_kins = ['LFADS predictor']#, 'Kinematic + LFADS predictor']
     references = ['Allocentric', 'Hand-centric']
 
     classifiers = [',\n '.join([kin, ref]) for kin in include_kins for ref in references]

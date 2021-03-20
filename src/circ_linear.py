@@ -1,11 +1,6 @@
 import numpy as np
 import pandas as pd
 import segment_submovements as ss
-
-
-def circ_linear_p(y, theta):
-    '''Parametric correlation coefficient between linear variable 
-    y and circular variable theta (see Lototzis et al 2018)'''
     
 
 def circ_linear_np(y, theta):
