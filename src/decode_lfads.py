@@ -103,7 +103,7 @@ if __name__=='__main__':
 
             X_lfads = np.copy(X)
             downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
-            Y = downsampled_kinematics.loc[used_inds].values
+            Y = downsampled_kinematics.loc[used_inds].values.astype(float)
 
         ## Fitting
         n_splits = 5

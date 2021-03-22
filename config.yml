@@ -3,12 +3,12 @@ center_out:
   rockstar: pmalonis@205.208.57.121:~/center_out/rs1050225_clean_SNRgt4.mat
 datasets:
   # split-rockstar:
-  #   inputInfo: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/data_Fk5pGm/single_rockstar/inputInfo_rockstar.mat
-  #   raw: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/raw/split-rockstar.mat
-  #   params:
-  #     trunc-elastic:
-  #       train: pmalonis@205.208.57.121:/home/pmalonis/lfads_analysis/data/model_output/autolfads/trunc_elastic_runs/home/pjmalonis/bucket/trunc_elastic_runs/lfads_output/model_runs_data.h5_train_posterior_sample_and_average
-  #       valid: pmalonis@205.208.57.121:/home/pmalonis/lfads_analysis/data/model_output/autolfads/trunc_elastic_runs/home/pjmalonis/bucket/trunc_elastic_runs/lfads_output/model_runs_data.h5_valid_posterior_sample_and_average
+  #     inputInfo: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/data_Fk5pGm/single_rockstar/inputInfo_rockstar.mat
+  #     raw: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/raw/split-rockstar.mat
+  #     params:
+  #       trunc-elastic:
+  #         train: pmalonis@205.208.57.121:/home/pmalonis/lfads_analysis/data/model_output/autolfads/trunc_elastic_runs/home/pjmalonis/bucket/trunc_elastic_runs/lfads_output/model_runs_data.h5_train_posterior_sample_and_average
+  #         valid: pmalonis@205.208.57.121:/home/pmalonis/lfads_analysis/data/model_output/autolfads/trunc_elastic_runs/home/pjmalonis/bucket/trunc_elastic_runs/lfads_output/model_runs_data.h5_valid_posterior_sample_and_average
   # mk08011M1m_mack_RTP:
   #   inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsInput/inputInfo_mk08011M1m.mat
   #   raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/mk08011M1m.mat
@@ -337,18 +337,21 @@ datasets:
     inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/data_Fk5pGm/single_rockstar/inputInfo_rockstar.mat
     raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/rockstar.mat
     params:
+      elastic-alpha0point5:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
   #     autolfads-laplace-prior:
   #       train: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_laplace_prior/train.h5
   #       valid: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_laplace_prior/valid.h5
-  #     autolfads-large-kl:
-  #       train: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_large_kl_range/train.h5
-  #       valid: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_large_kl_range/valid.h5
-      # norm-elastic:
-      #   train: 205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_testing/param_cEKhOR/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-      #   valid: 205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_testing/param_cEKhOR/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-      origin-param-elastic:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/origin_params_elastic_testing/param_2OLS24/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/origin_params_elastic_testing/param_2OLS24/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      #autolfads-large-kl:
+        #train: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_large_kl_range/train.h5
+        #valid: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_large_kl_range/valid.h5
+      #norm-elastic:
+         #train: 205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_testing/param_cEKhOR/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+         #valid: 205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_testing/param_cEKhOR/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      #origin-param-elastic:
+        #train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/origin_params_elastic_testing/param_2OLS24/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        #valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/origin_params_elastic_testing/param_2OLS24/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
 # fixed-test-rockstar:
       #   train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_rockstar/param_2OLS24/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
       #   valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_rockstar/param_2OLS24/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average

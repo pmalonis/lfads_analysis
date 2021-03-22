@@ -9,7 +9,7 @@ configfile: "config.yml"
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["all"]#["train", "valid", "all"]
+TRIAL_TYPES = ["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
