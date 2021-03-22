@@ -321,7 +321,11 @@ datasets:
   #   raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/raju_PMd.mat
     rockstar:
       inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep//data_Fk5pGm/single_rockstar/inputInfo_rockstar.mat
-  #   params:
+      params:
+        elastic-alpha0point5:
+          train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+          valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/rockstar.mat
   #     225_1f~2d~:
   #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
@@ -358,9 +362,9 @@ datasets:
   #     226_6zH8vI:
   #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-      226_8QTVEk:
-        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+  #    226_8QTVEk:
+  #      train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+  #      valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
   #     226_Ud-Q0k:
   #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
@@ -370,7 +374,6 @@ datasets:
   #     226_g42h9j:
   #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-      raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/rockstar.mat
   # rockstar_300_trial:
   #   inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/subsampled_rockstar/param_2OLS24/lfadsInput/inputInfo_300_trial.mat
   #   params:
@@ -399,6 +402,7 @@ datasets:
   #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/subsampled_rockstar/param_2OLS24/lfadsOutput/model_runs_600_trial_rockstar.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/subsampled_rockstar/param_2OLS24/lfadsOutput/model_runs_600_trial_rockstar.h5_valid_posterior_sample_and_average
   #   raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw//600_trial_rockstar.mat
+
 integration_win_size: 0.2
 peri_target_kinematics_start: -0.1
 peri_target_kinematics_stop: 0
