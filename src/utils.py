@@ -7,7 +7,6 @@ def print_commit():
     commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
     print(commit)
 
-
 def git_savefig(fig, filename):
     '''saves matplotlib figure with hash of current git commit as metadata'''
     commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
@@ -42,7 +41,7 @@ def get_trial_len(lfads_h5file, input_info):
 
     return trial_len
 
-def polar_hist(data, N):
+def polar_hist(data, N, ax=None):
     '''
     Plots polar histogram
     
@@ -55,10 +54,26 @@ def polar_hist(data, N):
     '''
     data = data%(2*np.pi)
     bins = np.linspace(0, 2*np.pi, N+1)
-    counts,_ = np.histogram(data, bins)
+    counts,_ = np.histogram(data, bins, density=True)
     bin_centers = (bins[:-1] + bins[1:])/2
     width = 2*np.pi/N
-    ax = plt.subplot(111, polar=True)
-    ax.bar(bin_centers, counts, width=width)
+    if ax is None:
+        ax = plt.subplot(111, polar=True)
     
+    ax.bar(bin_centers, counts, width=width)
+    return ax
+
+def spoke_plot(x, y, labels=['x','y'], ax=None, color=[0,.4,.4,.6]):
+
+    if ax is None:
+        ax = plt.subplot(111, polar=True)
+
+    ax.set_ylim([0, 2])
+    ax.set_yticks([1, 2])
+    ax.set_yticklabels(labels)
+    ax.set_xticks([])
+
+    for xi, yi in zip(x,y):
+        ax.plot([xi, yi], [1, 2], color=color)
+
     return ax

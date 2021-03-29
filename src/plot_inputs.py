@@ -38,7 +38,7 @@ if __name__ == '__main__':
             for i in range(h5_file['controller_outputs'].shape[0]):
                 input1 = h5_file['controller_outputs'][i,:,0]
                 input2 = h5_file['controller_outputs'][i,:,1]
-                targets = df.loc[used_inds[i]].kinematic.loc[:trial_len].query('hit_target').index.values
+                targets = df.loc[used_inds[i]].kinematic.loc[:trial_len].query('hit_target == True').index.values
                 t = np.arange(0, trial_len, dt)
                 fig = plt.figure()
                 plt.plot(t, input1)

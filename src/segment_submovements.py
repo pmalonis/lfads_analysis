@@ -7,7 +7,8 @@ from scipy import signal
 min_submovement_ms = 25
 
 def trial_intervals(trial_df):
-    '''Calculates submovement transitions from single trial, based on 
+    '''
+    Calculates submovement transitions from single trial, based on 
     speed profile
     
     Parameters

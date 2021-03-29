@@ -9,7 +9,7 @@ configfile: "config.yml"
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["train", "valid", "all"]
+TRIAL_TYPES = ["all"]#["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
@@ -158,6 +158,17 @@ rule input_analysis:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_integral_analysis.ipynb"
  #   notebook:
  #       "notebooks/integral_analysis.ipynb"
+
+# rule full_input_analysis:
+#     input:
+#         INTERMEDIATE_DIR + "{dataset}.p",
+#         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
+#         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+#         SRC_DIR + "process_inputs.py",
+#     log:
+#         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_input_analysis.ipynb"
+#     notebook:
+#         "notebooks/input_analysis.ipynb"
 
 rule peak_analysis:
     input:
