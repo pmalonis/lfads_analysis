@@ -18,6 +18,8 @@ if __name__=='__main__':
     st_trial = kin_dict['events'][np.where(kin_dict['events']['label']=='sTrial')]['times'][0].flatten()
     e_trial = kin_dict['events'][np.where(kin_dict['events']['label']=='eTrial')]['times'][0].flatten()
     st_trial = np.array([st_trial[np.argmin(et-st_trial[st_trial<et])] for et in e_trial]) 
+    out_dict['st_trial'] = st_trial
+    out_dict['endmv'] = e_trial
     out_dict['cpl_st_trial_rew'] = np.array([st_trial, e_trial]).T
     out_dict['hit_target'] = kin_dict['events'][np.where(kin_dict['events']['label']=='hitTarg')]['times'][0]
 
