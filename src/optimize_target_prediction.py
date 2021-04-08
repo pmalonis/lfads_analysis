@@ -7,12 +7,14 @@ from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
+from sklearn.multioutput import MultiOutputRegressor
 from scipy import io
 import utils
 import importlib
 import itertools
 import os
 import yaml
+import multiprocessing
 importlib.reload(utils)
 importlib.reload(ta)
 importlib.reload(pt)
@@ -51,6 +53,7 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, used_inds=None, reference='h
 
 if __name__=='__main__':
 
+    n_cores = multiprocessing.cpu_count()
     output_filename = '../data/peaks/target_prediction_grid_search.csv'
     datasets = ['rockstar', 'raju', 'mack']
     params = ['2OLS24', '2OLS24', '2OLS24']
@@ -83,14 +86,18 @@ if __name__=='__main__':
     for pre_params_set in itertools.product(*preprocess_dict.values()):
         pre_param_dicts.append({k:p for k,p in zip(preprocess_dict.keys(), pre_params_set)})
 
-    # estimator_dict = {'SVR': (SVR(), svr_dict), 
-    #               'Random Forest': (RandomForestRegressor(), rf_dict), 
-    #               'Gradient Boosted Trees': (XGBRegressor(), xgb_dict)}
+    estimator_dict = {'SVR': (MultiOutputRegressor(SVR()), svr_dict), 
+                  'Random Forest': (RandomForestRegressor(), rf_dict), 
+                  'Gradient Boosted Trees': (MultiOutputRegressor(XGBRegressor()), xgb_dict)}
+    #estimator_dict = {'Random Forest': (RandomForestRegressor(), rf_dict), 
+    #                    'Gradient Boosted Trees': (MultiOutputRegressor(XGBRegressor()), xgb_dict)}
+                  
 
-    estimator_dict = {'Random Forest': (RandomForestRegressor(), rf_dict), 
-                    'Gradient Boosted Trees': (XGBRegressor(), xgb_dict)}
 
-    estimator_dict = {'Random Forest': (RandomForestRegressor(), rf_dict)}
+    # estimator_dict = {'Random Forest': (RandomForestRegressor(), rf_dict), 
+    #                 'Gradient Boosted Trees': (XGBRegressor(), xgb_dict)}
+
+    # estimator_dict = {'Random Forest': (RandomForestRegressor(), rf_dict)}
 
     # estimator_hyperparams = list(set([k for v in estimator_dict.values() for k in v[1].keys()]))
     # preprocess_hyperparams = list(preprocess_dict.keys())
@@ -126,16 +133,25 @@ if __name__=='__main__':
                                             used_inds=used_inds, **pre_param_dict)            
             
                 for estimator_name, (estimator, param_grid) in estimator_dict.items():
-                    model = GridSearchCV(estimator, param_grid)
+                    if isinstance(estimator, MultiOutputRegressor):
+                        param_grid = {'estimator__' + k:v for k,v in param_grid.items()}
+
+                    model = GridSearchCV(estimator, param_grid, n_jobs=n_cores)
                     model.fit(X,y)
                     n_params = len(model.cv_results_['params']) #number of parameters in sklearn Grid Search
                     lfads_param_df = pd.DataFrame({'dataset':[dataset_name]*n_params, 'lfads_params':[lfads_params]*n_params})
                     pre_param_df = pd.DataFrame({k:[v]*n_params for k,v in pre_param_dict.items()})
-                    estimator_param_df = pd.DataFrame(model.cv_results_.pop('params'))
                     model.cv_results_.pop('rank_test_score')
-                    results_df = pd.DataFrame(model.cv_results_)
+                    model.cv_results_.pop('params')
+                    estimator_param_df = pd.DataFrame(model.cv_results_)
+                    estimator_param_df['estimator'] = [estimator_name] * n_params
+                    
+                    #removing estimator__ prefix
+                    mapper = lambda s: s.replace('estimator__','')
+                    estimator_param_df.rename(mapper=mapper, axis='columns', inplace=True)
+
                     grid_results.append(pd.concat([lfads_param_df, pre_param_df, 
-                                                    estimator_param_df, results_df], axis=1))
+                                                    estimator_param_df], axis=1))
 
     output = pd.concat(grid_results, ignore_index=True)
     output.to_csv(output_filename)
