@@ -129,11 +129,13 @@ if __name__=='__main__':
                     model = GridSearchCV(estimator, param_grid)
                     model.fit(X,y)
                     n_params = len(model.cv_results_['params']) #number of parameters in sklearn Grid Search
-                    repeated_dataset_dict = {'dataset':[dataset_name]*n_params}
-                    repeated_lfads_param_dict = {'lfads_params':[lfads_params]*n_params}
-                    repeated_pre_param_dict = {k:[v]*n_params for k,v in pre_param_dict.items()}
-                    grid_results.append(pd.DataFrame({**repeated_dataset_dict, **repeated_lfads_param_dict, 
-                                                    **repeated_pre_param_dict, **model.cv_results_}))
+                    lfads_param_df = pd.DataFrame({'dataset':[dataset_name]*n_params, 'lfads_params':[lfads_params]*n_params})
+                    pre_param_df = pd.DataFrame({k:[v]*n_params for k,v in pre_param_dict.items()})
+                    estimator_param_df = pd.DataFrame(model.cv_results_.pop('params'))
+                    model.cv_results_.pop('rank_test_score')
+                    results_df = pd.DataFrame(model.cv_results_)
+                    grid_results.append(pd.concat([lfads_param_df, pre_param_df, 
+                                                    estimator_param_df, results_df], axis=1))
 
-    results = pd.concat(grid_results, ignore_index=True)
-    results.to_csv(output_filename)
+    output = pd.concat(grid_results, ignore_index=True)
+    output.to_csv(output_filename)
