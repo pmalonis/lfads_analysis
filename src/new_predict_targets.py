@@ -59,7 +59,7 @@ def plot_with_control(regressor, predictor, control, x_target, y_target, x_hand,
 #         control[i] = np.mean(predict_target(regressor, control, x_target-x_hand, y_target-y_hand, pos))        
 
 
-def get_inputs_to_model(peak_df, co, dt, reference_frame, used_inds=None):
+def get_inputs_to_model(peak_df, co, trial_len, dt, reference_frame, used_inds=None):
     #removing targets for which we don't have a full window of controller inputs
     peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') < trial_len - cfg['post_target_win_stop'])]
     

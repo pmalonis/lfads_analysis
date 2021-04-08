@@ -211,7 +211,6 @@ def get_latencies(targets, peaks, win_start, win_stop, trial_len):
     #removing targets that occur when lfads not run
     target_peaks = target_peaks.iloc[np.where(target_peaks.index.get_level_values('time')< trial_len)]
 
-
     return target_peaks, peak_count
 
 def get_target_peak_counts(target_peaks, input_idx, all_inputs=False):
@@ -283,7 +282,7 @@ def get_peak_latencies(df, co, min_heights, dt, used_inds,
                 target_peak_count += 1
 
 
-def get_peak_df(df, co, min_heights, dt, used_inds, trial_len, win_start=0, win_stop=0.5):
+def get_peak_df(df, co, trial_len, min_heights, dt=0.01, win_start=0, win_stop=0.5):
     '''Chaining above function above to get useful dataframe'''
     targets = get_targets(df)
     peaks = get_peaks(co, dt, min_heights, min_distance=cfg['min_peak_spacing'])
