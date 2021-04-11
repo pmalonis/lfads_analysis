@@ -190,8 +190,7 @@ def random_intervals(df, n_intervals, interval_len, trial_len, bin_size=bin_size
 if __name__=='__main__':
     trial_type = 'all'
     data_filename = '../data/intermediate/rockstar.p'
-    lfads_filename = "/home/pmalonis/226_figs/rockstar_8QTVEk_%s.h5"%trial_type
-
+    lfads_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_8QTVEk_%s.h5"%trial_type
     with h5py.File(lfads_filename, 'r') as h5file:
         co = np.array(h5file['controller_outputs'])
 

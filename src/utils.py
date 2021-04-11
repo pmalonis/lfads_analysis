@@ -1,11 +1,11 @@
 import subprocess as sp
 import numpy as np
+import matplotlib.pyplot as plt
 
 def print_commit():
     '''saves matplotlib figure with hash of current git commit as metadata'''
     commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()
     print(commit)
-
 
 def git_savefig(fig, filename):
     '''saves matplotlib figure with hash of current git commit as metadata'''
@@ -31,3 +31,49 @@ def get_dt(lfads_h5file, input_info):
     dt = dt_ms/1000
 
     return dt
+
+def get_trial_len(lfads_h5file, input_info):
+    '''Gets trial length'''
+    dt = get_dt(lfads_h5file, input_info)
+    trial_len_ms = input_info['seq_timeVector'][-1][-1]
+    trial_len = trial_len_ms/1000
+    trial_len = np.floor(trial_len/dt)*dt
+
+    return trial_len
+
+def polar_hist(data, N, ax=None):
+    '''
+    Plots polar histogram
+    
+    Parameters:
+    data: data to plot in histogram, must be in radians
+    N: number of bins in histogram
+
+    Returns:
+    ax: axis with polar histogram
+    '''
+    data = data%(2*np.pi)
+    bins = np.linspace(0, 2*np.pi, N+1)
+    counts,_ = np.histogram(data, bins, density=True)
+    bin_centers = (bins[:-1] + bins[1:])/2
+    width = 2*np.pi/N
+    if ax is None:
+        ax = plt.subplot(111, polar=True)
+    
+    ax.bar(bin_centers, counts, width=width)
+    return ax
+
+def spoke_plot(x, y, labels=['x','y'], ax=None, color=[0,.4,.4,.6]):
+
+    if ax is None:
+        ax = plt.subplot(111, polar=True)
+
+    ax.set_ylim([0, 2])
+    ax.set_yticks([1, 2])
+    ax.set_yticklabels(labels)
+    ax.set_xticks([])
+
+    for xi, yi in zip(x,y):
+        ax.plot([xi, yi], [1, 2], color=color)
+
+    return ax

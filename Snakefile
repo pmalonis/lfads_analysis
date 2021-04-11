@@ -9,7 +9,7 @@ configfile: "config.yml"
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["train", "valid", "all"]
+TRIAL_TYPES = ["all"]#["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
@@ -60,7 +60,7 @@ rule download_all:
     input:
         expand_filename(RAW_DIR + "{dataset}.mat"),
         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"),
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5")
 
 rule download_model:
     params:
@@ -78,7 +78,7 @@ rule download_raw:
         source = lambda wildcards: config["datasets"][wildcards.dataset]["raw"]
     output:
         #constrain wildcard to not contain forward slash (doesn't represent file in subdirectory)
-        RAW_DIR + "{dataset, ^(?!.*/).*$}.mat"
+        RAW_DIR + "{dataset}.mat"
     shell:
         "scp -T {params.source} {output}"
 
@@ -156,8 +156,19 @@ rule input_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_integral_analysis.ipynb"
-    notebook:
-        "notebooks/integral_analysis.ipynb"
+ #   notebook:
+ #       "notebooks/integral_analysis.ipynb"
+
+# rule full_input_analysis:
+#     input:
+#         INTERMEDIATE_DIR + "{dataset}.p",
+#         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
+#         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+#         SRC_DIR + "process_inputs.py",
+#     log:
+#         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_input_analysis.ipynb"
+#     notebook:
+#         "notebooks/input_analysis.ipynb"
 
 rule peak_analysis:
     input:
@@ -167,8 +178,8 @@ rule peak_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_peak_analysis.ipynb"
-    notebook:
-        "notebooks/peak_analysis.ipynb"
+#    notebook:
+#        "notebooks/peak_analysis.ipynb"
 
 rule simulated_data_notebook:
     input:
@@ -177,8 +188,8 @@ rule simulated_data_notebook:
         SRC_DIR + "glds.py"
     log:
         notebook = "notebooks/processed/simulated_data.ipynb"
-    notebook:
-        "notebooks/simulated_data.ipynb"
+#    notebook:
+#        "notebooks/simulated_data.ipynb"
         
 rule notebook_to_html:
     input:

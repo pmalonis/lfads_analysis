@@ -9,8 +9,8 @@ from scipy.linalg import subspace_angles
 sim_bin = .001 #bin size of simulation
 transition_mat = np.array([[-0.625, -20.5],[12.5,-0.625]]) #gives rotations, min segment
 
-def fit_system(intervals, n_components, new_binsize=bin_size/1000):
-
+def fit_system(intervals, n_components):
+    print("fit function entered")
     y_prime = []
     y = []
     #pca = PCA(n_components=n_components)
@@ -149,6 +149,7 @@ def fit_predict(df, co, n_components):
     # counts -= counts.mean(axis=0)
     # counts = np.transpose(counts, (1,0,2))
     print("counts segmented")
+    #counts = np.transpose(counts, (1,0,2))
     train_counts, test_counts = split_segments(counts)
 
     A, pca = fit_system(train_counts, n_components)
@@ -291,13 +292,10 @@ def sim_predict(new_binsize, std):
 
     return r2_score(np.concatenate(a),np.concatenate(p))
 
-if __name__=='__main__':
-    trial_type = 'all'
-    data_filename = '../data/intermediate/rockstar.p'
-    lfads_filename = "/home/pmalonis/226_figs/rockstar_8QTVEk_%s.h5"%trial_type
+#     with h5py.File(lfads_filename, 'r') as h5file:
+#         co = np.array(h5file['controller_outputs'])
 
-    with h5py.File(lfads_filename, 'r') as h5file:
-        co = np.array(h5file['controller_outputs'])
+#     df = pd.read_pickle(data_filename)
 
     df = pd.read_pickle(data_filename)
     predicted, actual, A, pca = fit_predict(df, co, 6)
