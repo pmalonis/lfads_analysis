@@ -9,38 +9,57 @@ datasets:
   #       trunc-elastic:
   #         train: pmalonis@205.208.57.121:/home/pmalonis/lfads_analysis/data/model_output/autolfads/trunc_elastic_runs/home/pjmalonis/bucket/trunc_elastic_runs/lfads_output/model_runs_data.h5_train_posterior_sample_and_average
   #         valid: pmalonis@205.208.57.121:/home/pmalonis/lfads_analysis/data/model_output/autolfads/trunc_elastic_runs/home/pjmalonis/bucket/trunc_elastic_runs/lfads_output/model_runs_data.h5_valid_posterior_sample_and_average
-  # mk08011M1m-mack-RTP:
-  #   inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsInput/inputInfo_mk08011M1m.mat
-  #   raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/mk08011M1m.mat
-  #   params:
-  #     # -2d-3R:
-  #     #  train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
-  #     #  valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
-  #     2OLS24:
-  #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
-  #     # 2zkM6B:
-  #     #  train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
-  #     #  valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
-  #     fixed-2OLS24:
-  #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_mack_RTP/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_mack_RTP/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
-  raju:
-    inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsInput/inputInfo_raju.mat
-    raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/raju.mat
+  mk08011M1m-mack-RTP:
+    inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsInput/inputInfo_mk08011M1m.mat
+    raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/mk08011M1m.mat
     params:
+       -2d-3R:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      2OLS24:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      2zkM6B:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      fixed-2OLS24:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_mack_RTP/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_mack_RTP/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      gaussian-2OLS24:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      kX-F8p:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_kX-F8p/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_kX-F8p/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      uctZJw:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_uctZJw/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_uctZJw/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      VibGQ5:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_VibGQ5/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_VibGQ5/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      Yn9GDO:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_Yn9GDO/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_kl_co_sweep/param_Yn9GDO/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+        
+          # raju:
+  #   inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsInput/inputInfo_raju.mat
+  #   raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/raju.mat
+  #   params:
   #     fixed-test-raju:
   #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_raju/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_raju/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
   #     -2d-3R:
   #      train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
   #      valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
-      2OLS24:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+  #     2OLS24:
+  #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+  #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
   #     2zkM6B:
   #      train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
   #      valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+  #     gaussian-2OLS24:
+  #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_raju/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+  #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_raju/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
 
   #mk08011M1m_mack_RTP:
     #inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2OLS24/single_mk08011M1m/lfadsInput/inputInfo_mk08011M1m.mat
@@ -67,6 +86,7 @@ datasets:
       #2zkM6B:
       # train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
       # valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      
     #raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/raju.mat
   # mk080729_active:
   #   inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mk_active_orgin_params/param_IoCYXh/all/lfadsInput/inputInfo_active.mat
@@ -173,76 +193,91 @@ datasets:
   #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_train_posterior_sample_and_average
   #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/playback_first/param_r2YiSn/single_vis_pb/lfadsOutput/model_runs_vis_pb.h5_valid_posterior_sample_and_average
   #   raw: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/raw/Playback-NN/split_condition/mk080729_M1m/vis_pb.mat
-  # raju:
-  #   inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep//data_Fk5pGm/single_raju/inputInfo_raju.mat
-  #   params:
-  #     225_1f~2d~:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_2NJ~T3:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_3CLTSo:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_6zH8vI:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_8QTVEk:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_Ud-Q0k:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_dFpZUD:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     225_g42h9j:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_1f~2d~:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_1w5uAO:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_1w5uAO/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_1w5uAO/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_2NJ~T3:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_3CLTSo:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_4E9u7C:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_4E9u7C/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_4E9u7C/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_6zH8vI:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_8QTVEk:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_ViMCmc:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_ViMCmc/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_ViMCmc/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_dFpZUD:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_g42h9j:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_mSrasm:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_mSrasm/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_mSrasm/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     226_rvD0FW:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_rvD0FW/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_rvD0FW/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     OqO1c4:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_OqO1c4/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_OqO1c4/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #     Ud-Q0k:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
-  #   raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/raju.mat
+  raju:
+    inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep//data_Fk5pGm/single_raju/inputInfo_raju.mat
+    raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/raju.mat
+    params:
+      fixed-test-raju:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_raju/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/fixed_test_raju/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      -2d-3R:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_-2d_3R/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      2OLS24:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/raju_origin_parameters/param_2OLS24/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      2zkM6B:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/mack_RTP_origin_parameters/param_2zkM6B/single_mk08011M1m/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      gaussian-2OLS24:
+        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_raju/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_raju/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      225_1f~2d~:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_2NJ~T3:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_3CLTSo:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_6zH8vI:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_8QTVEk:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_Ud-Q0k:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_dFpZUD:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      225_g42h9j:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_1f~2d~:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_1w5uAO:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_1w5uAO/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_1w5uAO/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_2NJ~T3:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_3CLTSo:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_4E9u7C:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_4E9u7C/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_4E9u7C/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_6zH8vI:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_8QTVEk:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_ViMCmc:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_ViMCmc/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_ViMCmc/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_dFpZUD:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_g42h9j:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_mSrasm:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_mSrasm/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_mSrasm/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      226_rvD0FW:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_rvD0FW/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/long_trainingparam_rvD0FW/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      OqO1c4:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_OqO1c4/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_co_dim_sweepparam_OqO1c4/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
+      Ud-Q0k:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_raju/lfadsOutput/model_runs_raju.h5_valid_posterior_sample_and_average
   # raju_M1:
   #   inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep//data_Fk5pGm/single_raju_M1/inputInfo_raju_M1.mat
   #   params:
@@ -363,9 +398,9 @@ datasets:
     inputInfo: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/data_Fk5pGm/single_rockstar/inputInfo_rockstar.mat
     raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/rockstar.mat
     params:
-      elastic-alpha0point5:
-        train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-        valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      #elastic-alpha0point5:
+  #       train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+  #       valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/elastic_alpha0point5/param_hcIdNU/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
   #     autolfads-laplace-prior:
   #       train: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_laplace_prior/train.h5
   #       valid: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_laplace_prior/valid.h5
@@ -384,58 +419,61 @@ datasets:
       # autolfads001:
       #   train: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_001/train.h5
       #   valid: 205.208.57.121:~/peter/lfads_analysis/data/model_output/autolfads_001/valid.h5
-  #     225_1f~2d~:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_2NJ~T3:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_3CLTSo:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_6zH8vI:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_8QTVEk:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_Ud-Q0k:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_dFpZUD:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     225_g42h9j:
-  #       train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_1f~2d~:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_2NJ~T3:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_3CLTSo:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_6zH8vI:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-        #8QTVEk:
-          #train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-          #valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #    226_8QTVEk:
-  #      train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #      valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_Ud-Q0k:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_dFpZUD:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  #     226_g42h9j:
-  #       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
-  #       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
-  # rockstar_300_trial:
+      gaussian-2OLS24:
+          train: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_rockstar/lfadsOutput/model_runs_mk08011M1m.h5_train_posterior_sample_and_average
+          valid: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/2OLS24-gaussian-prior/param_2OLS24/single_rockstar/lfadsOutput/model_runs_mk08011M1m.h5_valid_posterior_sample_and_average
+      225_1f~2d~:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_2NJ~T3:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_3CLTSo:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_6zH8vI:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_8QTVEk:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_Ud-Q0k:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_dFpZUD:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      225_g42h9j:
+        train: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_1f~2d~:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_1f_2d_/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_2NJ~T3:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_2NJ_T3/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_3CLTSo:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_3CLTSo/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_6zH8vI:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_6zH8vI/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+        # 8QTVEk:
+        #   train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        #   valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_8QTVEk:
+       train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+       valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_8QTVEk/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_Ud-Q0k:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_Ud-Q0k/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_dFpZUD:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_dFpZUD/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+      226_g42h9j:
+        train: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average
+        valid: macleanlab@205.208.22.226:~/peter/lfads_analysis/data/model_output/controller_params_sweep/param_g42h9j/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average
+  #rockstar_300_trial:
   #   inputInfo: macleanlab@205.208.22.226:/home/macleanlab/peter/lfads_analysis/data/model_output/subsampled_rockstar/param_2OLS24/lfadsInput/inputInfo_300_trial.mat
   #   params:
   #     2OLS24:
