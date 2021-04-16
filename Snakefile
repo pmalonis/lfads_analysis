@@ -6,6 +6,10 @@ import sys
 
 configfile: "config.yml"
 
+locations_path = 'lfads_file_locations.yml'#os.path.join(os.path.dirname(__file__), 'lfads_file_locations.yml')
+dataset_info = yaml.safe_load(open(locations_path, 'r'))
+print(dataset_info)
+
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
@@ -50,8 +54,8 @@ if sp.check_output(["git", "status", "-s"]):
 def expand_filename(format_str):
     '''expands string based on parameter hashes for each dataset in the config file. also expands valid/train'''
     
-    filenames = [format_str.format(dataset=d, trial_type=t, param=p) for d in config["datasets"].keys()
-                for p in config["datasets"][d]["params"]
+    filenames = [format_str.format(dataset=d, trial_type=t, param=p) for d in dataset_info.keys()
+                for p in dataset_info[d]["params"]
                 for t in TRIAL_TYPES]
 
     return filenames
@@ -59,12 +63,12 @@ def expand_filename(format_str):
 rule download_all:
     input:
         expand_filename(RAW_DIR + "{dataset}.mat"),
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5")
 
 rule download_model:
     params:
-         source = lambda wildcards: config["datasets"][wildcards.dataset]["params"][wildcards.param][wildcards.trial_set]
+         source = lambda wildcards: dataset_info[wildcards.dataset]["params"][wildcards.param][wildcards.trial_set]
     output:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_set}.h5"
     wildcard_constraints:
@@ -75,7 +79,7 @@ rule download_model:
 
 rule download_raw:
     params:
-        source = lambda wildcards: config["datasets"][wildcards.dataset]["raw"]
+        source = lambda wildcards: dataset_info[wildcards.dataset]["raw"]
     output:
         #constrain wildcard to not contain forward slash (doesn't represent file in subdirectory)
         RAW_DIR + "{dataset}.mat"
@@ -92,9 +96,9 @@ rule download_center_out:
 
 rule download_inputInfo:
     params:
-        source = lambda wildcards: config["datasets"][wildcards.dataset]["inputInfo"]
+        source = lambda wildcards: dataset_info[wildcards.dataset]["params"][wildcards.param]["inputInfo"]
     output:
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"
     shell:
         "scp -T {params.source} {output}"
 
@@ -110,7 +114,7 @@ rule preprocess_center_out:
 rule convert_pandas:
     input:
         RAW_DIR + "{dataset}.mat",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/convert_to_pandas.py"
     output:
         INTERMEDIATE_DIR + "{dataset}.p"
@@ -121,7 +125,7 @@ rule plot_inputs:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/plot_inputs.py"
     output:
         "figures/input_timing_plots/{dataset}_param_{param}_{trial_type}.pdf"
@@ -136,7 +140,7 @@ rule decode_lfads:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/decode_lfads.py"
     output:
         "figures/decode_from_lfads_output/{dataset}_{param}_{trial_type}_decode_from_output.pdf",
@@ -152,7 +156,7 @@ rule input_analysis:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_integral_analysis.ipynb"
@@ -163,7 +167,7 @@ rule input_analysis:
 #     input:
 #         INTERMEDIATE_DIR + "{dataset}.p",
 #         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
-#         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+#         MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
 #         SRC_DIR + "process_inputs.py",
 #     log:
 #         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_input_analysis.ipynb"
@@ -174,7 +178,7 @@ rule peak_analysis:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_peak_analysis.ipynb"
@@ -209,7 +213,7 @@ rule movies_with_inputs:
     input:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
         RAW_DIR + "{dataset}.mat",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/kinematics_and_input.py"
     output:
         dynamic("figures/kinematics_movies_with_inputs/{dataset}_{param}_{trial_type}/trial_{trial_number}.mp4")
@@ -247,7 +251,7 @@ rule process_inputs:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/process_inputs.py"
     output:
         "data/processed_inputs/{dataset}_{param}_{trial_type}.p"
@@ -262,7 +266,7 @@ rule combine_trials:
     input:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_train.h5",
         MODEL_OUTPUT_DIR + "{dataset}_{param}_valid.h5",
-        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
         "src/combine_lfads_output.py"
     output:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"
