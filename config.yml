@@ -1,7 +1,6 @@
 align_peaks: true
 center_out:
   rockstar: pmalonis@205.208.57.121:~/center_out/rs1050225_clean_SNRgt4.mat
-
 integration_win_size: 0.2
 peri_target_kinematics_start: -0.1
 peri_target_kinematics_stop: 0

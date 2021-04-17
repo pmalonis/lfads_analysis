@@ -94,7 +94,7 @@ def get_inputs_to_model_control(df, peak_df, n_components, reference_frame, tria
     nneurons = sum('neural' in c for c in df.columns)
     all_smoothed = np.zeros((len(used_inds), int(trial_len/dt), nneurons))
     for i in used_inds:
-        smoothed = df.loc[i].neural.rolling(window=300, min_periods=1, win_type='gaussian', center=True).mean(std=std)
+        smoothed = df.loc[i].neural.rolling(window=std*6, min_periods=1, win_type='gaussian', center=True).mean(std=std)
         smoothed = smoothed.loc[:trial_len].iloc[midpoint_idx::win]
         smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values #removing rows with all values null (edge values of smoothing)
         all_smoothed[i,:,:] = smoothed

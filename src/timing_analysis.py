@@ -290,16 +290,16 @@ def get_peak_df(df, co, trial_len, min_heights, dt=0.01, win_start=0, win_stop=0
 
     return peak_df
         
-# if __name__=='__main__':
-#     trial_type = 'all'
+if __name__=='__main__':
+    trial_type = 'all'
 
-#     lfads_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_8QTVEk_%s.h5"%trial_type
-#     data_filename = "/home/pmalonis/lfads_analysis/data/intermediate/rockstar.p"
-#     inputInfo_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_inputInfo.mat"
+    lfads_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_2OLS24_%s.h5"%trial_type
+    data_filename = "/home/pmalonis/lfads_analysis/data/intermediate/rockstar.p"
+    inputInfo_filename = "/home/pmalonis/lfads_analysis/data/model_output/rockstar_inputInfo.mat"
 
-#     df = pd.read_pickle(data_filename)
-#     input_info = io.loadmat(inputInfo_filename)
-#     with h5py.File(lfads_filename) as h5file:
-#         co = h5file['controller_outputs'][:]
+    df = pd.read_pickle(data_filename)
+    input_info = io.loadmat(inputInfo_filename)
+    with h5py.File(lfads_filename) as h5file:
+        co = h5file['controller_outputs'][:]
         
-#     used_inds = utils.get_indices(input_info, trial_type)
+    used_inds = utils.get_indices(input_info, trial_type)

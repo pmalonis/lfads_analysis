@@ -3,9 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 from scipy import signal
+import yaml
+import os
 
-min_submovement_ms = 25
-
+config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+cfg = yaml.safe_load(open(config_path, 'r'))
+min_submovement_ms = cfg['min_submovement_ms']
+min_speed_prominence = 20 #minimum prominence for peak finder, in mm/s
 def trial_intervals(trial_df):
     '''
     Calculates submovement transitions from single trial, based on 
@@ -132,8 +136,9 @@ def speed_minima(x_vel, y_vel):
     Returns
     intervals: List of minima defining starts/ends of submovements
     '''
-    speed = np.sqrt(x_vel**2, y_vel**2)
+    speed = np.sqrt(x_vel**2 + y_vel**2)
     minima, _ = signal.find_peaks(-speed, width=min_submovement_ms)
+                                    #prominence=min_speed_prominence)
     
     return minima
 
@@ -158,16 +163,18 @@ def plot_submovements(trial_df):
     for x, y, dx, dy in zip(xs, ys, dxs, dys):
         arrow_len = np.linalg.norm([dx, dy])
         c = (arrow_len - arrow_shorten)/arrow_len
-        plt.arrow(x, y, dx*c, dy*c, width=.00001, head_width=5, length_includes_head=True, alpha=.2)
+        #plt.arrow(x, y, dx*c, dy*c, width=.00001, head_width=5, length_includes_head=True, alpha=.2)
 
     intervals = trial_intervals(trial_df)
     x, y = trial_df.kinematic[['x', 'y']].values.T
     ax.plot(x, y, 'k')
-    for interval in intervals:
+    cmap = matplotlib.cm.get_cmap('Paired')
+    for i, interval in enumerate(intervals):
         pos = trial_df.kinematic[['x', 'y']].iloc[interval[0]:interval[1]].values.T
-        ax.plot(*pos)
+        c = cmap(((i + 0.5)/10)%1)
+        ax.plot(*pos, color=c)
 
-    return ax
+    return ax, intervals
 
 def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
     '''
@@ -202,6 +209,46 @@ def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
     cb = plt.colorbar()
     cb.set_label('Controller Value')
 
+def plot_abs_trajectory_co(trial_df, trial_co, co_norm, dt, co_max=3):
+    '''
+    Plots trajectory of trial, sampled at points where controller output is recorded
+
+    Parameters
+    trial_df: single-trial dataframe corresponding to trial to plot
+    trial_co: controller outputs for one trial (time X n_outputs)
+    co_norm: normalizing factor for controller output. can be
+    dt: sampling period of lfads
+    co_max: maximum of colorbar scale for controller output (in units of co_norm)
+    '''
+    trial_len = len(trial_co) * dt
+    targets = trial_df.loc[:trial_len].kinematic.query('hit_target')[['x', 'y']].values.T
+    f, ax = plt.subplots(figsize=(10,8))
+    ax.plot(*targets[:,0], 'ro')
+    ax.plot(*targets[:,1:], 'bs')
+    xs, ys = targets[:,:-1]
+    dxs, dys = np.diff(targets, axis=1)
+    arrow_shorten = 1
+    for x, y, dx, dy in zip(xs, ys, dxs, dys):
+        arrow_len = np.linalg.norm([dx, dy])
+        c = (arrow_len - arrow_shorten)/arrow_len
+        plt.arrow(x, y, dx*c, dy*c, width=.00001, head_width=2, length_includes_head=True, alpha=.2)
+    
+    t = np.arange(trial_co.shape[0]) * dt
+    trial_co = np.copy(trial_co)
+    trial_co /= co_norm
+    trial_co = np.abs(trial_co)
+    trial_co = trial_co.sum(1)
+    mean_co = np.mean(trial_co)
+    idx = [trial_df.index.get_loc(time, method='nearest') for time in t]
+    x, y = trial_df.iloc[idx].kinematic[['x', 'y']].values.T
+    cm = plt.cm.get_cmap('YlOrRd')
+    norm = matplotlib.colors.TwoSlopeNorm(vcenter=mean_co, vmin=mean_co-0.001, vmax=co_max)
+    plt.scatter(x, y, s=10, c=trial_co, cmap=cm, norm=norm, edgecolors='k', linewidth=0.1)
+    cb = plt.colorbar()
+    cb.set_label('Controller Value')
+
+    return trial_co, mean_co
+
 def plot_trial(trial_df, trial_co, dt):
     '''
     Plots the speed profile, controller outputs, and target times
@@ -212,7 +259,7 @@ def plot_trial(trial_df, trial_co, dt):
     '''
     trial_len = trial_co.shape[0] * dt
     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].loc[:trial_len].T.values
-    speed = np.sqrt(x_vel**2, y_vel**2)
+    speed = np.sqrt(x_vel**2 + y_vel**2)
     t_targets = trial_df.kinematic.query('hit_target').index.values
     t = trial_df.loc[:trial_len].index.values
     lns = [] #for legend
@@ -230,8 +277,10 @@ def plot_trial(trial_df, trial_co, dt):
     lns.append(plt.plot(t_co, trial_co[:,1]))
     plt.legend(lns, ['Cursor Speed', 'Controller 1', 'Controller 2'])
     plt.ylabel('Controller Value')
-    ymin, ymax = plt.ylim()
+    ymin, ymax = (-1, 1)#plt.ylim()
     plt.vlines(t_targets, ymin, ymax)
+    plt.xlim([0, trial_len])
+    plt.ylim([ymin, ymax])
 
 if __name__=='__main__':
     pass 
