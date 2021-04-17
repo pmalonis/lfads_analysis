@@ -18,6 +18,10 @@ if __name__=='__main__':
     copy_datasets = ['controller_outputs', 'output_dist_params', 'factors', 'gen_states'] #datasets to copy
     with h5py.File(train_filename, 'r') as train_file, h5py.File(valid_filename, 'r') as valid_file, h5py.File(output_filename, 'w') as output_file:
         for dataset in copy_datasets:
+            # skipping 'controller_outputs' if controller dimension is set to 0
+            if dataset == 'controller_outputs' and dataset not in train_file.keys():
+                continue
+                
             output_file.create_dataset(dataset, shape=(n_trials,)+train_file[dataset].shape[1:])
             output_file[dataset][valid_inds,:,:] = valid_file[dataset][:,:,:]
             output_file[dataset][train_inds,:,:] = train_file[dataset][:,:,:]

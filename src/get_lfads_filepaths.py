@@ -19,8 +19,6 @@ if __name__=='__main__':
     files = [f.decode() for f in files]
     d = [parse(form, f).named for f in files] 
     df = pd.DataFrame(d)
-    df['run'] = df['run'].str.replace('_','-')#for parsing by snakemake
-    df['lfads_param'] = df['lfads_param'].str.replace('_','-')
     df['param'] = df['run'] + '-' + df['lfads_param']
     df.drop(['run', 'lfads_param'], inplace=True, axis=1)
     df['path'] = ['%s@%s:%s'%(cfg['username'],cfg['lfads_file_server'], f) for f in files]
@@ -30,10 +28,6 @@ if __name__=='__main__':
     #adding params level for consistency with previous format
     for dataset in out_dict.keys():
         out_dict[dataset] = {'params':out_dict[dataset]}
-        
-    #adding raw file paths
-    for dataset in cfg['raw_datasets'].keys():
-        out_dict[dataset]['raw'] = cfg['raw_datasets'][dataset]
 
     # adding input info
     for dataset in out_dict.keys():
@@ -45,6 +39,19 @@ if __name__=='__main__':
     if 'mk08011M1m' in out_dict.keys():
         out_dict['mack'] = out_dict['mk08011M1m']
         out_dict.pop('mk08011M1m')
+
+    #adding raw file paths
+    for dataset in cfg['raw_datasets'].keys():
+        out_dict[dataset]['raw'] = cfg['raw_datasets'][dataset]
+
+    #removing datasets that do not have raw path
+    out_dict = {dataset:out_dict[dataset] for dataset in cfg['raw_datasets'].keys()}    
+
+    #changing parameter set names for easier parsing
+    out_dict = {k.replace('_','-'):v for k,v in out_dict.items()}
+
+    for dataset in out_dict.keys():
+        out_dict[dataset]['params'] = {k.replace('_','-'):v for k,v in out_dict[dataset]['params'].items()}
 
     with open(output_filename, 'w') as out_file:
         yaml.safe_dump(out_dict, out_file)
