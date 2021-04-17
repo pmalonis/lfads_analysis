@@ -19,7 +19,8 @@ if __name__=='__main__':
     files = [f.decode() for f in files]
     d = [parse(form, f).named for f in files] 
     df = pd.DataFrame(d)
-    df['run'] = df['run'].str.replace('_','-')#for easier reading by snakemake
+    df['run'] = df['run'].str.replace('_','-')#for parsing by snakemake
+    df['lfads_param'] = df['lfads_param'].str.replace('_','-')
     df['param'] = df['run'] + '-' + df['lfads_param']
     df.drop(['run', 'lfads_param'], inplace=True, axis=1)
     df['path'] = ['%s@%s:%s'%(cfg['username'],cfg['lfads_file_server'], f) for f in files]
