@@ -41,7 +41,7 @@ def get_trial_len(lfads_h5file, input_info):
 
     return trial_len
 
-def polar_hist(data, N, ax=None):
+def polar_hist(data, N, density=True, ax=None):
     '''
     Plots polar histogram
     
@@ -54,7 +54,7 @@ def polar_hist(data, N, ax=None):
     '''
     data = data%(2*np.pi)
     bins = np.linspace(0, 2*np.pi, N+1)
-    counts,_ = np.histogram(data, bins, density=True)
+    counts,_ = np.histogram(data, bins, density=density)
     bin_centers = (bins[:-1] + bins[1:])/2
     width = 2*np.pi/N
     if ax is None:

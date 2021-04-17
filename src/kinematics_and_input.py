@@ -14,7 +14,7 @@ from utils import get_indices
 # out_directory = '/home/pmalonis/'
 
 fps = 50 #frame rate at which to read data
-playback_ratio = 1  # speed of playback (1 indicates real speed)
+playback_ratio = 0.25  # speed of playback (1 indicates real speed)
 kinematic_fs = 500 #frame rame of kinematic data
 
 def update_target(data, t):
@@ -349,16 +349,16 @@ if __name__=='__main__':
                     # sets conditions for end of trial, which depends on whether
                     # the current trial is the last one
                     if st_trial_idx + 1 >= len(data['st_trial']):
-                        trial_ended = t > data['endmv'][endmv_idx]
+                        trial_ended = t > data['endmv'][0,endmv_idx]
                     else:
-                        trial_ended = (t > data['endmv'][endmv_idx]) #The time between an endmv event and the next st_trial can be smaller than the frame rate
+                        trial_ended = (t > data['endmv'][0,endmv_idx]) #The time between an endmv event and the next st_trial can be smaller than the frame rate
 
                     if trial_ended:
                         # if trial is over, update the indices that allow finding the
                         # next trial
                         st_trial_idx = np.where(data['st_trial'] - t > 0)[0][0]
                         endmv_idx = np.where(data['endmv'] - t > 0)[0][0]
-                        if t < data['st_trial'][st_trial_idx]:
+                        if t < data['st_trial'][0,st_trial_idx]:
                             target_pos = ([], [])
                         else:
                             hit_target_idx, target_pos = update_target(data, t)
