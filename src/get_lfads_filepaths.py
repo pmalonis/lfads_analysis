@@ -27,11 +27,6 @@ if __name__=='__main__':
     # creates nested dictionary for yaml
     out_dict = df.groupby('dataset').apply(lambda x:x.groupby('param').apply(lambda x:x.set_index(['subset']).to_dict()['path']).to_dict()).to_dict()
 
-    #ad hoc fix for mack
-    if 'mk08011M1m' in out_dict.keys():
-        out_dict['mack'] = out_dict['mk08011M1m']
-        out_dict.pop('mk08011M1m')
-
     #adding params level for consistency with previous format
     for dataset in out_dict.keys():
         out_dict[dataset] = {'params':out_dict[dataset]}
@@ -45,6 +40,11 @@ if __name__=='__main__':
         for param in out_dict[dataset]['params'].keys():
             file_root = dirname(dirname(out_dict[dataset]['params'][param]['train']))
             out_dict[dataset]['params'][param]['inputInfo'] = file_root + '/lfadsInput/inputInfo_%s.mat'%dataset
+
+    #ad hoc fix for mack
+    if 'mk08011M1m' in out_dict.keys():
+        out_dict['mack'] = out_dict['mk08011M1m']
+        out_dict.pop('mk08011M1m')
 
     with open(output_filename, 'w') as out_file:
         yaml.safe_dump(out_dict, out_file)
