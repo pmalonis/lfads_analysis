@@ -9,7 +9,7 @@ config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
 if __name__=='__main__':
-    output_filename = '../lfads_file_locations.yaml'
+    output_filename = '../lfads_file_locations.yml'
 
     file_pattern = '*/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
     file_pattern = cfg['lfads_dir_path'] + file_pattern
@@ -19,9 +19,10 @@ if __name__=='__main__':
     files = [f.decode() for f in files]
     d = [parse(form, f).named for f in files] 
     df = pd.DataFrame(d)
+    df['run'] = df['run'].str.replace('_','-')#for easier reading by snakemake
     df['param'] = df['run'] + '-' + df['lfads_param']
     df.drop(['run', 'lfads_param'], inplace=True, axis=1)
-    df['path'] = ['%s@%s:%s%s'%(cfg['username'],cfg['lfads_file_server'], cfg['lfads_dir_path'],f) for f in files]
+    df['path'] = ['%s@%s:%s'%(cfg['username'],cfg['lfads_file_server'], f) for f in files]
     # creates nested dictionary for yaml
     out_dict = df.groupby('dataset').apply(lambda x:x.groupby('param').apply(lambda x:x.set_index(['subset']).to_dict()['path']).to_dict()).to_dict()
 
