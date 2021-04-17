@@ -43,7 +43,7 @@ if __name__=='__main__':
     for dataset in out_dict.keys():
         for param in out_dict[dataset]['params'].keys():
             file_root = dirname(dirname(out_dict[dataset]['params'][param]['train']))
-            out_dict[dataset]['params'][param]['inputInfo'] = file_root + '/inputInfo_%s.mat'%dataset
+            out_dict[dataset]['params'][param]['inputInfo'] = file_root + '/lfadsInput/inputInfo_%s.mat'%dataset
 
     with open(output_filename, 'w') as out_file:
         yaml.safe_dump(out_dict, out_file)
