@@ -8,12 +8,11 @@ configfile: "config.yml"
 
 locations_path = 'lfads_file_locations.yml'#os.path.join(os.path.dirname(__file__), 'lfads_file_locations.yml')
 dataset_info = yaml.safe_load(open(locations_path, 'r'))
-print(dataset_info)
 
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["all"]#["train", "valid", "all"]
+TRIAL_TYPES = ["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
@@ -102,6 +101,16 @@ rule download_inputInfo:
     shell:
         "scp -T {params.source} {output}"
 
+rule download_dataset_inputInfo: #not specific to specific parameter set, just to get trial_len
+    params:
+        source = lambda wildcards: next(iter(dataset_info[wildcards.dataset]["params"].values()))["inputInfo"]
+    wildcard_constraints:
+        dataset='|'.join(list(dataset_info.keys()))
+    output:
+        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"
+    shell:
+        "scp -T {params.source} {output}"
+
 rule preprocess_center_out:
     input:
         RAW_DIR + "center_out/{dataset}.mat",
@@ -114,8 +123,10 @@ rule preprocess_center_out:
 rule convert_pandas:
     input:
         RAW_DIR + "{dataset}.mat",
-        MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat",
+        MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat",
         "src/convert_to_pandas.py"
+    wildcard_constraints:
+        dataset='|'.join(list(dataset_info.keys()))
     output:
         INTERMEDIATE_DIR + "{dataset}.p"
     script:
