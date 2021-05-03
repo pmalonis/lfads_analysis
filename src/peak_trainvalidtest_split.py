@@ -16,16 +16,18 @@ import os
 import yaml
 from scipy import io
 import pickle
+from importlib import reload
+reload(ta)
 
 random_state = 1027
 train_test_ratio = 0.2
 
 if __name__=='__main__':
     #datasets = ['rockstar','raju', 'mack']
-    datasets = ['mack', 'mack']
-    params = ['Yn9GDO', 'uctZJw']
+    datasets = ['rockstar']#, 'mack']
+    params = ['fixed-rockstar-2OLS24']#, 'mack-kl-co-sweep-0Wo8i9']
     win_start = 0
-    win_stop = 0.5
+    win_stop = 0.3
     min_height_list = [[0.3, 0.3], [0.3, 0.3], [0.3, 0.3]]
     reverse_scores = []
     monkey_labels = []
