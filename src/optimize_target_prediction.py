@@ -30,9 +30,9 @@ random_state = 1748
 np.random.seed(random_state)
 spike_dt = 0.001
 
-def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3, reference='hand', use_rates=False, 
+def get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=0.05, win_stop=0.3, reference='hand', use_rates=False, 
                         rate_pcs=2, reduce_time=False, time_pcs=10, peaks_only=False,
-                        align_peaks=False, reach_endpoint=False):
+                        align_peaks=False, reach_endpoint=False, fit_direction=False):
     #removing targets for which we don't have a full window of controller inputs
 
     peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') < trial_len - cfg['post_target_win_stop'])]
@@ -78,9 +78,9 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3
                 idx_stop = int((target_time + win_stop)/dt)
             try:    
                 if use_rates:
-                    X[k,:] = pca.transform(all_smoothed[i,idx_start:idx_stop,:]).flatten()
+                    X[k,:] = pca.transform(all_smoothed[i,idx_start:idx_stop,:]).T.flatten()
                 else:
-                    X[k,:] = co[used_inds[i],idx_start:idx_stop,:].flatten()
+                    X[k,:] = co[used_inds[i],idx_start:idx_stop,:].T.flatten()
             except:
                 import pdb;pdb.set_trace()
             k += 1
@@ -99,6 +99,11 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3
     elif reference == 'shoulder':
         y = target_pos
 
+    if fit_direction:
+        r = np.linalg.norm(y, axis=1)
+        y = (y.T / r).T
+        y = np.concatenate([y, r.reshape((-1,1))], axis=1)
+
     return X, y
 
 def x_score_func(y, y_true):
@@ -106,6 +111,9 @@ def x_score_func(y, y_true):
 
 def y_score_func(y, y_true):
     return r2_score(y[:,1], y_true[:,1])
+
+def r_score_func(y, y_true):
+    return r2_score(y[:,2], y_true[:,2])
 
 def get_endpoint(peak_df, df, dt):
     used_inds = list(set(peak_df.index.get_level_values('trial')))
@@ -140,7 +148,7 @@ if __name__=='__main__':
     win_start = 0
     win_stop = 0.5
 
-    rockstar_dict = {'lfads_params': ['2OLS24'], 
+    rockstar_dict = {'lfads_params': ['final-fixed-2OLS24'], 
                      'file_root':'rockstar'}
     raju_dict = {'lfads_params': ['2OLS24'], 
                  'file_root':'raju'}
@@ -151,9 +159,11 @@ if __name__=='__main__':
                      'file_root':'rockstar-testing'}
     
     
-    dataset_dicts = {'Rockstar': rockstar_dict,
-                     'Raju': raju_dict,
-                     'Mack': mack_dict}
+    # dataset_dicts = {'Rockstar': rockstar_dict,
+    #                  'Raju': raju_dict,
+    #                  'Mack': mack_dict}
+
+    dataset_dicts = {'Rockstar': rockstar_dict}
 
     #dataset_dicts = {'testing':testing_dict}
 
@@ -169,6 +179,8 @@ if __name__=='__main__':
                        'reach_endpoint':[True, False],
                        'align_peaks':[False]}
 
+    preprocess_dict = {'fit_direction': [True]}
+
     pre_param_dicts = []
     for pre_params_set in itertools.product(*preprocess_dict.values()):
         pre_param_dicts.append({k:p for k,p in zip(preprocess_dict.keys(), pre_params_set)})
@@ -176,7 +188,8 @@ if __name__=='__main__':
     estimator_dict = {'SVR': (MultiOutputRegressor(SVR()), svr_dict), 
                   'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict), 
                   'Gradient Boosted Trees': (MultiOutputRegressor(XGBRegressor(random_state=random_state)), xgb_dict)}
-    #estimator_dict = {'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict)}
+    rf_dict = {'max_features':['auto']}
+    estimator_dict = {'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict)}
 
     # estimator_dict = {'SVR':(SVR(), svr_dict),
     #                 'Random Forest': (RandomForestRegressor(), rf_dict), 
@@ -190,7 +203,6 @@ if __name__=='__main__':
     # hyperparams = preprocess_hyperparams + estimator_hyperparams
     # out_df = pd.DataFrame(columns=hyperparams)
     grid_results = []
-    scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func)}
     for dataset_name, dataset_dict in dataset_dicts.items():
         for lfads_params in dataset_dict['lfads_params']:
             file_root = dataset_dict['file_root']
@@ -213,10 +225,17 @@ if __name__=='__main__':
             peak_df = pd.read_pickle(peak_filename)
             peak_df = get_endpoint(peak_df, df, dt)
             for pre_param_dict in pre_param_dicts:
-                if pre_param_dict['align_peaks']:
-                    X, y = get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.1, **pre_param_dict)            
+                if 'fit_direction' in pre_param_dict and pre_param_dict['fit_direction']==True:
+                    scoring={'x_score':make_scorer(x_score_func),
+                                'y_score':make_scorer(y_score_func),
+                                'r_score':make_scorer(r_score_func)}
                 else:
-                    X, y = get_inputs_to_model(peak_df, co, trial_len, dt, **pre_param_dict)            
+                    scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func)}
+
+                if 'align_peaks' in pre_param_dict and pre_param_dict['align_peaks']:
+                    X, y = get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=0.05, win_stop=0.1, **pre_param_dict)            
+                else:
+                    X, y = get_inputs_to_model(peak_df, df, co, trial_len, dt, **pre_param_dict)            
                 for estimator_name, (estimator, param_grid) in estimator_dict.items():
                     if isinstance(estimator, MultiOutputRegressor):
                         param_grid = {'estimator__' + k:v for k,v in param_grid.items()}
