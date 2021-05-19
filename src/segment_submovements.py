@@ -5,10 +5,11 @@ import matplotlib
 from scipy import signal
 import yaml
 import os
+from scipy.signal import savgol_filter
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
-min_submovement_ms = cfg['min_submovement_ms']
+min_submovement_ms = cfg['min_peak_spacing']
 min_speed_prominence = 20 #minimum prominence for peak finder, in mm/s
 def trial_intervals(trial_df):
     '''
@@ -93,6 +94,7 @@ def trial_transitions(trial_df, exclude_post_target=None, exclude_pre_target=Non
         event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
         non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
         minima = minima[non_post_target_events]
+    
     if exclude_pre_target is not None:
         #determine whether event time is in window post target
         event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
@@ -100,6 +102,7 @@ def trial_transitions(trial_df, exclude_post_target=None, exclude_pre_target=Non
         minima = minima[non_pre_target_events]
 
     return minima
+
 
 def dataset_events(df, func, column_label='transition', exclude_post_target=0.2, exclude_pre_target=0.2):
     '''
@@ -115,15 +118,37 @@ def dataset_events(df, func, column_label='transition', exclude_post_target=0.2,
     Returns
     events: dataframe rows corresponding to transitions
     '''
+    
     event_idx = df.groupby('trial').apply(lambda _df: func(_df.loc[_df.index[0][0]], exclude_post_target))
     event_idx = np.concatenate([event_idx.loc[i] + (df.loc[:i-1].shape[0] if i > 0 else 0) for i in range(len(event_idx))])
-
+    # try:
+    #     event_idx = np.concatenate([event_idx.loc[i] + (df.loc[:i-1].shape[0] if i > 0 else 0) for i in range(len(event_idx))])
+    # except:
+    #     import IPython; IPython.embed()
     events = df.kinematic.iloc[event_idx]
 
     return events
 
 def trial_control_transitions(trial_df):
     return
+
+# def speed_minima(x_vel, y_vel):
+#     '''Calculates submovements from velocity coordinates, based on 
+#     speed profile
+    
+#     Parameters
+#     x_vel: velocity in x-axis
+#     y_vel: velocity in y-axis
+    
+#     Returns
+#     intervals: List of minima defining starts/ends of submovements
+#     '''
+#     speed = np.sqrt(x_vel**2 + y_vel**2)
+#     minima,_ = signal.find_peaks(-speed,
+#                                 height=-cfg['speed_transition_thresh'],
+#                                 prominence=cfg['min_speed_prominence'])
+    
+#     return minima
 
 def speed_minima(x_vel, y_vel):
     '''Calculates submovements from velocity coordinates, based on 
@@ -137,10 +162,28 @@ def speed_minima(x_vel, y_vel):
     intervals: List of minima defining starts/ends of submovements
     '''
     speed = np.sqrt(x_vel**2 + y_vel**2)
-    minima, _ = signal.find_peaks(-speed, width=min_submovement_ms)
-                                    #prominence=min_speed_prominence)
+    speed = savgol_filter(speed, cfg['speed_filter_win'], cfg['speed_filter_order'])
+    minima, _  = signal.find_peaks(-speed,
+                                  height=-cfg['speed_transition_thresh'])
     
-    return minima
+    prominence = cfg['min_speed_prominence']
+    bounds = np.append(minima, len(speed) - 1)
+    minima = [minima[i] for i in range(len(minima)) 
+                if speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence]
+    
+    return np.array(minima)
+
+def impulse_corrections(trial_df):
+    '''Finds points of impulse control corrections, based on speed'''
+    
+    t = trial_df.index.values
+    speed = np.linalg.norm(trial_df.kinematic[['x_vel', 'y_vel']].values)
+    speed = savgol_filter(speed, cfg['speed_filter_win'], cfg['speed_filter_order'])
+    
+    accel = np.gradient(speed, t)
+    jerk = np.gradient(accel, t)
+
+    return accel
 
 def plot_submovements(trial_df):
     '''
@@ -267,7 +310,10 @@ def plot_trial(trial_df, trial_co, dt):
     trial_len_ms = trial_len*1000
     transitions = transitions[transitions < trial_len_ms]
     plt.figure(figsize=(12,6))
-    lns.append(plt.plot(t, speed,'g'))
+    lns.append(plt.plot(t, 10*speed,'g'))
+    accel = np.gradient(speed, t)
+    #plt.twinx()
+    lns.append(plt.plot(t, accel, 'c'))
     plt.plot(t[transitions], speed[transitions],'r.')
     plt.ylabel('Speed (mm/s)')
     plt.xlabel('Time (s)')
