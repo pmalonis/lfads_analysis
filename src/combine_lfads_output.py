@@ -15,7 +15,7 @@ if __name__=='__main__':
 
     n_trials = np.max(np.concatenate([valid_inds, train_inds])) + 1
 
-    copy_datasets = ['controller_outputs', 'output_dist_params', 'factors', 'gen_states'] #datasets to copy
+    copy_datasets = ['controller_outputs', 'output_dist_params', 'factors'] #datasets to copy
     with h5py.File(train_filename, 'r') as train_file, h5py.File(valid_filename, 'r') as valid_file, h5py.File(output_filename, 'w') as output_file:
         for dataset in copy_datasets:
             # skipping 'controller_outputs' if controller dimension is set to 0
