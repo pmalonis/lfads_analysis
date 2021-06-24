@@ -12,17 +12,17 @@ dataset_info = yaml.safe_load(open(locations_path, 'r'))
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
-TRIAL_TYPES = ["train", "valid", "all"]
+TRIAL_TYPES = ["all"]#["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
 PACKAGES = glob(os.environ["CONDA_PREFIX"] + "/conda-meta/*")
 TRIAL_SETS = ["train", "valid"]
 
-if sp.check_output(["git", "status", "-s"]):
-    to_run = input("There are uncommitted changes. Run anyway? (y/n):")
-    if to_run.lower() == 'n':
-        sys.exit()
+# if sp.check_output(["git", "status", "-s"]):
+#     to_run = input("There are uncommitted changes. Run anyway? (y/n):")
+#     if to_run.lower() == 'n':
+#         sys.exit()
 
 # if open('.git/HEAD').read()[:4]=='ref:': #determines if in detached head state
 #     GIT_HEAD = ".git/" + yaml.safe_load(open('.git/HEAD'))['ref']
@@ -53,9 +53,12 @@ if sp.check_output(["git", "status", "-s"]):
 def expand_filename(format_str):
     '''expands string based on parameter hashes for each dataset in the config file. also expands valid/train'''
     
-    filenames = [format_str.format(dataset=d, trial_type=t, param=p) for d in dataset_info.keys()
+    filenames = [format_str.format(dataset=d, trial_type=t, param=p) 
+                for d in dataset_info.keys()
                 for p in dataset_info[d]["params"]
                 for t in TRIAL_TYPES]
+
+    filenames = list(set(filenames)) #removing duplicates
 
     return filenames
 
@@ -65,6 +68,32 @@ rule download_all:
         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5")
 
+# rule download_all:
+#     output:
+#         expand_filename(RAW_DIR + "{dataset}.mat"),
+#         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+#         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5")
+
+#     run:
+#         download_list = []
+#         output_name_list = []
+#         for dataset in dataset_info.keys():
+#             download_list.append(dataset_info[dataset]["raw"])
+#             output_name_list.append(RAW_DIR + "{dataset}.mat".format(dataset=dataset))
+#             for param in dataset_info[dataset]["params"].keys():
+#                 download_list.append(dataset_info[dataset]["params"][param]['train'])
+#                 output_name_list.append(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.mat".format(dataset=dataset, 
+#                                                                                     param=param, trial_type="train"))
+#                 download_list.append(dataset_info[dataset]["params"][param]['valid'])
+#                 output_name_list.append(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.mat".format(dataset=dataset, 
+#                                                                                     param=param, trial_type="valid"))
+#                 download_list.append(dataset_info[dataset]["params"][param]["inputInfo"])
+#                 output_name_list.append(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat".format(dataset=dataset, param=param))
+                
+#         sp.run(['scp', '-T'] + download_list + [MODEL_OUTPUT_DIR])
+#         for download, output_file in zip(download_list, output_name_list):
+#             os.replace(MODEL_OUTPUT_DIR + os.path.basename(download), output_file)
+
 rule download_model:
     params:
          source = lambda wildcards: dataset_info[wildcards.dataset]["params"][wildcards.param][wildcards.trial_set]
@@ -72,9 +101,17 @@ rule download_model:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_set}.h5"
     wildcard_constraints:
         trial_set="train|valid"
-    shell:
-        #"scp -T {config[username]}@{params.source} {output}"
-        "scp -T {params.source} {output}"
+    run:
+        going = True
+        while going:
+            command = ["scp", "-T", params.source, output[0]]
+            proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+            err = proc.stderr.read().decode()
+            if "Connection closed" in err and "port 22" in err:
+                continue
+            else:
+                going=False
+        
 
 rule download_raw:
     params:
@@ -82,9 +119,17 @@ rule download_raw:
     output:
         #constrain wildcard to not contain forward slash (doesn't represent file in subdirectory)
         RAW_DIR + "{dataset}.mat"
-    shell:
-        "scp -T {params.source} {output}"
-
+    run:
+        going = True
+        while going:
+            command = ["scp", "-T", params.source, output[0]]
+            proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+            err = proc.stderr.read().decode()
+            if "Connection closed" in err and "port 22" in err:
+                continue
+            else:
+                going=False
+                
 rule download_center_out:
     params:
         source = lambda wildcards: config["center_out"][wildcards.dataset]
@@ -98,8 +143,16 @@ rule download_inputInfo:
         source = lambda wildcards: dataset_info[wildcards.dataset]["params"][wildcards.param]["inputInfo"]
     output:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"
-    shell:
-        "scp -T {params.source} {output}"
+    run:
+        going = True
+        while going:
+            command = ["scp", "-T", params.source, output[0]]
+            proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+            err = proc.stderr.read().decode()
+            if "Connection closed" in err and "port 22" in err:
+                continue
+            else:
+                going=False
 
 rule download_dataset_inputInfo: #not specific to specific parameter set, just to get trial_len
     params:
@@ -108,8 +161,16 @@ rule download_dataset_inputInfo: #not specific to specific parameter set, just t
         dataset='|'.join(list(dataset_info.keys()))
     output:
         MODEL_OUTPUT_DIR + "{dataset}_inputInfo.mat"
-    shell:
-        "scp -T {params.source} {output}"
+    run:
+        going = True
+        while going:
+            command = ["scp", "-T", params.source, output[0]]
+            proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+            err = proc.stderr.read().decode()
+            if "Connection closed" in err and "port 22" in err:
+                continue
+            else:
+                going=False
 
 rule preprocess_center_out:
     input:
