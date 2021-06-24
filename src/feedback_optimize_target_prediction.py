@@ -5,10 +5,11 @@ import new_predict_targets as pt
 import timing_analysis as ta
 import segment_submovements as ss
 import custom_objective
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from xgboost import XGBRegressor
 from sklearn.svm import SVR
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import r2_score,make_scorer
 from sklearn.decomposition import PCA
@@ -33,10 +34,13 @@ random_state = 1748
 np.random.seed(random_state)
 spike_dt = 0.001
 
+train_test_random_state = 1027
+train_test_ratio = 0.2
+
 def get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=-0.2, win_stop=0.0, reference='hand', 
-                        hand_time=0, use_rates=False,
-                        rate_pcs=2, reduce_time=False, time_pcs=10, align=False,
-                        submovement_func=None, sb_latency=-0.2, align_peaks=False, fit_direction=False):
+                        hand_time=0, use_rates=False, filter_co=False, poly_features=False, poly_degree=2,
+                        rate_pcs=2, reduce_time=False, time_pcs=10, 
+                        submovement_func=None, sb_latency=-0.2, align_peaks=False, align_win_start=-0.2, align_win_stop=0.2, fit_direction=False):
     #removing targets for which we don't have a full window of controller inputs
 
     peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') < trial_len - win_stop)]
@@ -69,28 +73,35 @@ def get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=-0.2, win_stop
         X = np.zeros((peak_df.shape[0], win_size*rate_pcs))
     else:
         X = np.zeros((peak_df.shape[0], win_size*co.shape[2]))
+
+    idx_to_remove = []
     for i in range(len(used_inds)):
         trial_peak_df = peak_df.loc[used_inds[i]]
         transition_times = trial_peak_df.index
         for transition_time in transition_times:
             if align_peaks:
-                peak_win_start = int((transition_time + win_start)/dt)
-                peak_win_stop = int((transition_time + win_stop)/dt)
+                peak_win_start = int((transition_time + align_win_start)/dt)
+                peak_win_stop = int((transition_time + align_win_stop)/dt)
                 if use_rates:
-                    peak_idx = np.argmax(all_smoothed[i, peak_win_start:peak_win_stop,:].sum(0)) + peak_win_start#peak of population response
+                    peak_idx = peak_win_start + np.argmax(all_smoothed[i, peak_win_start:peak_win_stop,:].sum(1)) #peak of population response
                 else:
-                    peak_idx = np.argmax(np.abs(co[used_inds[i], peak_win_start:peak_win_stop,:]).sum(0)) + peak_win_start # peak of sum of absolute controller input
-                    
-                idx_start = peak_idx - int(win_size/2)
-                idx_stop = peak_idx + int(win_size/2)
+                    peak_idx = peak_win_start + np.argmax(np.abs(co[used_inds[i], peak_win_start:peak_win_stop,:]).sum(1)) # peak of sum of absolute controller input
+                
+                idx_start = peak_idx + int(win_start/dt)
+                idx_stop = peak_idx + int(win_stop/dt)
             else:
                 idx_start = int((transition_time + win_start)/dt)
                 idx_stop = int((transition_time + win_stop)/dt)
 
-            if use_rates:
+            if (idx_start < 0) or (idx_stop >= trial_len//dt): #for align_peaks condition
+                idx_to_remove.append(k)
+            elif use_rates:
                 X[k,:] = pca.transform(all_smoothed[i,idx_start:idx_stop,:]).T.flatten()
             else:
-                X[k,:] = co[used_inds[i],idx_start:idx_stop,:].T.flatten()
+                try:
+                    X[k,:] = co[used_inds[i],idx_start:idx_stop,:].T.flatten()
+                except:
+                    import pdb;pdb.set_trace()
             
             target_idx = targets.loc[used_inds[i]].index.get_loc(transition_time, method='bfill')
             target_pos[k,:] = targets.loc[used_inds[i]].iloc[target_idx][['x', 'y']].values
@@ -98,9 +109,23 @@ def get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=-0.2, win_stop
             hand_pos[k,:] = df.loc[used_inds[i]].kinematic.iloc[df_idx][['x','y']].values
             k += 1
 
+    X = np.delete(X, idx_to_remove, axis=0)
+
+    if filter_co:
+        for i in range(co.shape[2]):
+            X[:,i*win_size:(i+1)*win_size] = savgol_filter(X[:,i*win_size:(i+1)*win_size], 11, 2, axis=1)
+
     if reduce_time:
-        pca_time = PCA(n_components=time_pcs)
-        X = pca_time.fit_transform(X)
+        X_reduced = np.zeros((X.shape[0], co.shape[2]*time_pcs))
+        for i in range(co.shape[2]):
+            pca_time = PCA(n_components=time_pcs)
+            X_reduced[:,i*time_pcs:(i+1)*time_pcs] = pca_time.fit_transform(X[:,i*win_size:(i+1)*win_size])
+        
+        X = X_reduced
+
+    if poly_features:
+        poly = PolynomialFeatures(degree=poly_degree)
+        X = poly.fit_transform(X)
 
     if reference == 'hand':
         y = target_pos - hand_pos
@@ -111,6 +136,8 @@ def get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=-0.2, win_stop
         #y = np.arctan2(y[:,1], y[:,0])
         y = (y.T / np.linalg.norm(y, axis=1)).T
         y = np.vstack([y.T, np.linalg.norm(y, axis=1)]).T
+
+    y = np.delete(y, idx_to_remove, axis=0)
 
     return X, y
 
@@ -153,42 +180,62 @@ def get_endpoint(peak_df, df, dt):
 if __name__=='__main__':
     cv = 5 #cross validation factor
     n_cores = multiprocessing.cpu_count()
-    output_filename = '../data/peaks/fb_hand_vs_shoulder_mack_rockstar.csv'
+    output_filename = '../data/peaks/fb_spectral_selected.csv'
     win_start = 0
     win_stop = 0.5
     # rockstar_dict = {'lfads_params': ['final-fixed-2OLS24', 'all-early-stop-kl-sweep-tLbfG6'], 
     #                  'file_root':'rockstar'}
     # rockstar_dict = {'lfads_params': ['all-early-stop-kl-sweep-yKzIQf'],
     #                  'file_root':'rockstar'}
-    rockstar_dict = {'lfads_params': ['final-fixed-2OLS24'],
-                     'file_root':'rockstar'}                     
-    raju_dict = {'lfads_params': ['final-fixed-2OLS24'],
-                 'file_root':'raju'}
-    mack_dict = {'lfads_params': ['all-early-stop-kl-sweep-bMGCVf'],
-                                  'file_root':'mack'}
-    raju_M1_dict = {'lfads_params': ['raju-split-updated-params-2OLS24'], 
-                 'file_root':'raju-M1'}
-    raju_PMd_dict = {'lfads_params': ['raju-split-updated-params-2OLS24'], 
-                    'file_root':'raju-PMd'}
+    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+    dataset_dicts = {}
+    for dataset in run_info.keys():
+        dset_dict = {}
+        dset_dict['lfads_params'] = [open('../data/peaks/%s_selected_param_spectral.txt'%(dataset)).read()]
+        dset_dict['file_root'] = dataset
+        dataset_dicts[run_info[dataset]['name']] = dset_dict
+        
+
+    # rockstar_dict = {'lfads_params': ['final-fixed-2OLS24'],
+    #                  'file_root':'rockstar'}                     
+    # raju_dict = {'lfads_params': ['final-fixed-2OLS24'],
+    #              'file_root':'raju'}
+    # mack_dict = {'lfads_params': ['all-early-stop-kl-sweep-bMGCVf'],
+    #                               'file_root':'mack'}
+    # raju_M1_dict = {'lfads_params': ['raju-split-updated-params-2OLS24'], 
+    #              'file_root':'raju-M1'}
+    # raju_PMd_dict = {'lfads_params': ['raju-split-updated-params-2OLS24'], 
+    #                 'file_root':'raju-PMd'}
 
     # testing_dict =  {'lfads_params': ['2OLS24'], 
     #                  'file_root':'rockstar-testing'}
         
-    dataset_dicts = {'Rockstar': rockstar_dict,
-                     #'Raju': raju_dict,
-                    'Mack': mack_dict}
+    # dataset_dicts = {'Rockstar': rockstar_dict,
+    #                  #'Raju': raju_dict,
+    #                 'Mack': mack_dict}
 
-
-    svr_dict = {'kernel':['linear', 'rbf', 'sigmoid'], 'gamma':np.logspace(-4,0,4), 'C':[0.5,1,1.5,2]}
+    svr_dict = {'kernel':['linear', 'rbf', 'sigmoid'], 
+                'gamma':np.logspace(-4,0,4),
+                'C':[0.5,1,1.5,2]}
+    svr_dict = {'kernel':['rbf'], 
+                'gamma':['scale'], 
+                'C':[0.2, 0.4, 0.5, 0.7, 0.9]}
     rf_dict = {'max_features':['auto', 'sqrt', 'log2'],
                'min_samples_leaf':[1,5,10,15]}
     xgb_dict = {'max_depth':[1, 2, 3, 4, 5, 6], 
                 'learning_rate':[0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}
 
-    preprocess_dict = {'reference':['hand', 'shoulder'],
-                       #'hand_time':[0, 0.1, 0.2, 0.3],
-                       'win_stop':[0, 0.2],
-                       'fit_direction':[True]}
+    # preprocess_dict = {'reference':['hand', 'shoulder'],
+    #                    #'hand_time':[0, 0.1, 0.2, 0.3],
+    #                    'fit_direction':[True],
+    #                    'align_peaks': [True, False]}
+
+    preprocess_dict = {'fit_direction':[True],
+                    'reference': ['hand', 'shoulder'],
+                    'poly_features': [True, False],
+                    'reduce_time': [True],
+                    'filter_co': [True],
+                    'time_pcs':[5, 7, 10, 15]}
 
     pre_param_dicts = []
     for pre_params_set in itertools.product(*preprocess_dict.values()):
@@ -197,8 +244,8 @@ if __name__=='__main__':
     estimator_dict = {'SVR': (MultiOutputRegressor(SVR()), svr_dict), 
                   'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict), 
                   'Gradient Boosted Trees': (MultiOutputRegressor(XGBRegressor(random_state=random_state)), xgb_dict)}
-    estimator_dict = {'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict)}
-
+    #estimator_dict = {'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict)}
+    estimator_dict = {'SVR': (MultiOutputRegressor(SVR()), svr_dict)}
     # estimator_dict = {'SVR':(SVR(), svr_dict),
     #                 'Random Forest': (RandomForestRegressor(), rf_dict), 
     #                 'Gradient Boosted Trees': (XGBRegressor(), xgb_dict)}
@@ -223,7 +270,7 @@ if __name__=='__main__':
             inputInfo_filename = '../data/model_output/' + \
                                 '_'.join([file_root, 'inputInfo.mat'])
             peak_filename = '../data/peaks/' + \
-                            '_'.join([file_root, lfads_params, 'fb_peaks_train.p'])
+                            '_'.join([file_root, 'fb_peaks_train.p'])
             
             df = data_filename = pd.read_pickle(data_filename)
             input_info = io.loadmat(inputInfo_filename)
@@ -235,9 +282,18 @@ if __name__=='__main__':
             #peak_df = ta.get_peak_df(df, co, trial_len, min_heights, dt=0.01, win_start=win_start, win_stop=win_stop)
             peak_df = pd.read_pickle(peak_filename)
             #peak_df = get_endpoint(peak_df, df, dt)
+            # if os.path.exists(peak_filename):
+            #     peak_df = pd.read_pickle(peak_filename)
+            # else:
+            #     peak_df = pd.read_pickle('../data/peaks/%s_%s_peaks_relative_3sds.p'%(dataset, lfads_params))
+            #     df_train, df_test = train_test_split(peak_df, test_size=train_test_ratio, random_state=train_test_random_state)
+            #     df_train, df_test = (df_train.sort_index(), df_test.sort_index())
+            #     df_train.to_pickle('../data/peaks/%s_%s_fb_peaks_train.p'%(dataset, lfads_params))
+            #     df_test.to_pickle('../data/peaks/%s_%s_fb_peaks_test.p'%(dataset, lfads_params))
+
             for pre_param_dict in pre_param_dicts:
                 if pre_param_dict.get('align_peaks'):
-                    X, y = get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=0.05, win_stop=0.1, **pre_param_dict)            
+                    X, y = get_inputs_to_model(peak_df, df, co, trial_len, dt, **pre_param_dict)            
                 else:
                     X, y = get_inputs_to_model(peak_df, df, co, trial_len, dt, **pre_param_dict)
                 for estimator_name, (estimator, param_grid) in estimator_dict.items():
