@@ -91,11 +91,12 @@ def pre_peak(trial_df, exclude_pre_target=None, exclude_post_target=None):
     return np.array(movements)
 
 if __name__=='__main__':
-    #datasets = ['rockstar', 'rockstar', 'rockstar', 'rockstar']#,'raju', 'mack']
-    #params = ['all-early-stop-kl-sweep-OvP3yt',
-    #        'all-early-stop-kl-sweep-6kE5-V']#, 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
-    datasets = ['mack', 'mack']
-    params = ['all-early-stop-kl-sweep-d5HOIW', 'all-early-stop-kl-sweep-bMGCVf']
+    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+    datasets = run_info.keys()
+    params = []
+    for dataset in run_info.keys():
+        params.append(open('../data/peaks/%s_selected_param_spectral.txt'%(dataset)).read())
+
     min_height_list = [[0.2, 0.2]]*len(datasets)#[[0.3, 0.3], [0.3, 0.3], [0.3, 0.3]]
     reverse_scores = []
     monkey_labels = []
@@ -114,13 +115,10 @@ if __name__=='__main__':
         used_inds = range(df.index[-1][0] + 1)
         transitions = ss.dataset_events(df, ss.trial_transitions, 
                                         exclude_post_target=non_corrective_window)
-        # transitions = ss.dataset_events(df, peak_speed, 
-        #                                 exclude_post_target=non_corrective_window)
-        # transitions = ss.dataset_events(df, pre_peak,
-        #                                 exclude_post_target=non_corrective_window)
+    
         peaks = ta.get_peaks(co, dt, min_heights, exclude_post_target=non_feedback_window, df=df)
         peak_df,_ = ta.get_latencies(transitions, peaks, win_start=win_start, win_stop=win_stop, trial_len=trial_len)
-        
+
         idx_train = np.load('../data/intermediate/train_test_split/%s_trials_train.npy'%dataset)
         idx_test = np.load('../data/intermediate/train_test_split/%s_trials_test.npy'%dataset)
         
@@ -131,6 +129,6 @@ if __name__=='__main__':
         df_test = filter_peaks(df_test)
         
         df_train, df_test = (df_train.sort_index(), df_test.sort_index())
-        df_train.to_pickle('../data/peaks/%s_%s_fb_peaks_train.p'%(dataset, param))
-        peak_df.to_pickle('../data/peaks/%s_%s_fb_peaks_train.p'%(dataset, param))
-        df_test.to_pickle('../data/peaks/%s_%s_fb_peaks_test.p'%(dataset, param))
+        df_train.to_pickle('../data/peaks/%s_fb_peaks_train.p'%(dataset))
+        peak_df.to_pickle('../data/peaks/%s_fb_peaks_train.p'%(dataset))
+        df_test.to_pickle('../data/peaks/%s_fb_peaks_test.p'%(dataset))
