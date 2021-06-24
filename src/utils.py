@@ -1,6 +1,20 @@
 import subprocess as sp
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+from scipy import io
+import h5py
+
+def load_data(data_filename, lfads_filename, inputInfo_filename):
+    '''loads data from filenames'''
+    df = pd.read_pickle(data_filename)
+    input_info = io.loadmat(inputInfo_filename)
+    with h5py.File(lfads_filename, 'r') as h5file:
+        co = h5file['controller_outputs'][:]
+        dt = get_dt(h5file, input_info)
+        trial_len = get_trial_len(h5file, input_info)
+    
+    return df, co, trial_len, dt
 
 def print_commit():
     '''saves matplotlib figure with hash of current git commit as metadata'''
@@ -26,7 +40,11 @@ def get_dt(lfads_h5file, input_info):
     '''Gets LFADS time bin size'''
 
     trial_len_ms = input_info['seq_timeVector'][0][-1]
-    nbins = lfads_h5file['controller_outputs'].shape[1]
+    if 'factors' in lfads_h5file.keys():
+        nbins = lfads_h5file['factors'].shape[1]
+    elif 'controller_outputs' in lfads_h5file.keys():
+        nbins = lfads_h5file['controller_outputs'].shape[1]
+        
     dt_ms = np.round(trial_len_ms/nbins)
     dt = dt_ms/1000
 
