@@ -16,15 +16,20 @@ plt.rcParams['axes.spines.right'] = False
 reload(opt)
 reload(utils)
 
-
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
 datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
+run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+datasets = list(run_info.keys())
+params = []
+for dataset in run_info.keys():
+    params.append(open('../data/peaks/%s_selected_param_gini.txt'%(dataset)).read())
+
 nbins = 12
 win_start = -0.2#0.00#-0.1#cfg['post_target_win_start']
-win_stop = 0#0.3#0.1#cfg['post_target_win_stop']
+win_stop = 0.2#0.3#0.1#cfg['post_target_win_stop']
 
 lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
 with h5py.File(lfads_filename, 'r+') as h5file:
@@ -58,7 +63,9 @@ if __name__=='__main__':
         #                             win_start=win_start, 
         #                             win_stop=win_stop)
 
-        X,y = fotp.get_inputs_to_model(peak_df, df, co, trial_len, dt)
+        #X,y = fotp.get_inputs_to_model(peak_df, df, co, trial_len, dt)
+        X,y = fotp.get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=win_start, win_stop=win_stop, align_peaks=True
+        )
 
         theta = np.arctan2(y[:,1], y[:,0])
         assert(nbins%2==0)
@@ -96,7 +103,7 @@ if __name__=='__main__':
                     co_argmax = i
                     co_max = np.max(co_av)
 
-            fig2, extremeplot = plt.subplots()
+            #fig2, extremeplot = plt.subplots()
             # inset_ex = fig2.add_axes([left, bottom, width, height], polar=True)
             # for i in [co_argmin, co_argmax]:        
             #     min_theta = i * bin_theta
