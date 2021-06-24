@@ -31,7 +31,7 @@ def get_targets(df, used_inds=None):
 
     return targets
 
-def get_peaks(co, dt, min_height, min_distance=cfg['min_peak_spacing'], 
+def get_peaks(co, dt, min_height, relative=False, min_distance=cfg['min_peak_spacing'], 
                 exclude_post_target=None, df=None):
     '''
     Returns times of peaks of controller outputs
@@ -42,8 +42,8 @@ def get_peaks(co, dt, min_height, min_distance=cfg['min_peak_spacing'],
 
     dt: time in between samples of controller outputs 
 
-    min_height: minimum height of peak to consider. Either scalar or 
-    vector with length equal to co.shape[2]. The later sets a separate 
+    min_height: minimum height of peak to consider, in number of standard deviations of absolute value above the mean absolute value. 
+    Either scalar or vector with length equal to co.shape[2]. The later sets a separate 
     height treshold for each controller output
 
     min_distance: minimum distance to neighboring peak, as given to 
@@ -63,20 +63,25 @@ def get_peaks(co, dt, min_height, min_distance=cfg['min_peak_spacing'],
     # to work with since it can be pass to dataframe as slice with no error
     peaks.fill([])
     t_lfads = np.arange(co.shape[1]) * dt #time labels of lfads input
+    abs_co = np.abs(co-co.mean((0,1)))
+    if isinstance(min_height, (int, float)):
+        min_height = np.ones(co.shape[2]) * min_height
+
     for trial_idx in range(co.shape[0]):
         for input_idx in range(co.shape[2]):
-            if isinstance(min_height, (int, float)):
-                height_arg = min_height
-            elif isinstance(min_height, list):
-                height_arg = min_height[input_idx]
-        
             if isinstance(min_distance, int):
                 distance_arg = min_distance
             elif isinstance(min_distance, list):
                 distance_arg = min_distance[input_idx]
-            
-            p, _ = signal.find_peaks(np.abs(co[trial_idx, :, input_idx]), 
-                            height=height_arg, distance=distance_arg)
+
+            if relative:
+                height_arg = abs_co[:,:,input_idx].mean() + min_height[input_idx]*abs_co[:,:,input_idx].std()
+                p, _ = signal.find_peaks(abs_co[trial_idx, :, input_idx], 
+                                height=height_arg, distance=distance_arg)
+            else:
+                p, _ = signal.find_peaks(abs_co[trial_idx, :, input_idx], 
+                                height=min_height[input_idx], distance=distance_arg)
+
             if (exclude_post_target is not None) and (df is not None): #TODO used_indx
                 times = []
                 for i in range(len(p)):
@@ -167,7 +172,6 @@ def get_latencies(targets, peaks, win_start, win_stop, trial_len):
     #making sure targets and peaks consider same number of trials
     n_trials_targets = targets.index[-1][0] + 1
     n_trials_peaks = peaks.shape[0]
-    assert(n_trials_targets == n_trials_peaks)
     n_inputs = peaks.shape[1]
     n_trials = n_trials_targets
     latency = [[] for i in range(n_inputs)]
@@ -178,7 +182,7 @@ def get_latencies(targets, peaks, win_start, win_stop, trial_len):
     peak_count = np.zeros(n_inputs)
     for input_idx in range(n_inputs):
         target_peaks['latency_%d'%input_idx] = np.nan
-    for trial_idx in range(n_trials):
+    for trial_idx in list(set(targets.index.get_level_values('trial'))):
         #if no events in trial, continue
         try:
             t_targets = targets.loc[trial_idx].index
@@ -242,50 +246,50 @@ def get_target_peak_counts(target_peaks, input_idx, all_inputs=False):
 
     return targets_with_peak
 
-def get_peak_latencies(df, co, min_heights, dt, used_inds,
-                        min_height, win_start=0, win_stop=0.5):
-    '''
-    Parameters:
-    df: pandas dataframe containing experiment data
+# def get_peak_latencies(df, co, min_heights, dt, used_inds,
+#                         min_height, win_start=0, win_stop=0.5):
+#     '''
+#     Parameters:
+#     df: pandas dataframe containing experiment data
     
-    Returns
-    latencies: list of lists of latency from nearest target appearance in window.
-    Each list gives the latencies for a different controller output
-    all_peak_counts: count of all controller peaks, for each controller output
-    target_peak_count: count of all peaks within window of target, for each controller ouput
-    '''
-    dt = utils.get_dt(h5file, input_info)
+#     Returns
+#     latencies: list of lists of latency from nearest target appearance in window.
+#     Each list gives the latencies for a different controller output
+#     all_peak_counts: count of all controller peaks, for each controller output
+#     target_peak_count: count of all peaks within window of target, for each controller ouput
+#     '''
+#     dt = utils.get_dt(h5file, input_info)
 
-    used_inds = utils.get_indices(input_info, trial_type)
-    targets = df.loc[used_inds].kinematic.query('hit_target')
-    trial_len = co.shape[1] * dt
-    t_lfads = np.arange(co.shape[1]) * dt #time labels of lfads input
-    all_peak_count = 0 # count of all controller peaks
-    target_peak_count = 0 # count of all peaks within window of target
-    latencies = [] # latency
-    for i in used_inds:
-        peaks = []
-        for input_idx in range(1):#range(co.shape[2]):
-            input_peaks, _ = signal.find_peaks(np.abs(co[i, :, input_idx]), 
-                            height=min_heights[input_idx])
-            peaks.append(input_peaks)
+#     used_inds = utils.get_indices(input_info, trial_type)
+#     targets = df.loc[used_inds].kinematic.query('hit_target')
+#     trial_len = co.shape[1] * dt
+#     t_lfads = np.arange(co.shape[1]) * dt #time labels of lfads input
+#     all_peak_count = 0 # count of all controller peaks
+#     target_peak_count = 0 # count of all peaks within window of target
+#     latencies = [] # latency
+#     for i in used_inds:
+#         peaks = []
+#         for input_idx in range(1):#range(co.shape[2]):
+#             input_peaks, _ = signal.find_peaks(np.abs(co[i, :, input_idx]), 
+#                             height=min_heights[input_idx])
+#             peaks.append(input_peaks)
 
-        peaks = np.concatenate(peaks)
-        t_peaks = t_lfads[peaks]
-        t_targets = targets.loc[i].index
-        all_peak_count += len(t_peaks)
-        for tp in t_peaks:
-            if any((tp - t_targets >= win_start) & (tp - t_targets < win_stop)):
-                diff_targets = tp - t_targets
-                latency = np.min(diff_targets[diff_targets>0]) #latency to closest target
-                latencies.append(latency)
-                target_peak_count += 1
+#         peaks = np.concatenate(peaks)
+#         t_peaks = t_lfads[peaks]
+#         t_targets = targets.loc[i].index
+#         all_peak_count += len(t_peaks)
+#         for tp in t_peaks:
+#             if any((tp - t_targets >= win_start) & (tp - t_targets < win_stop)):
+#                 diff_targets = tp - t_targets
+#                 latency = np.min(diff_targets[diff_targets>0]) #latency to closest target
+#                 latencies.append(latency)
+#                 target_peak_count += 1
 
 
-def get_peak_df(df, co, trial_len, min_heights, dt=0.01, win_start=0, win_stop=0.5):
+def get_peak_df(df, co, trial_len, min_heights, dt=0.01, relative=False, win_start=0, win_stop=0.5):
     '''Chaining above function above to get useful dataframe'''
     targets = get_targets(df)
-    peaks = get_peaks(co, dt, min_heights, min_distance=cfg['min_peak_spacing'])
+    peaks = get_peaks(co, dt, min_heights, relative, min_distance=cfg['min_peak_spacing'])
     peak_df, _ = get_latencies(targets, peaks, win_start, win_stop, trial_len=trial_len)
 
     return peak_df
