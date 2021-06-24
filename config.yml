@@ -25,7 +25,22 @@ lfads_dir_path: /gpfs/data/nicho-lab/pmalonis/data/model_output/
 username: pmalonis
 #lfads_file_pattern: */*/*/*/model_runs_*.h5*_posterior_sample_and_average # will work for other patterns as long as first wildcard corresponds to the dataset and the second is "train" or "valid"
 
-raw_datasets:
-  rockstar: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
-  raju: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju.mat
-  mack: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
+#submovement transitions
+speed_transition_thresh: 100
+min_speed_prominence: 100
+speed_filter_win: 101
+speed_filter_order: 2
+
+# order will be preserved in lfads yaml file
+datasets:
+  rockstar: 
+    name: RS
+    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
+  mack:
+    name: MK
+    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
+  raju-M1-no-bad-trials:
+    name: RJ
+    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
+  #raju_M1: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_M1.mat
+  #raju_PMd: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_PMd.mat
