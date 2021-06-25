@@ -13,6 +13,7 @@ from scipy.stats import kurtosis
 import pickle
 import timing_analysis as ta
 import decode_lfads as dl
+from plot_all_controller_metrics import metric_dict
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 
@@ -24,460 +25,48 @@ peak_with_threshold = 0.9
 figsize = (12,5)
 n_splits = 5
 
-run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
-
-class Dataset_Info():
-    def __init__(self, name):
-        self.kl_weight = {'gaussian':[], 'laplace':[]}
-        self.measure = {'gaussian':[], 'laplace':[]}
-        self.name = run_info[dataset]['name']
-
-    def plot(self, ax):
-        try:
-            for k in ['gaussian', 'laplace']:
-                assert(len(self.kl_weight[k]) == len(self.measure[k]))
-        except AssertionError:
-            raise ValueError("kl_weights and measure must have the same length")
-
-        for prior in self.kl_weight.keys():
-            idx = np.argsort(self.kl_weight[prior])
-            self.kl_weight[prior] = np.array(self.kl_weight[prior])[idx]
-            self.measure[prior] = np.array(self.measure[prior])[idx]
-        
-        ax.plot(self.kl_weight['gaussian'], self.measure['gaussian'])
-        ax.plot(self.kl_weight['laplace'], self.measure['laplace'])
-        ax.set_xlabel('Controller Penalty')
-        ax.set_title(self.name)
-        ax.legend(['Dense Prior', 'Sparse Prior'])
-
-class Run_Data():
-    def __init__(self, dataset, param, df, co, trial_len, dt):
-        self.dataset = dataset
-        self.param = param
-        self.df = df
-        self.co = co
-        self.trial_len = trial_len
-        self.dt = dt
-
-class Measure():
-    def __init__(self, title='', filename=None):
-        '''measure class inherits from run data'''
-        self.datasets = {}
-        self.title = title
-        self.filename = filename
-        self.fig = None
-
-    def add_dataset(self, dataset):
-        self.datasets[dataset] = Dataset_Info(dataset)
-
-    def add_run(self, prior, kl_weight, dataset, param, df, co, trial_len, dt):
-        if dataset not in self.datasets.keys():
-            self.add_dataset(dataset)
-
-        self.datasets[dataset].kl_weight[prior].append(kl_weight)
-        run = Run_Data(dataset, param, df, co, trial_len, dt)
-        m = self.compute_measure(run)
-        self.datasets[dataset].measure[prior].append(m)
-
-    def compute_measure(self, run):
-        pass
-
-    def plot(self):
-        fig = plt.figure(figsize=figsize)
-        axes = fig.subplots(1, len(self.datasets.keys()))
-        for i,k in enumerate(self.datasets.keys()):
-            self.datasets[k].plot(axes[i])
-            axes[i].set_ylabel(self.ylabel)
-        
-        fig.suptitle(self.title)
-
-        self.fig = fig
-
-    def savefig(self):
-        if self.filename is not None and self.fig is not None:
-            self.fig.savefig(self.filename)
-        else:
-            print("fig is None, nothing was saved")
-
-class Absolute_Target_Peak(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Proportion of targets with peaks'
-
-    def compute_measure(self, run):
-        peak_path = '../data/peaks/%s_%s_peaks_all_thresh=%0.1f.p'%(run.dataset, run.param, absolute_min_heights)
-    
-        if os.path.exists(peak_path):
-            peak_df = pd.read_pickle(peak_path)
-        else:
-            peak_df = ta.get_peak_df(df, co, trial_len, absolute_min_heights, dt, relative=False, win_start=win_start, win_stop=win_stop)
-            peak_df.to_pickle(peak_path)
-
-        npeaks = (peak_df['latency_0'].notnull() | peak_df['latency_1'].notnull()).sum()
-
-        return npeaks/peak_df.shape[0]
-
-class Relative_Target_Peak(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Proportion of targets with peaks'
-
-    def compute_measure(self, run):    
-        peak_path = '../data/peaks/%s_%s_peaks_relative_%dsds.p'%(run.dataset, run.param, relative_min_heights)
-        if os.path.exists(peak_path):
-            peak_df = pd.read_pickle(peak_path)
-        else:            
-            peak_df = ta.get_peak_df(df, co, trial_len, relative_min_heights, dt, relative=True, win_start=win_start, win_stop=win_stop)
-            peak_df.to_pickle(peak_path)
-
-        npeaks = (peak_df['latency_0'].notnull() | peak_df['latency_1'].notnull()).sum()
-
-        return npeaks/peak_df.shape[0]
-
-class Decode(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.kinematics = {}
-        self.firing_rates = {}
-        self.ylabel='Decoding Accuracy'
-
-    def add_dataset(self, dataset, kin, firing_rates):
-        self.datasets[dataset] = Dataset_Info(dataset)
-        self.kinematics[dataset] = kin      
-        self.firing_rates[dataset] = firing_rates
-
-    def add_run(self, prior, kl_weight, dataset, param, df, co, trial_len, dt):
-        if dataset not in self.datasets.keys():
-            Y = dl.get_kinematics(df, trial_len, dt)
-            X_smoothed = dl.get_smoothed_rates(df, trial_len, dt)
-            self.add_dataset(dataset, Y, X_smoothed)
-
-        self.datasets[dataset].kl_weight[prior].append(kl_weight)
-        run = Run_Data(dataset, param, df, co, trial_len, dt)
-        m = self.compute_measure(run)
-        self.datasets[dataset].measure[prior].append(m)
-
-    def compute_measure(self, run):
-        lfads_filename = '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
-        with h5py.File(lfads_filename, 'r') as h5file:
-            X = dl.get_lfads_predictor(h5file['factors'][:])
-
-        Y = self.kinematics[run.dataset]
-        return self.get_decoding_performance(X, Y)
-
-    def get_decoding_performance(self, X, Y, n_splits=n_splits):
-        rs,_ = dl.get_rs(X, Y, n_splits=n_splits)
-        decode_perf = np.array(list(rs.values())).mean()
-
-        return decode_perf
-
-    def plot(self):
-        fig = plt.figure(figsize=figsize)
-        axes = fig.subplots(1, len(self.datasets.keys()))
-        for i,k in enumerate(self.datasets.keys()):
-            self.datasets[k].plot(axes[i])
-            axes[i].set_ylabel(self.ylabel)
-
-            #adding firing rate decoding performancce
-            Y = self.kinematics[k] 
-            X_smoothed = self.firing_rates[k]
-            rate_decode = self.get_decoding_performance(X_smoothed, Y)
-            n_points = len(self.datasets[k].kl_weight['gaussian'])
-            axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
-                            np.ones(n_points) * rate_decode, 'g')
-            
-            #adding autolfads performance for rockstar
-            if k=='rockstar':
-                with h5py.File('../data/model_output/rockstar_autolfads-laplace-prior_all.h5', 'r') as h5file:
-                    X_autolfads = dl.get_lfads_predictor(h5file['factors'][:])
-                
-                autolfads_decode = self.get_decoding_performance(X_autolfads, Y)
-                n_points = len(self.datasets[k].kl_weight['gaussian'])
-                axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
-                            np.ones(n_points) * autolfads_decode, 'r')
-                axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode', 
-                                'Autolfads Decode'])
-            else:
-                axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode'])
-
-        fig.suptitle(self.title)
-        self.fig = fig
-
-class Ginis(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Controller Gini Coefficient'
-
-    def compute_measure(self, run):
-        return np.mean([sa.gini(run.co[:,:,i].flatten()) for i in range(run.co.shape[2])])
-
-class Spectral_Centroid(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Spectral Mean'
-
-    def compute_measure(self, run):
-        # f,p = periodogram(run.co.sum(2), fs=100, axis=1)
-        # p = p.mean(0)
-        # p /= p.sum(0)
-        
-        # return np.sum(f*p)
-
-        f,p = periodogram(run.co, axis=1)
-        p = p.mean(0)
-        p /= p.sum(0)
-        c = np.zeros(p.shape[1])
-        for i in range(p.shape[1]):
-            c[i] = np.sum(f*p[:,i])
-
-        return np.mean(c)
-
-class Power(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Controller Gini Coefficient'
-
-    def compute_measure(self, run):
-        return np.mean([sa.gini(run.co[:,:,i].flatten()) for i in range(run.co.shape[2])])
-
-class Kurtosis(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Controller Kurtosis'
-
-    def compute_measure(self, run):
-        #return np.mean([kurtosis(run.co[:,:,i]) for i in range(run.co.shape[2])])
-        return kurtosis(np.abs(savgol_filter(run.co,11,2,axis=1)).sum(2).flatten())
-
-class Fit(Measure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.ylabel='Reconstruction Loss, Validation Set'
-    
-    def compute_measure(self, run):
-        return run_info[run.dataset]['params'][run.param]['fit']['recon_train']
-
-# class Total_Peaks(Measure):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.ylabel='Reconstruction Loss, Validation Set'
-    
-#     def compute_measure(self, run):
-
-#         all_peaks = ta.get_peaks(co, dt, min_heights)
-#         total_peaks = 0
-#         for i in range(all_peaks.shape[0]):
-#             for j in range(all_peaks[i,0].shape[0]):
-#                 if np.any(np.abs(all_peaks[i,0][j] - all_peaks[i,1]) < 0.1):
-#                     continue
-#                 else:
-#                     total_peaks += 1
-
-#             total_peaks += len(all_peaks[i,1])
-
-#         n_targets = peak_df.shape[0]
-#         #peak_path = '../data/peaks/%s_%s_peaks_all_thresh=%0.1f.p'%(run.dataset, run.param, min_heights)
-#         peak_path = '../data/peaks/%s_%s_peaks_relative_3sds.p'%(run.dataset, run.param)
-#         if os.path.exists(peak_path):
-#             peak_df = pd.read_pickle(peak_path)
-#         else:
-#             #peak_df,_ = ps.split_peak_df(df, co, trial_len, dt, dataset, param)
-#             peak_df = ta.get_peak_df(df, co, trial_len, min_heights, dt, win_start=win_start, win_stop=win_stop)
-#             peak_df.to_pickle(peak_path)
-
-#         npeaks = (peak_df['latency_0'].notnull() | peak_df['latency_1'].notnull()).sum()
-#         peak_counts[prior].append(total_peaks/n_targets)
-
-#         return run_info[run.dataset]['params'][run.param]['fit']['recon_train']
-
 if __name__=='__main__':
-    measures = [Absolute_Target_Peak(filename='absolute_targets_with_peaks.png'),
-        Relative_Target_Peak(filename='relative_targets_with_peaks.png'), 
-        Decode(filename='decode.png'),
-        Ginis(filename='gini.png'),
-        Kurtosis(filename='kurtosis.png'),
-        Fit(filename='recon_loss.png')]
+    # measures = [Absolute_Target_Peak(filename='absolute_targets_with_peaks.png'),
+    #     Relative_Target_Peak(filename='relative_targets_with_peaks.png'), 
+    #     Decode(filename='decode.png'),
+    #     Ginis(filename='gini.png'),
+    #     Kurtosis(filename='kurtosis.png'),
+    #     Fit(filename='recon_loss.png')]
     
     #measures = [Decode('decode.png')]
     #measures = [Target_Peak(filename='absolute_targets_with_peaks.png')]
-    select_measure_idx = 0
-    measures = [Ginis(filename='gini.png')]
-    #measures = [Spectral_Centroid(filename='spectral.png')]
-    for dataset in run_info.keys():
-        # kl_weight = {'gaussian':[], 'laplace':[]}
-        # ginis = {'gaussian':[], 'laplace':[]}
-        # target_peaks = {'gaussian':[], 'laplace':[]}
-        # power = {'gaussian':[], 'laplace':[]}
-        # fit = {'gaussian':[], 'laplace':[]}
-        # decode = {'gaussian':[], 'laplace':[]}
-        # peak_counts = {'gaussian':[], 'laplace':[]}
-        # decode_controller = {'gaussian':[], 'laplace': []}
-        df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
-
-        # decode_path = '../data/model_output/%s_decoding.p'%dataset
-        # if os.path.exists(decode_path):
-        #     decode = pickle.load(open(decode_path,'rb'))
-        #     do_decoding = False
-        # else:
-        #     do_decoding = True
-
-        # decode_path_controller = '../data/model_output/%s_controller_decoding.p'%dataset
-        # if os.path.exists(decode_path_controller):
-        #     decode_controller = pickle.load(open(decode_path_controller,'rb'))
-        #     do_controller_decoding = False
-        # else:
-        #     do_controller_decoding = True
-
-        
-        for param in run_info[dataset]['params'].keys():
-            lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
-            if 'raju' in dataset and not os.path.exists(lfads_filename):
-                continue
-            
-            inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
-            input_info = io.loadmat(inputInfo_filename)
-            with h5py.File(lfads_filename, 'r') as h5file:
-                co = h5file['controller_outputs'][:]
-                dt = utils.get_dt(h5file, input_info)
-                trial_len = utils.get_trial_len(h5file, input_info)
-
-            prior = run_info[dataset]['params'][param]['param_values']['ar_prior_dist']
-            kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
-
-            for measure in measures:
-                measure.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
-                
-        # kl_weight = measures[select_measure_idx].datasets[dataset].kl_weight
-        # gini = measures[select_measure_idx].datasets[dataset].measure
-        # selected_kl_weight = kl_weight['gaussian'][np.argmin(gini['gaussian'][:-4])]
-        # for param in run_info[dataset]['params'].keys():
-        #     if (run_info[dataset]['params'][param]['param_values']['kl_co_weight']==selected_kl_weight and 
-        #         run_info[dataset]['params'][param]['param_values']['ar_prior_dist']=='gaussian'):
-        #         with open('../data/peaks/%s_selected_param_spectral.txt'%(dataset),'w') as selected_param_file:
-        #             selected_param_file.write(param)
-        #         break
-
-        kl_weight = measures[select_measure_idx].datasets[dataset].kl_weight
-        gini = measures[select_measure_idx].datasets[dataset].measure
-        selected_kl_weight = kl_weight['laplace'][np.argmax(gini['laplace'][:-2])]
-        for param in run_info[dataset]['params'].keys():
-            if (run_info[dataset]['params'][param]['param_values']['kl_co_weight']==selected_kl_weight and 
-                run_info[dataset]['params'][param]['param_values']['ar_prior_dist']=='laplace'):
-                with open('../data/peaks/%s_selected_param_gini.txt'%(dataset),'w') as selected_param_file:
-                    selected_param_file.write(param)
-                break
+    #dataset
+    run_info_path = os.path.dirname(__file__) + '/../lfads_file_locations.yml'
+    run_info = yaml.safe_load(open(run_info_path, 'r'))
     
-    for measure in measures:
-        measure.plot()
-        measure.savefig()
-            #     X_factors = dl.get_lfads_predictor(h5file['factors'][:])
-            #     X_controller = dl.get_lfads_predictor(h5file['controller_outputs'][:])
+    config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+    cfg = yaml.safe_load(open(config_path, 'r'))
+    
+    select_metric = cfg['selection_metric']
+    metric = metric_dict[select_metric]()
+    
+    dataset = snakemake.wildcards.dataset
+    df = pd.read_pickle(os.path.dirname(__file__)+'/../data/intermediate/%s.p'%dataset)
+    for param in run_info[dataset]['params'].keys():
+        lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
+        inputInfo_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+        input_info = io.loadmat(inputInfo_filename)
+        with h5py.File(lfads_filename, 'r') as h5file:
+            co = h5file['controller_outputs'][:]
+            dt = utils.get_dt(h5file, input_info)
+            trial_len = utils.get_trial_len(h5file, input_info)
 
-            # prior = run_info[dataset]['params'][param]['param_values']['ar_prior_dist']
-            # kl_weight[prior].append(run_info[dataset]['params'][param]['param_values']['kl_co_weight'])
-            
-            # peak_path = '../data/peaks/%s_%s_peaks_all_thresh=%0.1f.p'%(dataset, param, min_heights)
-            # if os.path.exists(peak_path):
-            #     peak_df = pd.read_pickle(peak_path)
-            # else:
-            #     #peak_df,_ = ps.split_peak_df(df, co, trial_len, dt, dataset, param)
-            #     peak_df = ta.get_peak_df(df, co, trial_len, min_heights, dt, win_start=win_start, win_stop=win_stop)
-            #     peak_df.to_pickle(peak_path)
+        prior = run_info[dataset]['params'][param]['param_values']['ar_prior_dist']
+        kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
 
-            # npeaks = (peak_df['latency_0'].notnull() | peak_df['latency_1'].notnull()).sum()
-            # target_peaks[prior].append(npeaks/peak_df.shape[0])
-            # g = np.mean([sa.gini(co[:,:,i].flatten()) for i in range(co.shape[2])])
-            # ginis[prior].append(g)
-            # filtered = savgol_filter(co,11,2,axis=1)
-            # p = np.max(np.sum(np.abs(filtered - filtered.mean((0,1))), axis=(0,1)))
-            # power[prior].append(p)
+        metric.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
 
-            # fit[prior].append(run_info[dataset]['params'][param]['fit']['recon_train'])
-
-            # all_peaks = ta.get_peaks(co, dt, min_heights)
-            # total_peaks = 0
-            # for i in range(all_peaks.shape[0]):
-            #     for j in range(all_peaks[i,0].shape[0]):
-            #         if np.any(np.abs(all_peaks[i,0][j] - all_peaks[i,1]) < 0.1):
-            #             continue
-            #         else:
-            #             total_peaks += 1
-
-            #     total_peaks += len(all_peaks[i,1])
-
-            # n_targets = peak_df.shape[0]
-            # peak_counts[prior].append(total_peaks/n_targets)
-
-        #     if do_decoding:
-        #         Y = dl.get_kinematics(df, trial_len, dt)
-        #         rs,_ = dl.get_rs(X_factors,Y,n_splits=5)
-        #         decode_perf = np.array(list(rs.values())).mean()
-        #         decode[prior].append(decode_perf)
-            
-        #     if do_controller_decoding:
-        #         Y = dl.get_kinematics(df, trial_len, dt)
-        #         rs,_ = dl.get_rs(X_controller,Y,n_splits=5)
-        #         decode_perf = np.array(list(rs.values())).mean()
-        #         decode_controller[prior].append(decode_perf)
-        
-        # for prior in kl_weight.keys():
-        #     idx = np.argsort(kl_weight[prior])
-        #     kl_weight[prior] = np.array(kl_weight[prior])[idx]
-        #     target_peaks[prior] = np.array(target_peaks[prior])[idx]
-        #     power[prior] = np.array(power[prior])[idx]
-        #     fit[prior] = np.array(fit[prior])[idx]
-        #     #peak_counts[prior] = np.array(peak_counts[prior])[idx]
-        #     decode[prior] = np.array(decode[prior])[idx]
-        #     decode_controller[prior] = np.array(decode_controller[prior])[idx]
-        #     kurtosis[prior] = np.array(decode_controller[prior])[idx]
-
-        # if do_decoding:
-        #     pickle.dump(decode, open(decode_path,'wb'))
-
-        # if do_controller_decoding:
-        #     pickle.dump(decode, open(decode_path_controller,'wb'))
-
-        #plt.plot(kl_weight['gaussian'], target_peaks['gaussian'])
-        #plt.plot(kl_weight['laplace'], target_peaks['laplace'])
-        
-        #plt.xlabel('Controller Penalty')
-        # plt.plot(ginis['gaussian'], target_peaks['gaussian'])
-        # plt.plot(ginis['laplace'], target_peaks['laplace'])
-        # plt.xlabel('Gini')
-        # 
-        # plt.legend(['Dense Prior', 'Sparse Prior'])
-        # monkey = dataset[0].upper() + dataset[1:] #capitalize dataset for title
-        # plt.title(monkey)
-        # plt.figure()
-        # plt.plot(kl_weight['gaussian'], power['gaussian'])
-        # plt.plot(kl_weight['laplace'], power['laplace'])
-        # plt.xlabel('Power')
-        # plt.ylabel('Proportion of targets with peaks')
-        # monkey = dataset[0].upper() + dataset[1:] #capitalize dataset for title
-        # plt.title(monkey)
-        # plt.figure()
-
-        # plt.plot(kl_weight['gaussian'], target_peaks['gaussian'])
-        # plt.plot(kl_weight['laplace'], target_peaks['laplace'])
-        # plt.ylabel('Proportion of targets with peaks')
-        # plt.ylim([0,1])
-
-        # plt.plot(kl_weight['gaussian'], fit['gaussian'])
-        # plt.plot(kl_weight['laplace'], fit['laplace'])
-        # plt.ylabel('Reconstruction Loss')
-
-        # plt.plot(kl_weight['gaussian'], peak_counts['gaussian'])
-        # plt.plot(kl_weight['laplace'], peak_counts['laplace'])
-        # plt.ylabel('Total Peaks/Number of Targets')
-
-        # plt.plot(kl_weight['gaussian'], decode['gaussian'])
-        # plt.plot(kl_weight['laplace'], decode['laplace'])
-        # plt.ylabel('Decode Accuracy')
-
-        # legend = ['Dense Prior']
-        # plt.legend(['Dense Prior', 'Sparse Prior'])
-        # plt.xlabel('KL_weight')
-        # monkey = run_info[dataset]['name']
-
-        # plt.title(monkey)
-
+    kl_weight = metric.datasets[dataset].kl_weight
+    metric_values = metric.datasets[dataset].measure
+    selected_kl_weight = kl_weight['laplace'][np.argmax(metric_values['laplace'][:-2])]
+    for param in run_info[dataset]['params'].keys():
+        if (run_info[dataset]['params'][param]['param_values']['kl_co_weight']==selected_kl_weight and 
+            run_info[dataset]['params'][param]['param_values']['ar_prior_dist']=='laplace'):
+            with open(snakemake.output[0], 'w') as selected_param_file:
+                selected_param_file.write(param)
+            break

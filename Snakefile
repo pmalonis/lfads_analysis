@@ -3,6 +3,8 @@ from glob import glob
 import yaml
 import subprocess as sp
 import sys
+sys.path.insert(0, 'src')
+from select_lfads_model import metric_dict
 
 configfile: "config.yml"
 
@@ -12,12 +14,14 @@ dataset_info = yaml.safe_load(open(locations_path, 'r'))
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
+PEAK_DIR = "data/peaks/"
 TRIAL_TYPES = ["all"]#["train", "valid", "all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
 PACKAGES = glob(os.environ["CONDA_PREFIX"] + "/conda-meta/*")
 TRIAL_SETS = ["train", "valid"]
+CONTROLLER_METRICS = list(metric_dict.keys())
 
 # if sp.check_output(["git", "status", "-s"]):
 #     to_run = input("There are uncommitted changes. Run anyway? (y/n):")
@@ -93,6 +97,37 @@ rule download_all:
 #         sp.run(['scp', '-T'] + download_list + [MODEL_OUTPUT_DIR])
 #         for download, output_file in zip(download_list, output_name_list):
 #             os.replace(MODEL_OUTPUT_DIR + os.path.basename(download), output_file)
+
+rule plot_controller_metric:
+    input:
+        "src/plot_all_controller_metrics.py",
+        "src/plot_controller_metric.py",
+        "lfads_file_locations.yml",
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+
+    output:
+        "figures/{metric}.png"
+
+    script:
+        "src/plot_controller_metric.py"
+
+rule select_model:
+    input:
+        "src/plot_all_controller_metrics.py",
+        "src/select_lfads_model.py",
+        "lfads_file_locations.yml",
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        "config.yml"
+    
+    output:
+        PEAK_DIR + "{dataset}_selected_param_%s.txt"%config['selection_metric']
+
+    script:
+        "src/select_lfads_model.py"
 
 rule download_model:
     params:
