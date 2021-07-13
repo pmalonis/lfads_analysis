@@ -16,25 +16,23 @@ import os
 import yaml
 from scipy import io
 import pickle
-from importlib import reload
-reload(ta)
 
 random_state = 1027
 train_test_ratio = 0.2
 
-def split_target_df(df, dataset):
-    target_df = ta.get_targets(df)
-    df_train, df_test = train_test_split(target_df, test_size=train_test_ratio, random_state=random_state)
-    df_train, df_test = (df_train.sort_index(), df_test.sort_index())
-    df_train.to_pickle(os.path + '/../data/peaks/%s_targets_train.p'%dataset)
-    df_test.to_pickle(os.path + '/../data/peaks/%s_targets_test.p'%dataset)
-
-    return df_train, df_test
-
 if __name__=='__main__':
-    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
-    datasets = list(run_info.keys())
-    for i, dataset in enumerate(datasets):
+    datasets = ['raju-M1-no-bad-trials']
+    win_start = 0
+    win_stop = 0.5
+    min_height_list = [[0.3,0.3]]*len(datasets)#[[0.3, 0.3], [0.3, 0.3], [0.3, 0.3]]
+    reverse_scores = []
+    monkey_labels = []
+    for i,dataset in enumerate(datasets):
         data_filename = '../data/intermediate/' + dataset + '.p'
         df = data_filename = pd.read_pickle(data_filename)
-        split_peak_df(df, co, trial_len, dt, dataset)
+
+        idx = range(df.index[-1][0] + 1)
+        idx_train, idx_test = train_test_split(idx, test_size=train_test_ratio, random_state=random_state)
+        
+        np.save('../data/intermediate/train_test_split/%s_trials_train.npy'%dataset, idx_train)
+        np.save('../data/intermediate/train_test_split/%s_trials_test.npy'%dataset, idx_test)

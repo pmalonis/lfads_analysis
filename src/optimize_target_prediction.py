@@ -5,8 +5,10 @@ import new_predict_targets as pt
 import timing_analysis as ta
 import segment_submovements as ss
 import custom_objective
+from multiprocessing import Pool
+import joblib
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, FunctionTransformer
 from sklearn.pipeline import make_pipeline
 from xgboost import XGBRegressor
 from sklearn.svm import SVR
@@ -36,23 +38,44 @@ np.random.seed(random_state)
 train_test_random_state = 1027
 train_test_ratio = 0.2
 spike_dt = 0.001
+nbins = 12
 
-
-def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3, reference='hand', use_rates=False, 
-                        df=None, rate_pcs=2, reduce_time=False, time_pcs=10, peaks_only=False,
+def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop=0.3, reference='hand', use_rates=False, 
+                        rate_pcs=2, reduce_time=False, time_pcs=10, peaks_only=False, use_dpca=False,
                         align_peaks=False, find_peak_win_size=0.2, reach_endpoint=False, fit_direction=True,
-                        poly_features=False, poly_degree=2, filter_co=False, align_win_start=0.0, align_win_stop=0.2):
+                        poly_features=False, poly_degree=2, filter_co=False, align_win_start=0.0, align_win_stop=0.2,
+                        hand_time=0, min_win_start=None, max_win_stop=None, win_lim=None):
+    '''
+    fit_direction: fit raw x-y coordinates or fit normalized x-y coordinates as well as
+    length vector
+    hand_time: time from event to use as reference for hand-centric coordinates
+    '''
     #removing targets for which we don't have a full window of controller inputs
+    if win_lim is not None:
+        win_start, win_stop = win_lim
+    
+    if min_win_start is None:
+        min_win_start = win_start
 
-    peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') < trial_len - cfg['post_target_win_stop'])]
-    used_inds = list(set(peak_df.index.get_level_values('trial')))
+    if max_win_stop is None:
+        max_win_stop = win_stop
+
+    #removing events with a window that goes beyond the trial length
+    peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') < trial_len - max_win_stop)]
+    
+    #removing events with a window that starts before the start of the trial
+    peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') + min_win_start >= 0)]
+
+    used_inds = np.sort(list(set(peak_df.index.get_level_values('trial'))))
 
     k = 0 # target counter
     if use_rates and not isinstance(df, pd.DataFrame):
         raise ValueError('df argument must be given if use_rates is True')
 
-    win_size = int((win_stop-win_start)/dt)
-
+    win_size = int(np.round((win_stop-win_start)/dt))
+    
+    hand_pos = np.zeros((peak_df.shape[0],2))
+    
     #TODO Create utils function for this
     if use_rates:
         nneurons = sum('neural' in c for c in df.columns)
@@ -66,33 +89,39 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3
             smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values #removing rows with all values null (edge values of smoothing)
             all_smoothed[i,:,:] = smoothed
 
-        pca = PCA(n_components=rate_pcs)
-        pca.fit(np.vstack(all_smoothed))
-        X = np.zeros((peak_df.shape[0], win_size*rate_pcs))
+        if use_dpca:
+            pca = FunctionTransformer()
+            X = np.zeros((peak_df.shape[0], win_size*nneurons))
+        else:
+            pca = PCA(n_components=rate_pcs)
+            pca.fit(np.vstack(all_smoothed))
+            X = np.zeros((peak_df.shape[0], win_size*rate_pcs))
     else:
         X = np.zeros((peak_df.shape[0], win_size*co.shape[2]))
+
+
+    if filter_co:
+        co = savgol_filter(co, 11, 2, axis=1)
 
     idx_to_remove = []
     for i in range(len(used_inds)):
         trial_peak_df = peak_df.loc[used_inds[i]]
-        target_times = trial_peak_df.index
-        for target_time in target_times:
+        trial_df = df.loc[used_inds[i]]
+        transition_times = trial_peak_df.index
+        for transition_time in transition_times:
             if align_peaks:
-                peak_win_start = int((target_time + align_win_start)/dt)
-                peak_win_stop = int((target_time + align_win_stop)/dt)
+                peak_win_start = int((transition_time + align_win_start)/dt)
+                peak_win_stop = int((transition_time + align_win_stop)/dt)
                 if use_rates:
                     peak_idx = peak_win_start + np.argmax(all_smoothed[i, peak_win_start:peak_win_stop,:].sum(1)) #peak of population response
                 else:
-                    try:
-                        peak_idx = peak_win_start + np.argmax(np.abs(co[used_inds[i], peak_win_start:peak_win_stop,:]).sum(1)) # peak of sum of absolute controller input
-                    except:
-                        import pdb;pdb.set_trace()
+                    peak_idx = peak_win_start + np.argmax(np.abs(co[used_inds[i], peak_win_start:peak_win_stop,:]).sum(1)) # peak of sum of absolute controller input
 
                 idx_start = peak_idx + int(win_start/dt)
                 idx_stop = peak_idx + int(win_stop/dt)
             else:
-                idx_start = int((target_time + win_start)/dt)
-                idx_stop = int((target_time + win_stop)/dt)
+                idx_start = int((transition_time + win_start)/dt)
+                idx_stop = int((transition_time + win_stop)/dt)
             
             if (idx_start < 0) or (idx_stop >= trial_len//dt): #for align_peaks condition
                 idx_to_remove.append(k)
@@ -107,16 +136,14 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3
                 else:
                     X[k,:] = co[used_inds[i],idx_start:idx_stop,:].T.flatten()
 
+            df_idx = trial_df.index.get_loc(transition_time + hand_time, method='nearest')
+            hand_pos[k,:] = trial_df.kinematic.iloc[df_idx][['x','y']].values
             k += 1
 
     X = np.delete(X, idx_to_remove, axis=0)
 
     X_index = ~np.all(np.isnan(X), axis=1)
     X = X[X_index]
-
-    if filter_co:
-        for i in range(co.shape[2]):
-            X[:,i*win_size:(i+1)*win_size] = savgol_filter(X[:,i*win_size:(i+1)*win_size], 11, 2, axis=1)
 
     if reduce_time:
         X_reduced = np.zeros((X.shape[0], co.shape[2]*time_pcs))
@@ -136,9 +163,18 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3
         target_pos = peak_df[['target_x', 'target_y']].values
 
     if reference == 'hand':
-        y = target_pos - peak_df[['x', 'y']].values
+        y = target_pos - hand_pos
+
     elif reference == 'shoulder':
         y = target_pos
+        
+    y = np.delete(y, idx_to_remove, axis=0)
+    y = y[X_index]
+    zero_rows = ~np.all(y==0, axis=1)
+    #removing examples where hand_pos and target pos are the same. 
+    #this occurs if transition_time + hand_time falls exactly on target appearance time
+    y = y[zero_rows]
+    X = X[zero_rows]
 
     if fit_direction:
         #y = np.arctan2(y[:,1], y[:,0])
@@ -146,8 +182,18 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, win_start=0.05, win_stop=0.3
         y = (y.T / np.linalg.norm(y, axis=1)).T
         y = np.concatenate([y, r.reshape(-1,1)], axis=1)
 
-    y = np.delete(y, idx_to_remove, axis=0)
-    y = y[X_index]
+    if use_rates and use_dpca:
+        X_av = np.zeros((nneurons, trial_len//dt, nbins))
+        reshaped_X = X.reshape((-1, trial_len//dt, nneurons), order='F')
+        for i in range(-nbins//2, nbins//2):
+            min_theta = i * bin_theta
+            max_theta = (i+1) * bin_theta
+            X_av[:,:,i] = reshaped_X[(theta > min_theta) & (theta <= max_theta)].mean(0).T
+        
+        model = dPCA('ntp', n_components=rate_pcs)
+        model.fit(X_av)
+        transformed = model.transform(reshaped_X.T)['p']
+        transformed
 
     return X, y
 
@@ -170,10 +216,7 @@ def get_endpoint(peak_df, df, dt):
         minima = ss.trial_transitions(df.loc[i])
         t_move = df.loc[i].index[minima]
         for t_target in peak_df.loc[i].index:
-            try:
-                t_end = t_move[np.where(t_move > t_target + cfg['post_target_win_stop'])[0][0]]
-            except:
-                import pdb;pdb.set_trace()
+            t_end = t_move[np.where(t_move > t_target + cfg['post_target_win_stop'])[0][0]]
             idx_end = trial_df.index.get_loc(t_end, method='nearest')
             endpoint_x[k] = trial_df.kinematic.iloc[idx_end]['x']
             endpoint_y[k] = trial_df.kinematic.iloc[idx_end]['y']
@@ -190,66 +233,81 @@ def get_endpoint(peak_df, df, dt):
 if __name__=='__main__':
     cv = 5 #cross validation factor
     n_cores = multiprocessing.cpu_count()
-    output_filename = '../data/peaks/gini_selected.csv'
-    win_start = 0
-    win_stop = 0.5
-    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+    output_filename = '../data/peaks/mack_test.csv'
+    run_info = yaml.safe_load(open(os.path.dirname(__file__) + '/../lfads_file_locations.yml', 'r'))
     dataset_dicts = {}
+    # for dataset in run_info.keys():
+    #     if dataset=='mack':
+    #         dset_dict = {}
+    #         dset_dict['lfads_params'] = [open(os.path.dirname(__file__)+'/../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read()]
+    #         dset_dict['file_root'] = dataset
+    #         dataset_dicts[run_info[dataset]['name']] = dset_dict
+    # for dataset in run_info.keys():
+    #     if dataset=='mack':
+    #         dset_dict = {}
+    #         dset_dict['lfads_params'] = [open(os.path.dirname(__file__)+
+    #         '/../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric)).read() 
+    #         for selection_metric in ['gini','spectral']]
+    #         dset_dict['file_root'] = dataset
+    #         dataset_dicts[run_info[dataset]['name']] = dset_dict
     for dataset in run_info.keys():
-        dset_dict = {}
-        dset_dict['lfads_params'] = [open('../data/peaks/%s_selected_param_gini.txt'%(dataset)).read()]
-        dset_dict['file_root'] = dataset
-        dataset_dicts[run_info[dataset]['name']] = dset_dict
+        if dataset=='mack':
+            dset_dict = {}
+            dset_dict['lfads_params'] = [open(os.path.dirname(__file__)+
+            '/../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric)).read() 
+            for selection_metric in ['spectral']]
+            dset_dict['file_root'] = dataset
+            dataset_dicts[run_info[dataset]['name']] = dset_dict
 
-    # rockstar_dict = {'lfads_params':  ['all-early-stop-kl-sweep-yKzIQf'],
-    #                  'file_root':'rockstar'}
-    # raju_dict = {'lfads_params': ['final-fixed-2OLS24'], 
-    #              'file_root':'raju'}
-    # nb_raju_dict = {'lfads_params': ['final-fixed-2OLS24'], 
-    #              'file_root':'raju_no_bad_trials'}
-    # mack_dict = {'lfads_params': ['all-early-stop-kl-sweep-bMGCVf'],
-    #                               'file_root':'mack'}
-    # raju_M1_dict = {'lfads_params': ['raju-split-updated-params-2OLS24'], 
-    #              'file_root':'raju-M1'}
-    # raju_PMd_dict = {'lfads_params': ['raju-split-updated-params-2OLS24'], 
-    #                 'file_root':'raju-PMd'}
-
-    # testing_dict =  {'lfads_params': ['2OLS24'], 
-    #                  'file_root':'rockstar-testing'}
-    
-    # dataset_dicts = {'Rockstar': rockstar_dict,
-    #                  'Raju': raju_dict,
-    #                 'Mack': mack_dict}
-    #dataset_dicts = {'Raju': raju_dict, 'NB Raju':nb_raju_dict}
 
     svr_dict = {'kernel':['rbf'], 
                 'gamma':['scale'], 
-                'C':[0.2, 0.4, 0.5, 0.7, 0.9]}
-
-    rf_dict = {'max_features':['auto', 'sqrt', 'log2'],
-               'min_samples_leaf':[1,5,10,15]}
-    # xgb_dict = {'max_depth':[1, 2, 3, 4, 5, 6],
-    #             'learning_rate':[0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}
+                'C':[0.1, 0.3, 0.5, 0.7, 0.9]}
     
-    # preprocess_dict = {'reference':['hand', 'shoulder'],
-    #                    'use_rates':[True, False],
-    #                    'reduce_time':[True, False],
-    #                    'reach_endpoint':[True, False],
-    #                    'align_peaks':[False]}
+    rf_dict = {'max_features':['auto', 'sqrt', 'log2'],
+                'min_samples_leaf':[1,5,10,15]}
+    preprocess_dict = {'fit_direction':[True],
+                        'poly_features': [True],
+                        'reduce_time': [True],
+                        'use_rates':[False],
+                        'filter_co': [True],
+                        'time_pcs':[9],
+                        'win_lim':[(0,0.1),(0,0.15),(0,0.2),(0,0.25),
+                                   (0,0.3),(0.05,0.15), (0.05,0.2),(0.05,0.2), 
+                                    (0.05,0.25),(0.05,0.3),(0.1,0.2), (0.1,0.25),
+                                    (0.1,0.3)],
+                        'hand_time':[0]}
+    # preprocess_dict = {'fit_direction':[True],
+    #                 'poly_features': [False],
+    #                 'reduce_time': [True],
+    #                 'use_rates':[False],
+    #                 'filter_co': [True],
+    #                 'time_pcs':[15],
+    #                 'win_lim':[(-0.3,0),(-0.2, 0)],
+    #                 'hand_time':[0]}
 
     preprocess_dict = {'fit_direction':[True],
-                       'reference': ['hand', 'shoulder'],
-                       'poly_features': [True, False],
-                        'reduce_time': [True],
-                        'filter_co': [True],
-                        'time_pcs':[5, 7, 10, 15]}
+                    'poly_features': [False],
+                    'reduce_time': [True],
+                    'use_rates':[False],
+                    'filter_co': [True, False],
+                    'time_pcs':[15],
+                    'win_lim':[(0.05,0.3)],
+                    'hand_time':[0]}
 
-    #preprocess_dict = {'fit_direction':[True, False]}
+    #preprocess_dict = {'filter_co':[False,True], 'use_rates':[True,False],'fit_direction':[True, False], 'reference':['hand','shoulder'],'time_pcs':[5, 7, 10, 15], 'poly_features': [True, False]}
     #preprocess_dict = {'align_peaks':[True, False], 'fit_direction':[True, False]}
     #preprocess_dict = {'poly_features':[True, False], 'reduce_time':[True], 'filter_co':[True], 'time_pcs':[5], 'win_stop':[.16, 0.2]}
     pre_param_dicts = []
+    no_pcs_param_dicts = []
     for pre_params_set in itertools.product(*preprocess_dict.values()):
-        pre_param_dicts.append({k:p for k,p in zip(preprocess_dict.keys(), pre_params_set)})
+        no_pcs_param_dict = {k:p for k,p in zip(preprocess_dict.keys(), pre_params_set) if k !='rate_pcs'}
+        
+        #leaves out reduntant paramaters set for rate_pcs parameter only affecting sets with use_rates=True
+        if ('use_rates' not in no_pcs_param_dict.keys() or no_pcs_param_dict['use_rates']==False) and no_pcs_param_dict in no_pcs_param_dicts:
+            continue
+        else:
+            pre_param_dicts.append({k:p for k,p in zip(preprocess_dict.keys(), pre_params_set)})
 
     # estimator_dict = {'SVR': (MultiOutputRegressor(SVR()), svr_dict), 
     #               'Random Forest': (RandomForestRegressor(random_state=random_state), rf_dict), 
@@ -278,17 +336,16 @@ if __name__=='__main__':
     grid_results = []
     scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func)}
     dir_scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func),'r_score':make_scorer(r_score_func)}
-    
     for dataset_name, dataset_dict in dataset_dicts.items():
         for lfads_params in dataset_dict['lfads_params']:
             file_root = dataset_dict['file_root']
-            data_filename = '../data/intermediate/' + file_root + '.p'
-            lfads_filename = '../data/model_output/' + \
+            data_filename = os.path.dirname(__file__)+'/../data/intermediate/' + file_root + '.p'
+            lfads_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
                             '_'.join([file_root, lfads_params, 'all.h5'])
-            inputInfo_filename = '../data/model_output/' + \
+            inputInfo_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
                                 '_'.join([file_root, 'inputInfo.mat'])
-            peak_filename = '../data/peaks/' + \
-                            '_'.join([file_root, 'peaks_train.p'])
+            peak_filename = os.path.dirname(__file__)+'/../data/peaks/' + \
+                            '_'.join([file_root, 'targets_train.p'])
             
             df = data_filename = pd.read_pickle(data_filename)
             input_info = io.loadmat(inputInfo_filename)
@@ -318,9 +375,9 @@ if __name__=='__main__':
                         param_grid = {'estimator__' + k:v for k,v in param_grid.items()}
 
                     if pre_param_dict.get('fit_direction'):
-                        model = GridSearchCV(estimator, param_grid, scoring=dir_scoring, refit=False, cv=cv, n_jobs=n_cores)
+                        model = GridSearchCV(estimator, param_grid, scoring=dir_scoring, refit=False, cv=cv)
                     else:
-                        model = GridSearchCV(estimator, param_grid, scoring=scoring, refit=False, cv=cv, n_jobs=n_cores)
+                        model = GridSearchCV(estimator, param_grid, scoring=scoring, refit=False, cv=cv)
 
                     model.fit(X,y)
                     n_params = len(model.cv_results_['params']) #number of parameters in sklearn Grid Search
@@ -333,10 +390,9 @@ if __name__=='__main__':
                     #removing estimator__ prefix
                     mapper = lambda s: s.replace('estimator__','')
                     estimator_param_df.rename(mapper=mapper, axis='columns', inplace=True)
-
-                    grid_results.append(pd.concat([lfads_param_df, pre_param_df, 
-                                                    estimator_param_df], axis=1))
-                    inputs[dataset_name] = (X, y)
+                    
+                    grid_results.append(pd.concat([lfads_param_df, pre_param_df, estimator_param_df], axis=1))
+                    print('params saved')
 
     output = pd.concat(grid_results, ignore_index=True)
     output.to_csv(output_filename)

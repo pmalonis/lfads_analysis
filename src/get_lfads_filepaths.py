@@ -14,8 +14,14 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 #cfg['username'] = 'macleanlab'
 #cfg['lfads_dir_path'] = '/home/macleanlab/peter/lfads_analysis/data/model_output/'
 if __name__=='__main__':
-    output_filename = '../lfads_file_locations.yml'
-    common_param_filename = '../lfads_common_parameters.yml'
+    output_filename = snakemake.output[0]#os.path.dirname(__file__) + '/../lfads_file_locations.yml'
+    common_param_filename = os.path.dirname(__file__) + '/../lfads_common_parameters.yml'
+    # file_pattern = 'mack_large_bin/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
+    # file_pattern = cfg['lfads_dir_path'] + file_pattern
+    # file_pattern = 'mack_fixed_tau_2co/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
+    # file_pattern = cfg['lfads_dir_path'] + file_pattern
+    #file_pattern = 'test_fixed_tau/*/single*k*/*/model_runs_*.h5*_posterior_sample_and_average'
+    #file_pattern = cfg['lfads_dir_path'] + file_pattern
     file_pattern = 'gaussian_kl_sweep/*/single*k*/*/model_runs_*.h5*_posterior_sample_and_average'
     file_pattern = cfg['lfads_dir_path'] + file_pattern
     file_pattern += ' ' + cfg['lfads_dir_path'] + 'laplace_kl_sweep/*/single_*k*/*/model_runs_*.h5*_posterior_sample_and_average'

@@ -1,9 +1,15 @@
+from scipy.signal import savgol_filter
 import subprocess as sp
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
+import yaml
 from scipy import io
 import h5py
+
+config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+cfg = yaml.safe_load(open(config_path, 'r'))
 
 def load_data(data_filename, lfads_filename, inputInfo_filename):
     '''loads data from filenames'''
@@ -95,3 +101,23 @@ def spoke_plot(x, y, labels=['x','y'], ax=None, color=[0,.4,.4,.6]):
         ax.plot([xi, yi], [1, 2], color=color)
 
     return ax
+
+# def get_firing_rates(df, dt, spike_dt):
+#     nneurons = sum('neural' in c for c in df.columns)
+#     std = cfg['target_decoding_smoothed_control_std']
+#     win = int(dt/spike_dt)
+#     midpoint_idx = int((win-1)/2)
+#     all_smoothed = np.zeros((len(used_inds), int(trial_len/dt), nneurons)) #holds firing rates for whole experiment (to be used for dimensionality reduction)
+#     for i in range(len(used_inds)):
+#         smoothed = df.loc[used_inds[i]].neural.rolling(window=std*4, min_periods=1, win_type='gaussian', center=True).mean(std=std)
+#         smoothed = smoothed.loc[:trial_len].iloc[midpoint_idx::win]
+#         smoothed = smoothed.loc[np.all(smoothed.notnull().values, axis=1),:].values #removing rows with all values null (edge values of smoothing)
+#         all_smoothed[i,:,:] = smoothed
+
+#     return all_smoothed
+
+def get_speed(x_vel, y_vel):
+    speed = np.sqrt(x_vel**2 + y_vel**2)
+    speed = savgol_filter(speed, cfg['speed_filter_win'], cfg['speed_filter_order'])
+
+    return speed

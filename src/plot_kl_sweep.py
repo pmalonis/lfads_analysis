@@ -7,7 +7,7 @@ import numpy as np
 
 if __name__=='__main__':
     run_info = yaml.safe_load(open('../lfads_file_locations.yml'))
-    output_name = '../figures/kl_sweep_spectrum.pdf'
+    output_name = '../figures/kl_sweep_big_bin.pdf'
     
     plots_per_page = 5
 
@@ -16,7 +16,7 @@ if __name__=='__main__':
             dset_params = sorted(run_info[dataset]['params'].items(),
                                 key=lambda d:d[1]['param_values']['kl_co_weight'])
 
-            dset_params = [(p,d) for p,d in dset_params if d['param_values']['ar_prior_dist']=='laplace']
+            dset_params = [(p,d) for p,d in dset_params if (d['param_values']['ar_prior_dist']=='laplace')]
             for i, (param_str, params) in enumerate(dset_params):
                 lfads_filename = '../data/model_output/' + '_'.join([dataset, param_str, 'all.h5'])
                 kl_weight = params['param_values']['kl_co_weight']

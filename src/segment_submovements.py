@@ -6,6 +6,9 @@ from scipy import signal
 import yaml
 import os
 from scipy.signal import savgol_filter
+import sys
+sys.path.insert(0,'.')
+import utils
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -150,6 +153,28 @@ def trial_control_transitions(trial_df):
     
 #     return minima
 
+# def speed_minima(x_vel, y_vel):
+#     '''Calculates submovements from velocity coordinates, based on 
+#     speed profile
+    
+#     Parameters
+#     x_vel: velocity in x-axis
+#     y_vel: velocity in y-axis
+    
+#     Returns
+#     intervals: List of minima defining starts/ends of submovements
+#     '''
+#     speed = utils.get_speed(x_vel, y_vel)
+#     minima, _  = signal.find_peaks(-speed,
+#                                   height=-cfg['speed_transition_thresh'])
+    
+#     prominence = cfg['min_speed_prominence']
+#     bounds = np.append(minima, len(speed) - 1)
+#     minima = [minima[i] for i in range(len(minima))
+#               if speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence]
+    
+#     return np.array(minima)
+
 def speed_minima(x_vel, y_vel):
     '''Calculates submovements from velocity coordinates, based on 
     speed profile
@@ -161,17 +186,46 @@ def speed_minima(x_vel, y_vel):
     Returns
     intervals: List of minima defining starts/ends of submovements
     '''
-    speed = np.sqrt(x_vel**2 + y_vel**2)
-    speed = savgol_filter(speed, cfg['speed_filter_win'], cfg['speed_filter_order'])
+    speed = utils.get_speed(x_vel, y_vel)
     minima, _  = signal.find_peaks(-speed,
                                   height=-cfg['speed_transition_thresh'])
     
     prominence = cfg['min_speed_prominence']
     bounds = np.append(minima, len(speed) - 1)
-    minima = [minima[i] for i in range(len(minima)) 
-                if speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence]
+    minima = [minima[i] for i in range(len(minima))
+              if speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence]
     
     return np.array(minima)
+
+
+
+def trial_maxima(trial_df, exclude_post_target=None, exclude_pre_target=None):
+    '''Calculates submovement transitions from single trial, based on 
+    speed profile
+    
+    Parameters
+    trial_df: single-trial dataframe
+    
+    Returns
+    trial_transitions: List of minima defining starts/ends of submovements, in index
+    '''
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+    maxima = speed_maxima(x_vel, y_vel)
+
+    targets = trial_df.kinematic.query('hit_target')
+    if exclude_post_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+        non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
+        maxima = maxima[non_post_target_events]
+    
+    if exclude_pre_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+        non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
+        maxima = maxima[non_pre_target_events]
+
+    return maxima
 
 def impulse_corrections(trial_df):
     '''Finds points of impulse control corrections, based on speed'''
@@ -184,6 +238,67 @@ def impulse_corrections(trial_df):
     jerk = np.gradient(accel, t)
 
     return accel
+
+def filter_peaks(peak_df):
+    peak_df = peak_df[peak_df[['latency_0', 'latency_1']].notnull().any(axis=1)]
+    return peak_df
+
+def peak_speed(trial_df, exclude_pre_target=None, exclude_post_target=None):
+    speed = np.linalg.norm(trial_df.kinematic[['x_vel', 'y_vel']].values, axis=1)
+    idx_targets = np.where(trial_df.kinematic['hit_target'])[0]
+    peaks = []
+    for i in range(len(idx_targets)-1):
+        target_peaks,_ = find_peaks(speed[idx_targets[i]:idx_targets[i+1]])
+        if len(target_peaks) > 0:
+            target_peaks += idx_targets[i]
+            peaks.append(target_peaks[speed[target_peaks].argmax()])
+        else:
+            continue
+
+    return np.array(peaks)
+
+def pre_peak(trial_df, exclude_pre_target=None, exclude_post_target=None):
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+    minima = ss.speed_minima(x_vel, y_vel)
+    peaks = peak_speed(trial_df)
+    peaks = peaks[peaks>minima[0]]
+    t = trial_df.index.values
+    speed = np.sqrt(x_vel**2 + y_vel**2)
+    accel = np.gradient(speed, t)
+    
+    movements = []
+    for i in range(len(peaks)-1):
+        move_start = minima[np.argmin(np.ma.MaskedArray(peaks[i] - minima, peaks[i] - minima < 0))]
+        move_stop = find_peaks(-speed[peaks[i]:])[0][0]
+        start_accel = accel[move_start]
+        peak_accel = np.max(accel[move_start:peaks[i]])
+        accel_amp = peak_accel-start_accel
+
+        peak_accel_idx = move_start + np.argmax(accel[move_start:peaks[i]])
+
+        up_peaks = move_start + find_peaks(accel[move_start:peak_accel_idx])[0]
+        if len(up_peaks) > 0:
+            up_troughs = np.zeros(len(up_peaks), dtype=int)
+            for j,p in enumerate(up_peaks):
+                try:
+                    up_troughs[j] = p + find_peaks(-accel[p:peak_accel_idx])[0][0]
+                except:
+                    import pdb; pdb.set_trace()
+
+            movements += list(up_peaks[(accel[up_peaks] - accel[up_troughs])>(0.1*accel_amp)])
+
+        down_peaks = peak_accel_idx + find_peaks(accel[peak_accel_idx:move_stop])[0]
+        if len(down_peaks) > 0:
+            down_troughs = np.zeros(len(down_peaks), dtype=int)
+            for j,p in enumerate(down_peaks):
+                try:
+                    down_troughs[j] = p - find_peaks(-accel[p:peak_accel_idx:-1])[0][0]
+                except:
+                    import pdb; pdb.set_trace()
+
+            movements += list(down_peaks[(accel[down_peaks] - accel[down_troughs])>0.1 * accel_amp])
+
+    return np.array(movements)
 
 def plot_submovements(trial_df):
     '''
@@ -306,14 +421,14 @@ def plot_trial(trial_df, trial_co, dt):
     t_targets = trial_df.kinematic.query('hit_target').index.values
     t = trial_df.loc[:trial_len].index.values
     lns = [] #for legend
-    transitions = trial_transitions(trial_df)
+    transitions = trial_maxima(trial_df)
     trial_len_ms = trial_len*1000
     transitions = transitions[transitions < trial_len_ms]
     plt.figure(figsize=(12,6))
-    lns.append(plt.plot(t, 10*speed,'g'))
+    lns.append(plt.plot(t, speed,'g'))
     accel = np.gradient(speed, t)
     #plt.twinx()
-    lns.append(plt.plot(t, accel, 'c'))
+    #lns.append(plt.plot(t, accel, 'c'))
     plt.plot(t[transitions], speed[transitions],'r.')
     plt.ylabel('Speed (mm/s)')
     plt.xlabel('Time (s)')
@@ -327,6 +442,28 @@ def plot_trial(trial_df, trial_co, dt):
     plt.vlines(t_targets, ymin, ymax)
     plt.xlim([0, trial_len])
     plt.ylim([ymin, ymax])
+
+def speed_maxima(x_vel, y_vel):
+    '''Calculates submovements from velocity coordinates, based on 
+    speed profile
+    
+    Parameters
+    x_vel: velocity in x-axis
+    y_vel: velocity in y-axis
+    
+    Returns
+    intervals: List of minima defining starts/ends of submovements
+    '''
+    speed = utils.get_speed(x_vel, y_vel)
+    minima, _  = signal.find_peaks(speed,
+                                  height=200, prominence=100)
+    
+    # prominence = 100
+    # bounds = np.append(minima, len(speed) - 1)
+    # minima = [minima[i] for i in range(len(minima))
+    #           if speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence]
+    
+    return np.array(minima)
 
 if __name__=='__main__':
     pass 

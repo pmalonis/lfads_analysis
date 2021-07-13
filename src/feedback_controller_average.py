@@ -54,8 +54,8 @@ if __name__=='__main__':
         # peak_df_train = pd.read_pickle('../data/peaks/%s_%s_peaks_train.p'%(dataset,param))
         # peak_df_test = pd.read_pickle('../data/peaks/%s_%s_peaks_test.p'%(dataset,param))
 
-        peak_df_train = pd.read_pickle('../data/peaks/%s_%s_fb_peaks_train.p'%(dataset,param))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_%s_fb_peaks_test.p'%(dataset,param))
+        peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
+        peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
@@ -64,8 +64,7 @@ if __name__=='__main__':
         #                             win_stop=win_stop)
 
         #X,y = fotp.get_inputs_to_model(peak_df, df, co, trial_len, dt)
-        X,y = fotp.get_inputs_to_model(peak_df, df, co, trial_len, dt, win_start=win_start, win_stop=win_stop, align_peaks=True
-        )
+        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, win_start=win_start, win_stop=win_stop, align_peaks=False)
 
         theta = np.arctan2(y[:,1], y[:,0])
         assert(nbins%2==0)

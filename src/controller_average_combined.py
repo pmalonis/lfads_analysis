@@ -33,9 +33,9 @@ for dataset in run_info.keys():
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
 nbins = 12
 fb_win_start = -0.2#0.00#-0.1#cfg['post_target_win_start']
-fb_win_stop = 0.2#0.3#0.1#cfg['post_target_win_stop']
-win_start = 0
-win_stop = 0.3
+fb_win_stop = 0 #0.3#0.1#cfg['post_target_win_stop']
+win_start = -0.2
+win_stop = 0
 
 lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
 with h5py.File(lfads_filename, 'r+') as h5file:
@@ -44,8 +44,6 @@ with h5py.File(lfads_filename, 'r+') as h5file:
 n_co = co.shape[2]
 
 if __name__=='__main__':
-    fig = plt.figure()
-    fig.tight_layout()
     for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
         data_filename = '../data/intermediate/' + dataset + '.p'
         lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
@@ -59,21 +57,21 @@ if __name__=='__main__':
             trial_len = utils.get_trial_len(h5file, input_info)
 
         co = savgol_filter(co, 11, 2, axis=1)
-        peak_df_train = pd.read_pickle('../data/peaks/%s_peaks_train.p'%(dataset))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_peaks_test.p'%(dataset))
+        peak_df_train = pd.read_pickle('../data/peaks/%s_firstmove_train.p'%(dataset))
+        peak_df_test = pd.read_pickle('../data/peaks/%s_firstmove_test.p'%(dataset))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_fb_peaks_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_fb_peaks_test.p'%(dataset))
+        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
+        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
-        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, 
+        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, 
                                     win_start=win_start, 
                                     win_stop=win_stop)
 
-        fb_X,fb_y = fotp.get_inputs_to_model(fb_peak_df, df, co, trial_len, dt, 
+        fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df,
                                             win_start=fb_win_start, win_stop=fb_win_stop)
 
         win_size = int((win_stop - win_start)/dt)
@@ -92,7 +90,7 @@ if __name__=='__main__':
             axplot = fig.subplots(1,2)
             plt.suptitle('%s Controller %s'%(run_info[dataset]['name'],(j+1)))
             ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
-                        
+
             #setting dimensions for inset
             left = .4#win_start + .8 * (win_stop-win_start)
             bottom = .7#ymin + .8 * (ymax-ymin)
@@ -114,8 +112,13 @@ if __name__=='__main__':
                 color = colors[i+nbins//2]
                 axplot[0].plot(t_ms, co_av, color=color)
                 axplot[0].set_title('Initial')
+                axplot[0].set_xlabel('Time From Movement (ms)')
+                axplot[0].set_ylabel('Controller Value (a.u.)')
                 inset.hist([(i+0.5) * bin_theta], [min_theta, max_theta], color=color)
                 
                 axplot[1].plot(fb_t_ms, fb_co_av, color=color)
                 axplot[1].set_title('Corrective')
+                axplot[1].set_xlabel('Time From Movement (ms)')
+                axplot[1].set_ylabel('Controller Value (a.u.)')
                 fb_inset.hist([(i+0.5) * bin_theta], [min_theta, max_theta], color=color)
+                plt.savefig('../figures/final_figures/%s_controller_%s_averages.png'%(dataset,j+1))

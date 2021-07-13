@@ -63,10 +63,10 @@ if __name__=='__main__':
 
     kl_weight = metric.datasets[dataset].kl_weight
     metric_values = metric.datasets[dataset].measure
-    selected_kl_weight = kl_weight['laplace'][np.argmax(metric_values['laplace'][:-2])]
+    selected_kl_weight = kl_weight['laplace'][np.argmax(metric_values['gaussian'][:-2])]
     for param in run_info[dataset]['params'].keys():
         if (run_info[dataset]['params'][param]['param_values']['kl_co_weight']==selected_kl_weight and 
-            run_info[dataset]['params'][param]['param_values']['ar_prior_dist']=='laplace'):
+            run_info[dataset]['params'][param]['param_values']['ar_prior_dist']=='gaussian'):
             with open(snakemake.output[0], 'w') as selected_param_file:
                 selected_param_file.write(param)
             break

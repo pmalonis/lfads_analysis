@@ -20,7 +20,7 @@ reload(utils)
 
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
-cfg = yaml.safe_load(open(config_path, 'r'))
+cfg = yaml.safe_load(open(config_path, 'r')) 
 
 run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
 datasets = list(run_info.keys())
@@ -28,14 +28,13 @@ params = []
 for dataset in run_info.keys():
     params.append(open('../data/peaks/%s_selected_param_gini.txt'%(dataset)).read())
 
-
 #datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
 nbins = 12
-fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
+fb_win_start = -0.2#0.00#-0.1#cfg['post_target_win_start']
 fb_win_stop = 0#0.3#0.1#cfg['post_target_win_stop']
-win_start = 0
-win_stop = 0.3
+win_start = -0.2
+win_stop = 0
 
 lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
 with h5py.File(lfads_filename, 'r+') as h5file:
@@ -44,8 +43,6 @@ with h5py.File(lfads_filename, 'r+') as h5file:
 n_co = co.shape[2]
 
 if __name__=='__main__':
-    fig = plt.figure()
-    fig.tight_layout()
     for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
         data_filename = '../data/intermediate/' + dataset + '.p'
         lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
@@ -59,21 +56,21 @@ if __name__=='__main__':
             trial_len = utils.get_trial_len(h5file, input_info)
 
         co = savgol_filter(co, 11, 2, axis=1)
-        peak_df_train = pd.read_pickle('../data/peaks/%s_peaks_train.p'%(dataset))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_peaks_test.p'%(dataset))
+        peak_df_train = pd.read_pickle('../data/peaks/%s_firstmove_train.p'%(dataset))
+        peak_df_test = pd.read_pickle('../data/peaks/%s_firstmove_test.p'%(dataset))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_fb_peaks_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_fb_peaks_test.p'%(dataset))
+        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
+        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
-        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, 
+        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df,
                                     win_start=win_start, 
                                     win_stop=win_stop)
 
-        fb_X,fb_y = fotp.get_inputs_to_model(fb_peak_df, df, co, trial_len, dt, 
+        fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df, 
                                             win_start=fb_win_start, win_stop=fb_win_stop)
 
         win_size = int((win_stop - win_start)/dt)
@@ -106,11 +103,14 @@ if __name__=='__main__':
             co_rank += list(np.argsort(co_max))
             fb_co_rank += list(np.argsort(fb_co_max))
             
-
+            plt.figure(1)
+            plt.tight_layout(pad=2)
+            plt.suptitle('Mean of Controller Direction-Averages')
+            #plt.tight_layout()
             plt.subplot(n_co,len(datasets),dset_idx+1+j*len(datasets))
             sns.regplot(co_mean, fb_co_mean)
-            plt.xlabel('Ctrl %d Initial Movement Mean'%(j+1))
-            plt.ylabel('Ctrl %d Corretive Movement Mean'%(j+1))
+            plt.xlabel('Initial Movement')
+            plt.ylabel('Corretive Movement')
             if j==0:
                 plt.title(run_info[dataset]['name'])
             xmin, xmax = plt.xlim()
@@ -121,8 +121,35 @@ if __name__=='__main__':
                     'r = %0.2f'%np.corrcoef(co_mean, fb_co_mean)[1,0])
         #plt.figure()
         #plt.scatter(co_max, fb_co_max)
+            plt.subplots_adjust(wspace=0.2)
 
-            print("Controller %d Mean Average Correlation: %f"%(j,np.corrcoef(co_mean, fb_co_mean)[1,0]))
-            print("Controller %d Max Average Correlation: %f"%(j,np.corrcoef(co_max, fb_co_max)[1,0]))
+            plt.figure(2)
+            plt.tight_layout(pad=2)
+            plt.suptitle('Maxima of Controller Direction-Averages')
+            #plt.tight_layout()
+            plt.subplot(n_co,len(datasets),dset_idx+1+j*len(datasets))
+            sns.regplot(co_max, fb_co_max)
+            plt.xlabel('Initial Movement')
+            plt.ylabel('Corretive Movement')
+            if j==0:
+                plt.title(run_info[dataset]['name'])
+            xmin, xmax = plt.xlim()
+            ymin, ymax = plt.ylim()
+            xpos = xmin + .1*(xmax-xmin)
+            ypos = ymax - .1*(ymax-ymin)
+            plt.text(xpos,ypos,
+                    'r = %0.2f'%np.corrcoef(co_max, fb_co_max)[1,0])
+            #plt.figure()
+        #plt.scatter(co_max, fb_co_max)
+            plt.subplots_adjust(wspace=0.2)
 
-        plt.subplots_adjust(wspace=0.3)
+    fig = plt.figure(1)
+    fig.text(0.02, .75, 'Controller 1')
+    fig.text(00.02, .25, 'Controller 2')
+    fig.set_size_inches(12,6)
+    plt.savefig('../figures/final_figures/co_averages_correlation-means.png')
+    fig = plt.figure(2)
+    fig.text(0.02, .75, 'Controller 1')
+    fig.text(0.02, .25, 'Controller 2')
+    fig.set_size_inches(12,6)
+    plt.savefig('../figures/final_figures/co_averages_correlation-maxima.png')
