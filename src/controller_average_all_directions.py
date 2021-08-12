@@ -5,6 +5,7 @@ import seaborn as sns
 import optimize_target_prediction as opt
 import feedback_optimize_target_prediction as fotp
 import utils
+from scipy.signal import peak_widths
 from scipy.stats import zscore
 from importlib import reload
 import os
@@ -44,6 +45,7 @@ with h5py.File(lfads_filename, 'r+') as h5file:
 n_co = co.shape[2]
 
 if __name__=='__main__':
+    widths = []
     for first_event in ["targets", "firstmove"]:
         fig1 = plt.figure(figsize=(15,6))
         fig2 = plt.figure(figsize=(15,6))
@@ -99,6 +101,9 @@ if __name__=='__main__':
                 plt.figure(event_idx+1)
                 plt.subplot(1, 3, dset_idx + 1)
                 plt.plot(t, co_mag_av)
+                if event_idx == 0:
+                    width = peak_widths(co_mag_av, np.argmax(co_mag_av))
+                    widths.append([width, first_event, dataset])
                 if dset_idx == 0:
                     plt.ylabel('Controller Magnitude (Z-Score)')
                 # if event_idx == 0:
@@ -121,3 +126,6 @@ if __name__=='__main__':
 
         fig1.savefig('../figures/final_figures/co_average_all_dir_firstmove.png')
         fig2.savefig('../figures/final_figures/co_average_all_dir_corrections.png')
+        plt.figure()
+        plot_df = pd.DataFrame(widths, columns=['Width', 'Reference', 'Dataset'])
+        sns.pointplot(plot_df)
