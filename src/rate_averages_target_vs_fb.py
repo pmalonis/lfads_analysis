@@ -15,25 +15,26 @@ from scipy.signal import savgol_filter
 from matplotlib import rcParams
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
-plt.rcParams['font.size'] = 18
 reload(opt)
 reload(utils)
 
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
-cfg = yaml.safe_load(open(config_path, 'r'))
+cfg = yaml.safe_load(open(config_path, 'r')) 
 
 run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
 datasets = list(run_info.keys())
 params = []
 for dataset in run_info.keys():
-    params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
+    params.append(open('../data/peaks/%s_selected_param_gini.txt'%(dataset)).read())
 
+#datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
+#params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
 nbins = 12
 fb_win_start = -0.2#0.00#-0.1#cfg['post_target_win_start']
-fb_win_stop = 0 #0.3#0.1#cfg['post_target_win_stop']
+fb_win_stop = 0.0#0.3#0.1#cfg['post_target_win_stop']
 win_start = -0.2
-win_stop = 0
+win_stop = 0.0
 
 lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
 with h5py.File(lfads_filename, 'r+') as h5file:
@@ -65,11 +66,11 @@ if __name__=='__main__':
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
-        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, 
+        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, use_rates=True, rate_pcs=2,
                                     win_start=win_start, 
                                     win_stop=win_stop)
 
-        fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df,
+        fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df, use_rates=True, rate_pcs=2,
                                             win_start=fb_win_start, win_stop=fb_win_stop)
 
         win_size = int((win_stop - win_start)/dt)
@@ -80,43 +81,75 @@ if __name__=='__main__':
         assert(nbins%2==0)
         
         bin_theta = np.pi / (nbins/2)
-        colors = sns.color_palette('hls', nbins)
-        t_ms = np.arange(win_start, win_stop, dt) * 1000
-        fb_t_ms = np.arange(fb_win_start, fb_win_stop, dt) * 1000
-        for j in range(n_co):
-            fig = plt.figure(figsize=(15,5))
-            axplot = fig.subplots(1,2)
-            plt.suptitle('%s Controller %s'%(run_info[dataset]['name'],(j+1)))
-            ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
 
-            #setting dimensions for inset
-            left = .4#win_start + .8 * (win_stop-win_start)
-            bottom = .7#ymin + .8 * (ymax-ymin)
-            width = .05 #* (win_stop - win_start)
-            height = .15 #* (ymax - ymin)
-            inset = fig.add_axes([left, bottom, width, height], polar=True)
-           
-            fb_left = .8#win_start + .8 * (win_stop-win_start)
-            fb_bottom = .7#ymin + .8 * (ymax-ymin)
-            fb_width = .05 #* (win_stop - win_start)
-            fb_height = .15 #* (ymax - ymin)
-            fb_inset = fig.add_axes([fb_left, fb_bottom, fb_width, fb_height], polar=True)
+        for j in range(n_co):
+            ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
+            fb_co_mean = []
+            co_mean = []
+            fb_co_max = []
+            co_max = []
+            fb_co_rank = [] 
+            co_rank = [] 
             for i in range(-nbins//2, nbins//2):
                 min_theta = i * bin_theta
                 max_theta = (i+1) * bin_theta
                 co_av = X[:,j*win_size:(j+1)*win_size][(theta > min_theta) & (theta <= max_theta)].mean(0)
                 fb_co_av = fb_X[:,j*fb_win_size:(j+1)*fb_win_size][(fb_theta > min_theta) & (fb_theta <= max_theta)].mean(0) 
+                co_mean.append(co_av.mean())
+                fb_co_mean.append(fb_co_av.mean())
+                co_max.append(co_av.max())
+                fb_co_max.append(fb_co_av.max())
 
-                color = colors[i+nbins//2]
-                axplot[0].plot(t_ms, co_av, color=color)
-                axplot[0].set_title('Initial')
-                axplot[0].set_xlabel('Time From Movement (ms)')
-                axplot[0].set_ylabel('Controller Value (a.u.)')
-                inset.hist([(i+0.5) * bin_theta], [min_theta, max_theta], color=color)
-                
-                axplot[1].plot(fb_t_ms, fb_co_av, color=color)
-                axplot[1].set_title('Corrective')
-                axplot[1].set_xlabel('Time From Movement (ms)')
-                axplot[1].set_ylabel('Controller Value (a.u.)')
-                fb_inset.hist([(i+0.5) * bin_theta], [min_theta, max_theta], color=color)
-                plt.savefig('../figures/final_figures/%s_controller_%s_averages.svg'%(dataset,j+1))
+            co_rank += list(np.argsort(co_max))
+            fb_co_rank += list(np.argsort(fb_co_max))
+            
+            plt.figure(1)
+            plt.tight_layout(pad=2)
+            plt.suptitle('Mean of Controller Direction-Averages')
+            #plt.tight_layout()
+            plt.subplot(n_co,len(datasets),dset_idx+1+j*len(datasets))
+            sns.regplot(co_mean, fb_co_mean)
+            plt.xlabel('Initial Movement')
+            plt.ylabel('Corretive Movement')
+            if j==0:
+                plt.title(run_info[dataset]['name'])
+            xmin, xmax = plt.xlim()
+            ymin, ymax = plt.ylim()
+            xpos = xmin + .1*(xmax-xmin)
+            ypos = ymax - .1*(ymax-ymin)
+            plt.text(xpos,ypos,
+                    'r = %0.2f'%np.corrcoef(co_mean, fb_co_mean)[1,0])
+        #plt.figure()
+        #plt.scatter(co_max, fb_co_max)
+            plt.subplots_adjust(wspace=0.2)
+
+            plt.figure(2)
+            plt.tight_layout(pad=2)
+            plt.suptitle('Maxima of Controller Direction-Averages')
+            #plt.tight_layout()
+            plt.subplot(n_co,len(datasets),dset_idx+1+j*len(datasets))
+            sns.regplot(co_max, fb_co_max)
+            plt.xlabel('Initial Movement')
+            plt.ylabel('Corretive Movement')
+            if j==0:
+                plt.title(run_info[dataset]['name'])
+            xmin, xmax = plt.xlim()
+            ymin, ymax = plt.ylim()
+            xpos = xmin + .1*(xmax-xmin)
+            ypos = ymax - .1*(ymax-ymin)
+            plt.text(xpos,ypos,
+                    'r = %0.2f'%np.corrcoef(co_max, fb_co_max)[1,0])
+            #plt.figure()
+        #plt.scatter(co_max, fb_co_max)
+            plt.subplots_adjust(wspace=0.2)
+
+    fig = plt.figure(1)
+    fig.text(0.02, .75, 'Rate PC 1')
+    fig.text(00.02, .25, 'Rate PC 2')
+    fig.set_size_inches(12,6)
+    plt.savefig('../figures/final_figures/rate_averages_correlation-means.png')
+    fig = plt.figure(2)
+    fig.text(0.02, .75, 'Rate PC 1')
+    fig.text(0.02, .25, 'Rate PC 2')
+    fig.set_size_inches(12,6)
+    plt.savefig('../figures/final_figures/rate_averages_correlation-maxima.png')

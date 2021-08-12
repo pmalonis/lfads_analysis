@@ -41,32 +41,46 @@ if __name__=='__main__':
     
     config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
-    
-    select_metric = cfg['selection_metric']
-    metric = metric_dict[select_metric]()
-    
     dataset = snakemake.wildcards.dataset
-    df = pd.read_pickle(os.path.dirname(__file__)+'/../data/intermediate/%s.p'%dataset)
-    for param in run_info[dataset]['params'].keys():
-        lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
-        inputInfo_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
-        input_info = io.loadmat(inputInfo_filename)
-        with h5py.File(lfads_filename, 'r') as h5file:
-            co = h5file['controller_outputs'][:]
-            dt = utils.get_dt(h5file, input_info)
-            trial_len = utils.get_trial_len(h5file, input_info)
+    select_metric = cfg['selection_metric']
+    if select_metric == 'adhoc':
+        with open(snakemake.output[0], 'w') as selected_param_file:
+            param = cfg['datasets'][dataset]['adhoc_param']
+            selected_param_file.write(param)
+    else:
+        metric = metric_dict[select_metric]()
+        df = pd.read_pickle(os.path.dirname(__file__)+'/../data/intermediate/%s.p'%dataset)
+        for param in run_info[dataset]['params'].keys():
+            co_dim  = run_info[dataset]['params'][param]['param_values'].get('co_dim')
+            if co_dim is not None and co_dim != cfg['selected_co_dim']:
+                continue
+            
+            prior = run_info[dataset]['params'][param]['param_values'].get('ar_prior_dist')
+            if prior is None:
+                prior = 'gaussian'
+            if prior != 'gaussian': continue
 
-        prior = run_info[dataset]['params'][param]['param_values']['ar_prior_dist']
-        kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
+            lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
+            inputInfo_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+            input_info = io.loadmat(inputInfo_filename)
+            with h5py.File(lfads_filename, 'r') as h5file:
+                co = h5file['controller_outputs'][:]
+                dt = utils.get_dt(h5file, input_info)
+                trial_len = utils.get_trial_len(h5file, input_info)
 
-        metric.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
+            kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
 
-    kl_weight = metric.datasets[dataset].kl_weight
-    metric_values = metric.datasets[dataset].measure
-    selected_kl_weight = kl_weight['laplace'][np.argmax(metric_values['gaussian'][:-2])]
-    for param in run_info[dataset]['params'].keys():
-        if (run_info[dataset]['params'][param]['param_values']['kl_co_weight']==selected_kl_weight and 
-            run_info[dataset]['params'][param]['param_values']['ar_prior_dist']=='gaussian'):
-            with open(snakemake.output[0], 'w') as selected_param_file:
-                selected_param_file.write(param)
-            break
+            metric.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
+
+        kl_weight = metric.datasets[dataset].kl_weight
+        metric_values = metric.datasets[dataset].measure
+        selected_kl_weight = kl_weight['gaussian'][np.argmax(metric_values['gaussian'])]
+        for param in run_info[dataset]['params'].keys():
+            co_dim  = run_info[dataset]['params'][param]['param_values'].get('co_dim')
+            if co_dim is not None and co_dim != cfg['selected_co_dim']:
+                continue
+            if (run_info[dataset]['params'][param]['param_values']['kl_co_weight']==selected_kl_weight and 
+                run_info[dataset]['params'][param]['param_values'].get('ar_prior_dist') in [None, 'gaussian']):
+                with open(snakemake.output[0], 'w') as selected_param_file:
+                    selected_param_file.write(param)
+                break

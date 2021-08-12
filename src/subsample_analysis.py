@@ -6,9 +6,16 @@ from scipy import io
 
 def gini(c):
     '''Computes Gini coefficient of vector c'''
-    c = np.sort(np.abs(c-np.mean(c)))
+    c = np.sort(np.abs(c))
     N = len(c)
-    G = 1 - 2*(c/np.sum(c)).dot((N - np.arange(1,N+1) + 1/2)/N)
+    G = 1 - 2*((c/np.sum(c)).dot((N - np.arange(1,N+1) + 1/2)/N))
+
+    return G
+
+def gini2(c):
+    c = np.sort(np.abs(c))
+    N = len(c)
+    G = 2 * np.arange(1, N+1).dot(c)/(N*np.sum(c)) - (N+1)/N
 
     return G
 

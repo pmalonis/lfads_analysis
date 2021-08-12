@@ -4,12 +4,17 @@ import yaml
 import subprocess as sp
 import sys
 sys.path.insert(0, 'src')
-from select_lfads_model import metric_dict
+from get_lfads_filepaths import write_filepaths
 
 configfile: "config.yml"
 
 locations_path = 'lfads_file_locations.yml'#os.path.join(os.path.dirname(__file__), 'lfads_file_locations.yml')
+if not os.path.exists(locations_path):
+    write_filepaths(locations_path)
+
 dataset_info = yaml.safe_load(open(locations_path, 'r'))
+
+from select_lfads_model import metric_dict
 
 RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
@@ -57,7 +62,7 @@ CONTROLLER_METRICS = list(metric_dict.keys())
 def expand_filename(format_str):
     '''expands string based on parameter hashes for each dataset in the config file. also expands valid/train'''
     
-    filenames = [format_str.format(dataset=d, trial_type=t, param=p) 
+    filenames = [format_str.replace("{dataset}",d).replace("{param}",p).replace("{trial_type}",t)
                 for d in dataset_info.keys()
                 for p in dataset_info[d]["params"]
                 for t in TRIAL_TYPES]
@@ -97,37 +102,146 @@ rule download_all:
 #         sp.run(['scp', '-T'] + download_list + [MODEL_OUTPUT_DIR])
 #         for download, output_file in zip(download_list, output_name_list):
 #             os.replace(MODEL_OUTPUT_DIR + os.path.basename(download), output_file)
-
-rule plot_controller_metric:
+rule file_locations:
     input:
-        "src/plot_all_controller_metrics.py",
-        "src/plot_controller_metric.py",
-        "lfads_file_locations.yml",
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
-        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        "config.yml",
+        "src/get_lfads_filepaths.py"
 
     output:
-        "figures/{metric}.png"
+        "lfads_file_locations.yml"
 
     script:
-        "src/plot_controller_metric.py"
+        "src/get_lfads_filepaths.py"
+        
+# rule plot_controller_metric:
+#     input:
+#         "src/plot_all_controller_metrics.py",
+#         "src/plot_controller_metric.py",
+#         "lfads_file_locations.yml",
+#         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+#         expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
+#         expand_filename(INTERMEDIATE_DIR + "{dataset}.p")
+#     output:
+#         "figures/{metric}.png"
+
+#     script:
+#         "src/plot_controller_metric.py"
 
 rule select_model:
     input:
-        "src/plot_all_controller_metrics.py",
         "src/select_lfads_model.py",
         "lfads_file_locations.yml",
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
-        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_type}.h5"),
-        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
-        "config.yml"
-    
+        "config.yml",
+        inputInfo_files = lambda wildcards: [(MODEL_OUTPUT_DIR + 
+        "{dataset}_{param}_inputInfo.mat").format(dataset=wildcards.dataset, param=p) 
+        for p in dataset_info[wildcards.dataset]["params"]],
+        
+        lfads_files = lambda wildcards: [(MODEL_OUTPUT_DIR + 
+        "{dataset}_{param}_all.h5").format(dataset=wildcards.dataset, param=p) 
+        for p in dataset_info[wildcards.dataset]["params"]],       
+        
+        data_file = INTERMEDIATE_DIR + "{dataset}.p",
+        
     output:
         PEAK_DIR + "{dataset}_selected_param_%s.txt"%config['selection_metric']
 
     script:
         "src/select_lfads_model.py"
+
+rule auc_window_fig:
+    input:
+        # firstmoves = expand_filename(PEAK_DIR + "{dataset}_firstmove_all.p")
+        # corrections = expand_filename(PEAK_DIR + "{dataset}_corrections_all.p")
+        # maxima = expand_filename(PEAK_DIR + "{dataset}_maxima_all.p")
+        # data = 
+        # co = 
+        # input_info =
+        "src/snr.py"
+    output:
+        firstmove_corrections = "figures/final_figures/firstmove_corrections_auc.svg",
+        maxima = "figures/final_figures/maxima_auc.svg"
+    script:
+        "src/snr.py"
+
+
+rule target_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_targets_train.p",
+        test_data = PEAK_DIR + "{dataset}_targets_test.p",
+        all_data = PEAK_DIR + "{dataset}_targets_all.p"
+
+    script:
+        "src/target_train-test_split.py"
+
+rule random_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_random_train.p",
+        test_data = PEAK_DIR + "{dataset}_random_test.p"
+
+    script:
+        "src/random_train-test_split.py"
+
+rule maxima_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "src/maxima_train-test_split.py",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_maxima_train.p",
+        test_data = PEAK_DIR + "{dataset}_maxima_test.p",
+        all_data = PEAK_DIR + "{dataset}_maxima_all.p"
+    script:
+        "src/maxima_train-test_split.py"
+
+rule firstmove_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "src/firstmove_train-test_split.py",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_firstmove_train.p",
+        test_data = PEAK_DIR + "{dataset}_firstmove_test.p",
+        all_data = PEAK_DIR + "{dataset}_firstmove_all.p"
+
+    script:
+        "src/firstmove_train-test_split.py"
+
+rule correction_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "src/correction_train-test_split.py",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_corrections_train.p",
+        test_data = PEAK_DIR + "{dataset}_corrections_test.p",
+        all_data = PEAK_DIR + "{dataset}_corrections_all.p"
+
+    script:
+        "src/correction_train-test_split.py"
+
+rule optimize_target_prediction:
+    input:
+        "config.yml",
+        "src/optimize_target_prediction.py",
+        selection_files = expand_filename(PEAK_DIR + 
+        "{dataset}_selected_param_%s.txt"%config['selection_metric']),
+        targets_files = expand_filename(PEAK_DIR + 
+        "{dataset}_{event_type}_train.p")
+    output:
+        PEAK_DIR + "params_search_{event_type}.csv"
+    script:
+        "src/optimize_target_prediction.py"
 
 rule download_model:
     params:
@@ -146,7 +260,6 @@ rule download_model:
                 continue
             else:
                 going=False
-        
 
 rule download_raw:
     params:
@@ -267,6 +380,107 @@ rule input_analysis:
         SRC_DIR + "process_inputs.py",
     log:
         notebook = "notebooks/processed/{dataset}_{param}_{trial_type}_integral_analysis.ipynb"
+
+rule rate_pcs_search:
+    input:
+        PEAK_DIR + 'params_search_{event_type}.csv'
+    output:
+        PEAK_DIR + 'rate_pcs_search_{event_type}.csv',
+    script:
+        "src/rate_pcs_search.py"
+
+rule target_prediction_evaluation_controller:
+    input:
+        PEAK_DIR + 'params_search_{event_type}.csv'
+    params:
+        reference = ['hand', 'shoulder'],
+        use_rates = [False] #get maximum of reference only for controller prediction, not rate prediction
+    output:
+        PEAK_DIR + 'controller_best_models_{event_type}.csv'
+    script:
+        "src/model_evaluation.py"
+
+rule rate_pcs_target_prediction_evaluation:
+    input:
+        PEAK_DIR + 'rate_pcs_search_{event_type}.csv',
+        "src/model_evaluation.py"
+    params:
+        filter_co = [True]
+    output:
+        PEAK_DIR + 'rate_best_models_{event_type}.csv'
+    script:
+        "src/model_evaluation.py"
+
+rule hand_v_shoulder_fig:
+    input:
+        PEAK_DIR + 'controller_best_models_firstmove.csv',
+        PEAK_DIR + 'controller_best_models_corrections.csv',
+        "src/final_figs/hand_v_shoulder_evaluation.py"
+    output:
+        'figures/final_figures/hand_v_shoulder_initial.png'
+    script:
+        "src/final_figs/hand_v_shoulder_evaluation.py"
+
+rule rate_pcs_fig:
+    input:
+        PEAK_DIR + 'controller_best_models_firstmove.csv',
+        PEAK_DIR + 'controller_best_models_corrections.csv',
+        "src/final_figs/rate_decoding_vs_co.py"
+    output:
+        "figures/final_figs/rate_decoding_firstmove.svg",
+        "figures/final_figs/rate_decoding_corretive.svg"
+    script:
+        "src/final_figs/rate_decoding_vs_co.py"
+
+rule window_search_fig:
+    input:
+        PEAK_DIR + "params_search_firstmove.csv",
+        PEAK_DIR + "params_search_corrections.csv",
+        "src/final_figs/plot_window_performance.py"
+    output:
+        "figures/final_figures/window_performance.svg"
+    script:
+        "src/final_figs/plot_window_performance.py"
+
+rule hand_time_search_fig:
+    input:
+        PEAK_DIR + "params_search_firstmove.csv",
+        PEAK_DIR + "params_search_corrections.csv",
+        "src/final_figs/plot_hand_time_performance.py"
+    output:
+        "figures/final_figures/hand_time.svg"
+    script:
+        "src/plot_hand_time_performance.py"
+
+rule random_event_performance_fig:
+    input:
+        PEAK_DIR + "controller_best_models_random.csv",
+        PEAK_DIR + "rate_best_models_random.csv",
+        "src/final_figs/random_event_performance.py"
+    output:
+        "figures/final_figures/random_events.svg"
+    script:
+        "src/final_figs/random_event_performance.py"
+
+rule maxima_event_performance_fig:
+    input:
+        PEAK_DIR + "controller_best_models_maxima.csv",
+        PEAK_DIR + "rate_best_models_maxima.csv",
+        "src/final_figs/maxima_event_performance.py"
+    output:
+        "figures/final_figures/speed_maxima.svg"
+    script:
+        "src/final_figs/maxima_event_performance.py"
+
+rule all_figs:
+    input:
+        #"figures/final_figures/random_events.svg",
+        #"figures/final_figures/hand_time.svg",
+        "figures/final_figures/window_performance.svg",
+        "figures/final_figs/rate_decoding_firstmove.svg",
+        "figures/final_figs/rate_decoding_corretive.svg",
+        'figures/final_figures/hand_v_shoulder.svg'
+
  #   notebook:
  #       "notebooks/integral_analysis.ipynb"
 

@@ -63,8 +63,8 @@ def raw_to_dataframe(data, input_info):
 
     channels = [k for k in data.keys() if 'Chan' in k]
     
-    x_norm = data['x'][:,1] - np.mean(data['x'][:,1])
-    y_norm = data['y'][:,1] - np.mean(data['y'][:,1])
+    x_norm = data['x'][:,1]# - np.mean(data['x'][:,1]) #mean subtraction messes up coordinate transformation
+    y_norm = data['y'][:,1]# - np.mean(data['y'][:,1])
 
     trial_len = input_info['seq_timeVector'][-1][-1]/1000
 

@@ -24,7 +24,6 @@ reload(ta)
 
 train_filename = snakemake.output.train_data
 test_filename = snakemake.output.test_data
-all_filename = snakemake.output.all_data
 data_filename = snakemake.input[0]
 
 random_state = 1027
@@ -40,29 +39,55 @@ def get_next_target(_df, data):
     to_drop = []
     for j,t in enumerate(transition_times):
         if np.any(targets.index > t):
-            target_idx.append(targets.index.get_loc(t,method='bfill'))
+            target_idx.append(targets.index.get_loc(t, method='bfill'))
         else:
             to_drop.append(j)
 
     x, y = targets.iloc[target_idx][['x','y']].values.T
-    _df = _df.drop(index=_df.iloc[to_drop].index)
+    if len(to_drop) > 0:
+        _df = _df.drop(index=_df.iloc[to_drop].index)
+
     _df['target_x'] = x
     _df['target_y'] = y
     
     if len(target_idx) > 0:
         return _df.loc[i]
 
-def split_correction_df(df):
-    correction_df = ss.dataset_events(df, ss.trial_transitions, 
-                                    exclude_post_target=non_corrective_window)
-    correction_df = correction_df.groupby('trial').apply(lambda trial_correct: get_next_target(trial_correct, df))
-    df_train, df_test = train_test_split(correction_df, test_size=train_test_ratio, random_state=random_state)
+def get_firstmove(_df, target_df, data):
+    i = _df.index[0][0]
+    trial_data = data.loc[i].kinematic
+    target_times = target_df.loc[i].index.values
+    firstmoves = []
+    speed = np.sqrt(trial_data['x_vel']**2+trial_data['y_vel']**2)
+    for j,t in enumerate(target_times[:-1]):
+        if t >= _df.loc[i].index[-1]: #continue if no transition after taget
+            continue
+        idx = _df.loc[i].index.get_loc(t, 'bfill')
+        if _df.loc[i].index[idx] < target_times[j+1]:
+            move = _df.loc[i].iloc[idx]
+        else: #get minimum speed
+            post_target_window = min(t+0.3, target_times[j+1])
+            move = trial_data.loc[speed.loc[t:post_target_window].idxmin()]
+
+        firstmoves.append(move)
+        
+    firstmoves_trial_df = pd.concat(firstmoves, axis=1).T
+    firstmoves_trial_df.index.rename('time',inplace=True)
+
+    return firstmoves_trial_df
+
+def split_firstmove_df(df):
+    transition_df = ss.dataset_events(df, ss.trial_transitions, exclude_post_target=0,exclude_pre_target=0)
+    target_df = df.kinematic.query('hit_target')
+    firstmove_df = transition_df.groupby('trial').apply(lambda _df: get_firstmove(_df, target_df, df))
+    firstmove_df = firstmove_df.groupby('trial').apply(lambda trial: get_next_target(trial, df))
+    df_train, df_test = train_test_split(firstmove_df, test_size=train_test_ratio, random_state=random_state)
     df_train, df_test = (df_train.sort_index(), df_test.sort_index())
     df_train.to_pickle(train_filename)
     df_test.to_pickle(test_filename)
-    correction_df.to_pickle(all_filename)
+
     return df_train, df_test
 
 if __name__=='__main__':
     df = pd.read_pickle(data_filename)
-    split_correction_df(df)
+    split_firstmove_df(df)

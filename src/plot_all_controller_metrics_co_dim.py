@@ -8,7 +8,7 @@ import os
 import peak_trainvalidtest_split as ps
 import matplotlib.pyplot as plt
 import subsample_analysis as sa
-from scipy.signal import savgol_filter, periodogram, windows
+from scipy.signal import savgol_filter, periodogram
 from scipy.stats import kurtosis
 import pickle
 import timing_analysis as ta
@@ -17,14 +17,13 @@ from sklearn.metrics import roc_auc_score, precision_recall_curve, average_preci
 from snr import get_event_co, get_background_co
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
-plt.rcParams['font.size'] = 14
 
 absolute_min_heights = 0.3
 relative_min_heights = 3
 win_start = 0.0
 win_stop = 0.3
 peak_with_threshold = 0.9
-figsize = (15,5)
+figsize = (12,5)
 n_splits = 5
 
 run_info_path = os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml')
@@ -32,27 +31,27 @@ run_info = yaml.safe_load(open(run_info_path, 'r'))
 
 class Dataset_Info():
     def __init__(self, dataset):
-        self.kl_weight = {'gaussian':[], 'laplace':[]}
+        self.co_dim = {'gaussian':[], 'laplace':[]}
         self.measure = {'gaussian':[], 'laplace':[]}
         self.name = run_info[dataset]['name']
 
     def plot(self, ax):
         try:
             for k in ['gaussian', 'laplace']:
-                assert(len(self.kl_weight[k]) == len(self.measure[k]))
+                assert(len(self.co_dim[k]) == len(self.measure[k]))
         except AssertionError:
-            raise ValueError("kl_weights and measure must have the same length")
+            raise ValueError("co_dims and measure must have the same length")
 
-        for prior in self.kl_weight.keys():
-            idx = np.argsort(self.kl_weight[prior])
-            self.kl_weight[prior] = np.array(self.kl_weight[prior])[idx]
+        for prior in self.co_dim.keys():
+            idx = np.argsort(self.co_dim[prior])
+            self.co_dim[prior] = np.array(self.co_dim[prior])[idx]
             self.measure[prior] = np.array(self.measure[prior])[idx]
         
-        ax.plot(self.kl_weight['gaussian'], self.measure['gaussian'])
-        ax.plot(self.kl_weight['laplace'], self.measure['laplace'])
+        ax.plot(self.co_dim['gaussian'], self.measure['gaussian'])
+        ax.plot(self.co_dim['laplace'], self.measure['laplace'])
         ax.set_xlabel('Controller Penalty')
-        ax.set_title("Monkey " + self.name)
-        #ax.'legend'(['Dense Prior', 'Sparse Prior'])
+        ax.set_title(self.name)
+        ax.legend(['Dense Prior', 'Sparse Prior'])
 
 class Run_Data():
     def __init__(self, dataset, param, df, co, trial_len, dt):
@@ -74,11 +73,11 @@ class Measure():
     def add_dataset(self, dataset):
         self.datasets[dataset] = Dataset_Info(dataset)
 
-    def add_run(self, prior, kl_weight, dataset, param, df, co, trial_len, dt):
+    def add_run(self, prior, co_dim, dataset, param, df, co, trial_len, dt):
         if dataset not in self.datasets.keys():
             self.add_dataset(dataset)
 
-        self.datasets[dataset].kl_weight[prior].append(kl_weight)
+        self.datasets[dataset].co_dim[prior].append(co_dim)
         run = Run_Data(dataset, param, df, co, trial_len, dt)
         m = self.compute_measure(run)
         self.datasets[dataset].measure[prior].append(m)
@@ -190,26 +189,26 @@ class Decode(Measure):
         super().__init__(*args, **kwargs)
         self.kinematics = {}
         self.firing_rates = {}
-        self.ylabel='Decoding Accuracy (r^2)'
+        self.ylabel='Decoding Accuracy'
 
     def add_dataset(self, dataset, kin, firing_rates):
         self.datasets[dataset] = Dataset_Info(dataset)
         self.kinematics[dataset] = kin      
         self.firing_rates[dataset] = firing_rates
 
-    def add_run(self, prior, kl_weight, dataset, param, df, co, trial_len, dt):
+    def add_run(self, prior, co_dim, dataset, param, df, co, trial_len, dt):
         if dataset not in self.datasets.keys():
             Y = dl.get_kinematics(df, trial_len, dt)
             X_smoothed = dl.get_smoothed_rates(df, trial_len, dt)
             self.add_dataset(dataset, Y, X_smoothed)
 
-        self.datasets[dataset].kl_weight[prior].append(kl_weight)
+        self.datasets[dataset].co_dim[prior].append(co_dim)
         run = Run_Data(dataset, param, df, co, trial_len, dt)
         m = self.compute_measure(run)
         self.datasets[dataset].measure[prior].append(m)
 
     def compute_measure(self, run):
-        lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
+        lfads_filename = '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
         with h5py.File(lfads_filename, 'r') as h5file:
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
@@ -229,7 +228,6 @@ class Decode(Measure):
         axes = fig.subplots(1, len(self.datasets.keys()))
         if len(self.datasets.keys()) == 1:
             axes = [axes]
-            
         for i,k in enumerate(self.datasets.keys()):
             self.datasets[k].plot(axes[i])
             axes[i].set_ylabel(self.ylabel)
@@ -238,32 +236,26 @@ class Decode(Measure):
             Y = self.kinematics[k] 
             X_smoothed = self.firing_rates[k]
             rate_decode = self.get_decoding_performance(X_smoothed, Y)
-            n_points = len(self.datasets[k].kl_weight['gaussian'])
-            axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
-                            np.ones(n_points) * rate_decode)
+            n_points = len(self.datasets[k].co_dim['gaussian'])
+            axes[i].plot(self.datasets[k].co_dim['gaussian'], 
+                            np.ones(n_points) * rate_decode, 'g')
             
             #adding autolfads performance for rockstar
-            # if k=='rockstar':
-            #     with h5py.File('../data/model_output/rockstar_autolfads-laplace-prior_all.h5', 'r') as h5file:
-            #         X_autolfads = dl.get_lfads_predictor(h5file['factors'][:])
+            if k=='rockstar':
+                with h5py.File('../data/model_output/rockstar_autolfads-laplace-prior_all.h5', 'r') as h5file:
+                    X_autolfads = dl.get_lfads_predictor(h5file['factors'][:])
                 
-            #     autolfads_decode = self.get_decoding_performance(X_autolfads, Y)
-            #     n_points = len(self.datasets[k].kl_weight['gaussian'])
-            #     axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
-            #                 np.ones(n_points) * autolfads_decode, 'r')
-            #     axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode', 
-            #                     'Autolfads Decode'])
-            # else:
-            #     axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode'])
+                autolfads_decode = self.get_decoding_performance(X_autolfads, Y)
+                n_points = len(self.datasets[k].co_dim['gaussian'])
+                axes[i].plot(self.datasets[k].co_dim['gaussian'], 
+                            np.ones(n_points) * autolfads_decode, 'r')
+                axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode', 
+                                'Autolfads Decode'])
+            else:
+                axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode'])
 
-        lns = axes[0].get_lines()
-        lns.pop(1)
-        plt.legend(handles=lns, labels=['Decoding from LFADS Factors', 'Decoding from Firing Rates'],
-                    bbox_to_anchor=(0.5, 0.8, 0.5, 0.5), loc='lower center', ncol=1)
         fig.suptitle(self.title)
         self.fig = fig
-
-    
 
 # class Total_Peaks(Measure):
 #     def __init__(self, *args, **kwargs):
@@ -304,21 +296,7 @@ class Gini(Measure):
         self.ylabel='Controller Gini Coefficient'
 
     def compute_measure(self, run):
-        gini_win = 20
-        window = np.ones(gini_win)#windows.gaussian(gini_win, std=2)
-        filtered_co = savgol_filter(run.co, 11, 2, axis=1)
-        filtered_co -= np.mean(filtered_co)
-        co_ginis = np.zeros(run.co.shape[2])
-        co_power_weight = (run.co**2).sum((0,1))
-        co_power_weight /= np.sum(co_power_weight)
-        for co_idx in range(co.shape[2]):
-            # window_powers = np.concatenate([np.sum((filtered_co[:,j:j+gini_win,co_idx]*window)**2, axis=1) 
-            #                                 for j in range(run.co.shape[1]-gini_win)])
-            
-            # co_ginis[co_idx] = sa.gini(window_powers)
-            co_ginis[co_idx] = sa.gini(filtered_co[:,:,co_idx].flatten())
-            
-        return np.mean(co_ginis * co_power_weight)
+        return np.mean([sa.gini(run.co[:,:,i].flatten()) for i in range(run.co.shape[2])])
 
 class Spectral_Centroid(Measure):
     def __init__(self, *args, **kwargs):
@@ -375,13 +353,14 @@ metric_dict = {#'gini': Gini,
                #'absolute_target_peak': Absolute_Target_Peak,
                #'relative_target_peak': Relative_Target_Peak,
                #'firstmove_auc': Firstmove_AUC,
-               #'firstmove_precision': Firstmove_Precision}
+               #'firstmove_precision': Firstmove_Precision
                 }
-
 if __name__=='__main__':
-    for co_dim in [2]:
+
+    for kl_weight in [2.0]:
         measures = [m(filename='%s.png'%k) for k,m in metric_dict.items()]    
         for dataset in run_info.keys():
+        
             df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
             
             for param in run_info[dataset]['params'].keys():
@@ -389,7 +368,7 @@ if __name__=='__main__':
                 if 'raju' in dataset and not os.path.exists(lfads_filename):
                     continue
                 
-                if run_info[dataset]['params'][param]['param_values'].get('co_dim') != co_dim:
+                if run_info[dataset]['params'][param]['param_values'].get('kl_co_weight') != kl_weight:
                     continue
 
                 inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
@@ -402,17 +381,15 @@ if __name__=='__main__':
                     else:
                         co = np.zeros((df.index[-1][0], int(trial_len/dt), 2))
 
-                
                 prior = run_info[dataset]['params'][param]['param_values'].get('ar_prior_dist')
                 if prior is None:
                     prior = 'gaussian'
-                if prior != 'gaussian': continue
-                kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
-                co_power = np.abs(co).sum()/co.shape[0]
-                for measure in measures:
-                    measure.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
-                    #measure.add_run(prior, co_power, dataset, param, df, co, trial_len, dt)
 
+                co_dim = run_info[dataset]['params'][param]['param_values']['co_dim']
+
+                for measure in measures:
+                    measure.add_run(prior, co_dim, dataset, param, df, co, trial_len, dt)
+                    
         for measure in measures:
             measure.plot()
             measure.savefig()

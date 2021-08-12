@@ -21,7 +21,7 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 y_min = 0
 y_max = 1
 
-offset = 0.150 #offset between kinematics and neual activity
+offset = 0.15 #offset between kinematics and neual activity
 dt = 0.010
 kin_dt = 0.001
 win = int(dt/kin_dt)

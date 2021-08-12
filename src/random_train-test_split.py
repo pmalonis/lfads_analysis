@@ -24,7 +24,6 @@ reload(ta)
 
 train_filename = snakemake.output.train_data
 test_filename = snakemake.output.test_data
-all_filename = snakemake.output.all_data
 data_filename = snakemake.input[0]
 
 random_state = 1027
@@ -54,12 +53,12 @@ def get_next_target(_df, data):
     if len(target_idx) > 0:
         return _df.loc[i]
 
-def get_maxima(_df, target_df, data):
+def get_firstmove(_df, target_df, data):
     i = _df.index[0][0]
     trial_data = data.loc[i].kinematic
     target_times = target_df.loc[i].index.values
     firstmoves = []
-    speed = np.sqrt(trial_data['x_vel']**2+trial_data['y_vel']**2)
+    speed = np.sqrt(trial_data['x_vel']**2 + trial_data['y_vel']**2)
     for j,t in enumerate(target_times[:-1]):
         if t >= _df.loc[i].index[-1]: #continue if no transition after taget
             continue
@@ -73,23 +72,42 @@ def get_maxima(_df, target_df, data):
         firstmoves.append(move)
         
     firstmoves_trial_df = pd.concat(firstmoves, axis=1).T
-    firstmoves_trial_df.index.rename('time',inplace=True)
+    firstmoves_trial_df.index.rename('time', inplace=True)
 
     return firstmoves_trial_df
 
-def split_maxima_df(df):
-    maxima_df = ss.dataset_events(df, ss.trial_maxima, exclude_post_target=0,exclude_pre_target=0)
+def get_random(_df, target_df, data):
+    i = _df.index[0][0]
+    move_times = _df.loc[i].index.values
+    target_times = np.zeros_like(move_times)
+    rand_events = []
+    for j,move_time in enumerate(move_times):
+        idx = target_df.loc[i].index.get_loc(move_time, 'bfill')
+        target_time = target_df.loc[i].index[idx]
+        rand_time = move_time + (target_time - move_time) * np.random.rand()
+        movement_data = data.loc[i].loc[move_time:target_time].kinematic
+        rand_idx = np.random.randint(movement_data.shape[0])
+        rand_events.append(movement_data.iloc[rand_idx])
+
+    rand_trial_df = pd.concat(rand_events, axis=1).T
+    rand_trial_df.index.rename('time', inplace=True)
+    rand_trial_df[['target_x', 'target_y']] = _df.loc[i][['target_x', 'target_y']].values
+
+    return rand_trial_df
+
+def split_df(df):
+    transition_df = ss.dataset_events(df, ss.trial_transitions, exclude_post_target=0,exclude_pre_target=0)
     target_df = df.kinematic.query('hit_target')
-    maxima_df = maxima_df.groupby('trial').apply(lambda trial: get_next_target(trial, df))
-    df_train, df_test = train_test_split(maxima_df, test_size=train_test_ratio, random_state=random_state)
+    firstmove_df = transition_df.groupby('trial').apply(lambda _df: get_firstmove(_df, target_df, df))
+    firstmove_df = firstmove_df.groupby('trial').apply(lambda trial: get_next_target(trial, df))
+    rand_df = firstmove_df.groupby('trial').apply(lambda _df: get_random(_df, target_df, df))
+    df_train, df_test = train_test_split(rand_df, test_size=train_test_ratio, random_state=random_state)
     df_train, df_test = (df_train.sort_index(), df_test.sort_index())
     df_train.to_pickle(train_filename)
     df_test.to_pickle(test_filename)
-    maxima_df.to_pickle(all_filename)
 
     return df_train, df_test
 
-
 if __name__=='__main__':
     df = pd.read_pickle(data_filename)
-    split_maxima_df(df)
+    split_df(df)

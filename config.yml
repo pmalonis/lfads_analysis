@@ -13,6 +13,9 @@ target_decoding_smoothed_control_std: 10
 #kinematic decoding
 rate_sigma_kin_decoding: 25 #sigma of smoothing kernel for decoding kinematics from firing rate
 kin_decoding_cv_splits: 5
+rate_sigma_example_plot: 25
+
+target_prediction_cv_splits: 5
 
 preprocess:
   cutoff: 20
@@ -32,18 +35,92 @@ speed_filter_win: 101
 speed_filter_order: 2
 
 # select which metric to use to select model
-selection_metric: gini
+selection_metric: adhoc ##decode
+selected_co_dim: 2
 
 # order will be preserved in lfads yaml file
 datasets:
   rockstar: 
     name: RS
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
+    adhoc_param: kl-co-dim-search-FDCWrX
   mack:
     name: MK
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
+    adhoc_param: kl-co-dim-search-FDCWrX
   raju-M1-no-bad-trials:
     name: RJ
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
+    adhoc_param: kl-co-dim-search-FDCWrX
   #raju_M1: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_M1.mat
   #raju_PMd: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_PMd.mat
+
+# target_preprocessing_search:
+#   fit_direction: [True, False]
+#   reference: ['hand', 'shoulder']
+#   poly_features: [True, False]
+#   reduce_time: [True, False]
+#   use_rates: [True, False]
+#   filter_co: [True]
+#   time_pcs: [5, 10, 15, 20]
+#   win_lim: ['(0,0.2)','(0.4,0.6)']
+#   hand_time: [0, 0.2, 0.4]
+#   rate_pcs: [20]
+
+# target_preprocessing_search:
+#   fit_direction: [True, False]
+#   reference: ['hand', 'shoulder']
+#   corr: ['ca']
+#   poly_features: [False]
+#   reduce_time: [False]
+#   use_rates: [True, False]
+#   reduce_neurons: [True, False]
+#   filter_co: [True]
+#   win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
+#             '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
+#             '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
+#   hand_time: [-0.1,-0.05, 0, 0.05, 0.1, 0.2]
+#   rate_pcs: [2]
+
+target_preprocessing_search:
+  fit_direction: [True]
+  reference: ['hand']
+  corr: ['ca']
+  poly_features: [False]
+  reduce_time: [False]
+  use_rates: [True]
+  reduce_neurons: [False]
+  filter_co: [True]
+  win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
+            '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
+            '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
+  hand_time: [0]
+
+# target_preprocessing_search:
+#   fit_direction: [True]
+#   reference: ['hand']
+#   corr: ['ca']
+#   poly_features: [False]
+#   reduce_time: [True, False]
+#   use_rates: [False]
+#   filter_co: [False]
+#   time_pcs: [15]
+#   win_lim: ['(-0.2,0)']
+#   hand_time: [0]
+#   rate_pcs: [20]
+
+used_estimator: SVR
+
+svr_parameters: 
+  kernel: ['rbf']
+  gamma: ['scale']
+  C: [0.1, 0.3, 0.5, 0.7, 0.9,1.1,1.3, 1.5]
+
+random_forest_parameters: 
+  max_features: ['auto', 'sqrt', 'log2']
+  min_samples_leaf: [1,5,10,15]
+
+num_cpus: 48
+
+rate_pcs_search_min: 2
+rate_pcs_search_max: 20

@@ -317,8 +317,8 @@ def get_endpoint(peak_df, df, dt):
     return peak_df
 
 if __name__=='__main__':
-    event_type = snakemake.wildcards.event_type #reference event time to load
-    output_filename = snakemake.output[0]
+    event_type = "firstmove"
+    output_filename = "optimize_testing.csv"
 
     ray.init(num_cpus=cfg['num_cpus'])
     get_model_results = ray.remote(get_model_results)
@@ -329,6 +329,8 @@ if __name__=='__main__':
     for dataset in run_info.keys():
         dset_dict = {}
         dset_dict['lfads_params'] = [open(os.path.dirname(__file__)+'/../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()]
+        if 'raju' in dataset or 'mack' in dataset:
+            dset_dict['lfads_params'].append('kl-co-dim-search-idzmpW') 
         dset_dict['file_root'] = dataset
         raw_data = io.loadmat(os.path.dirname(__file__) + '/../data/raw/%s.mat'%dataset)
         if 'monkey' in raw_data.keys():

@@ -1,4 +1,3 @@
-import ray
 import numpy as np
 import pandas as pd
 import h5py
@@ -9,7 +8,7 @@ import custom_objective
 from ast import literal_eval
 from multiprocessing import Pool
 import joblib
-from itertools import product
+from optimize_target_prediction import get_inputs_to_model, get_endpoint, x_score_func, y_score_func, r_score_func
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from sklearn.preprocessing import PolynomialFeatures, FunctionTransformer
 from sklearn.pipeline import make_pipeline
@@ -25,34 +24,30 @@ import utils
 import importlib
 import itertools
 import os
+import ray
 import yaml
 import multiprocessing
 from scipy.signal import savgol_filter
-import sys
+sys.path.insert(0, '.')
+from optimize_target_prediction import get_model_results
+from model_evaluation import get_row_params
 importlib.reload(utils)
 importlib.reload(ta)
 importlib.reload(pt)
 importlib.reload(custom_objective)
 
-config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
-cfg = yaml.safe_load(open(config_path, 'r'))
-
 random_state = 1748
-np.random.seed(random_state)
-
 train_test_random_state = 1027
-train_test_ratio = 0.2
-spike_dt = 0.001
-nbins = 12
-cv = cfg['target_prediction_cv_splits']
+estimator_dict = {'SVR': MultiOutputRegressor(SVR()),
+                  'Random Forest': RandomForestRegressor(random_state=random_state)}
 
 def get_model_results(pre_param_dict, args):
-    peak_df, co, trial_len, dt, df, scoring, dir_scoring, dataset_name, lfads_params, estimator_dict, k1, k2 = args
+  
+    peak_df, co, trial_len, dt, df, scoring, dir_scoring, dataset_name, lfads_params, estimator_dict = args
     if pre_param_dict.get('align_peaks'):
-        X, y = get_inputs_to_model(peak_df, co, trial_len, dt, df=df, win_start=0.05, win_stop=0.1, k1=k1, k2=k2, **pre_param_dict)            
+        X, y = get_inputs_to_model(peak_df, co, trial_len, dt, df=df, win_start=0.05, win_stop=0.1, **pre_param_dict)            
     else:
-        X, y = get_inputs_to_model(peak_df, co, trial_len, dt, df=df, k1=k1, k2=k2, **pre_param_dict)
-
+        X, y = get_inputs_to_model(peak_df, co, trial_len, dt, df=df, **pre_param_dict)
 
     results = []
     for estimator_name, (estimator, param_grid) in estimator_dict.items():
@@ -62,12 +57,10 @@ def get_model_results(pre_param_dict, args):
         if isinstance(estimator, MultiOutputRegressor):
             param_grid = {'estimator__' + k:v for k,v in param_grid.items()}
 
-        if pre_param_dict.get('fit_direction') and not pre_param_dict.get('corr')=='ja':
-            model = GridSearchCV(estimator, param_grid, scoring=dir_scoring, 
-                                refit=False, cv=cv)
+        if pre_param_dict.get('fit_direction'):
+            model = GridSearchCV(estimator, param_grid, scoring=dir_scoring, refit=False, cv=cv)
         else:
-            model = GridSearchCV(estimator, param_grid, scoring=scoring, 
-                                refit=False, cv=cv)
+            model = GridSearchCV(estimator, param_grid, scoring=scoring, refit=False, cv=cv)
 
         model.fit(X,y)
         n_params = len(model.cv_results_['params']) #number of parameters in sklearn Grid Search
@@ -90,10 +83,10 @@ def get_model_results(pre_param_dict, args):
     return pd.concat(results, ignore_index=True)
 
 def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop=0.3, reference='hand', use_rates=False, 
-                        reduce_neurons=True, rate_pcs=2, reduce_time=False, time_pcs=10, peaks_only=False, use_dpca=False,
+                        rate_pcs=2, reduce_time=False, time_pcs=10, peaks_only=False, use_dpca=False,
                         align_peaks=False, find_peak_win_size=0.2, reach_endpoint=False, fit_direction=True,
                         poly_features=False, poly_degree=2, filter_co=False, align_win_start=0.0, align_win_stop=0.2,
-                        hand_time=0, min_win_start=None, max_win_stop=None, win_lim=None, corr='ca', k1=None, k2=None):
+                        hand_time=0, min_win_start=None, max_win_stop=None, win_lim=None):
     '''
     fit_direction: fit raw x-y coordinates or fit normalized x-y coordinates as well as
     length vector
@@ -142,15 +135,15 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
             pca = FunctionTransformer()
             X = np.zeros((peak_df.shape[0], win_size*nneurons))
         else:
-            if reduce_neurons:
-                pca = PCA(n_components=rate_pcs)
+            pca = PCA(n_components=rate_pcs)
+            try:
                 pca.fit(np.vstack(all_smoothed))
-                X = np.zeros((peak_df.shape[0], win_size*rate_pcs))
-            else:
-                pca = FunctionTransformer()
-                X = np.zeros((peak_df.shape[0], win_size*nneurons))
+            except:
+                import pdb;pdb.set_trace()
+            X = np.zeros((peak_df.shape[0], win_size*rate_pcs))
     else:
         X = np.zeros((peak_df.shape[0], win_size*co.shape[2]))
+
 
     if filter_co:
         co = savgol_filter(co, 11, 2, axis=1)
@@ -213,31 +206,20 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
         target_pos = peak_df[['endpoint_x', 'endpoint_y']].values
     else:
         target_pos = peak_df[['target_x', 'target_y']].values
-    
-    target_pos = np.delete(target_pos, idx_to_remove, axis=0)
-    target_pos = target_pos[X_index]
-
-    hand_pos = np.delete(hand_pos, idx_to_remove, axis=0)
-    hand_pos = hand_pos[X_index]
-
-    not_zero_rows = ~np.all((target_pos-hand_pos)==0, axis=1)
-    
-    if corr == 'sc':
-        hand_pos = cartesian_to_shoulder(hand_pos, hand_pos)
-        target_pos = cartesian_to_shoulder(target_pos, hand_pos)
-    elif corr == 'ja':
-        hand_pos = cartesian_to_joint_pos(hand_pos, k1, k2)
-        target_pos = cartesian_to_joint_pos(target_pos, k1, k2)
 
     if reference == 'hand':
         y = target_pos - hand_pos
+
     elif reference == 'shoulder':
         y = target_pos
-    
+        
+    y = np.delete(y, idx_to_remove, axis=0)
+    y = y[X_index]
+    zero_rows = ~np.all(y==0, axis=1)
     #removing examples where hand_pos and target pos are the same. 
     #this occurs if transition_time + hand_time falls exactly on target appearance time
-    y = y[not_zero_rows]
-    X = X[not_zero_rows]
+    y = y[zero_rows]
+    X = X[zero_rows]
 
     if fit_direction:
         #y = np.arctan2(y[:,1], y[:,0])
@@ -256,35 +238,9 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
         model = dPCA('ntp', n_components=rate_pcs)
         model.fit(X_av)
         transformed = model.transform(reshaped_X.T)['p']
+        transformed
 
     return X, y
-
-def cartesian_to_joint_pos(pos, k1, k2):
-    x, y = pos.T
-    theta = np.pi - np.arctan(y/x) - np.arccos((x**2 + y**2 + k1**2 - k2**2)/(2*k1*np.sqrt(x**2+y**2)))
-    phi = np.arccos((x**2 + y**2 - k1**2 - k2**2)/(2*k1*k2))
-
-    return np.vstack([theta, phi]).T
-
-def cartesian_to_shoulder(pos, hand_pos):
-    r = np.linalg.norm(hand_pos, axis=1)
-    x, y = hand_pos.T
-    n = hand_pos.shape[0]
-    R = np.array([[y, -x],
-                  [x,  y]])/r
-    R = np.moveaxis(R, -1, 0)
-
-    return R.dot(pos.T)[range(n),:,range(n)]
-
-def cartesian_to_joint_vel(pos, vel, k1, k2):
-    x, y = pos.T
-    n = pos.shape[0]
-    theta, phi = cartesian_to_joint_pos(pos, k1, k2).T
-    R = np.array([[k1*sin(theta) + k2*sin(theta+phi), k2*sin(theta+phi)],
-                  [k1*cos(theta) + k2*cos(theta+phi), k2*cos(theta+phi)]])    
-    R = np.linalg.inv(np.moveaxis(R, -1, 0))
-        
-    return R.dot(vel.T)[range(n),:,range(n)]
 
 def x_score_func(y, y_true):
     return r2_score(y[:,0], y_true[:,0])
@@ -318,31 +274,34 @@ def get_endpoint(peak_df, df, dt):
 
 if __name__=='__main__':
     event_type = snakemake.wildcards.event_type #reference event time to load
+    full_search_filename = snakemake.input[0]
     output_filename = snakemake.output[0]
 
-    ray.init(num_cpus=cfg['num_cpus'])
+    ray.init()
     get_model_results = ray.remote(get_model_results)
+    output_filename = os.path.dirname(__file__) + '/../' + output_filename # making path relative to file
+    if os.path.exists(output_filename): #remove output file if it exists
+        os.remove(output_filename)
+
+    config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+    cfg = yaml.safe_load(open(config_path, 'r'))
+
+    np.random.seed(random_state)
+
+    train_test_ratio = 0.2
+    spike_dt = 0.001
+    nbins = 12
+
     buffer_size = multiprocessing.cpu_count()
 
+    search_output = pd.read_csv(os.path.dirname(__file__) + '/../' + full_search_filename)
+    cv = cfg['target_prediction_cv_splits']
     run_info = yaml.safe_load(open(os.path.dirname(__file__) + '/../lfads_file_locations.yml', 'r'))
     dataset_dicts = {}
     for dataset in run_info.keys():
         dset_dict = {}
-        dset_dict['lfads_params'] = [open(os.path.dirname(__file__)+'/../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()]
         dset_dict['file_root'] = dataset
-        raw_data = io.loadmat(os.path.dirname(__file__) + '/../data/raw/%s.mat'%dataset)
-        if 'monkey' in raw_data.keys():
-            dset_dict['k1'] = float(raw_data['monkey']['upper_kinarm'])
-            dset_dict['k2'] = float(raw_data['monkey']['lower_kinarm'])
-        else:
-            dset_dict['k1'] = None
-            dset_dict['k2'] = None
-        del raw_data
         dataset_dicts[run_info[dataset]['name']] = dset_dict
-
-    svr_dict = cfg['svr_parameters']
-
-    random_forest_dict = cfg['svr_parameters']
 
     preprocess_dict = cfg['target_preprocessing_search']
     if 'win_lim' in preprocess_dict:
@@ -352,7 +311,7 @@ if __name__=='__main__':
 
     pre_param_dicts = []
     no_pcs_param_dicts = []
-    for pre_params_set in product(*preprocess_dict.values()):
+    for pre_params_set in itertools.product(*preprocess_dict.values()):
         no_pcs_param_dict = {k:p for k,p in zip(preprocess_dict.keys(), pre_params_set) if k !='rate_pcs'}
         
         #leaves out reduntant paramaters set for rate_pcs parameter only affecting sets with use_rates=True
@@ -361,46 +320,50 @@ if __name__=='__main__':
         else:
             pre_param_dicts.append({k:p for k,p in zip(preprocess_dict.keys(), pre_params_set)})
 
-    estimator_dict = {'SVR': (MultiOutputRegressor(SVR()), cfg['svr_parameters']),
-                      'Random Forest': (RandomForestRegressor(), cfg['random_forest_parameters'])
-                      }
-
     trained = {}
     inputs = {}
     grid_results = []
     scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func)}
     dir_scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func),'r_score':make_scorer(r_score_func)}
     for dataset_name, dataset_dict in dataset_dicts.items():
-        for lfads_params in dataset_dict['lfads_params']:
-            file_root = dataset_dict['file_root']
-            data_filename = os.path.dirname(__file__)+'/../data/intermediate/' + file_root + '.p'
-            lfads_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
-                            '_'.join([file_root, lfads_params, 'all.h5'])
-            inputInfo_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
-                                '_'.join([file_root, 'inputInfo.mat'])
-            peak_filename = os.path.dirname(__file__)+'/../data/peaks/' + \
-                            '_'.join([file_root, '%s_train.p'%event_type])
-            
-            df = pd.read_pickle(data_filename)
-            input_info = io.loadmat(inputInfo_filename)
-            with h5py.File(lfads_filename, 'r+') as h5file:
-                co = h5file['controller_outputs'][:]
-                dt = utils.get_dt(h5file, input_info)
-                trial_len = utils.get_trial_len(h5file, input_info)
+        dset_out = search_output.query('dataset==@dataset_name')#[['reference','total_test_score','std_test_score', 'Control Type']]
+        dset_max = dset_out.loc[dset_out['total_test_score'].idxmax()]
 
-            peak_df = pd.read_pickle(peak_filename)
-            k1 = dataset_dict['k1']
-            k2 = dataset_dict['k2']
-            args_id = ray.put((peak_df, co, trial_len, dt, df, scoring, dir_scoring,
-                                dataset_name, lfads_params, estimator_dict, k1, k2))
-            
-            if dataset_dict['k1'] is None and 'ja' in preprocess_dict['corr']: #removing joint angle if we don't have arm measurements
-                used_pre_param_dicts = [p for p in pre_param_dicts if p['corr'] != 'ja']
-            else:
-                used_pre_param_dicts = pre_param_dicts
+        preprocess_dict, model_dict = get_row_params(dset_max)
+        preprocess_dict = {k:[v] for k,v in preprocess_dict.items()}
+        model_dict = {k:[v] for k,v in model_dict.items()} #each parameter is a list to make compatible with get_model_results
+        lfads_params = dset_max['lfads_params']
+        dset_estimator = dset_max['estimator']
+        dset_estimator_dict = {dset_estimator:(estimator_dict[dset_estimator],model_dict)}
 
-            grid_results += [get_model_results.remote(pre_param_dict, args_id) 
-                            for pre_param_dict in used_pre_param_dicts]
+        #setting up rate_pcs search
+        rate_pcs = list(range(cfg['rate_pcs_search_min'], cfg['rate_pcs_search_max']))
+        preprocess_dict['rate_pcs'] = rate_pcs
+        file_root = dataset_dict['file_root']
+        data_filename = os.path.dirname(__file__)+'/../data/intermediate/' + file_root + '.p'
+        lfads_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
+                        '_'.join([file_root, lfads_params, 'all.h5'])
+        inputInfo_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
+                            '_'.join([file_root, 'inputInfo.mat'])
+        peak_filename = os.path.dirname(__file__)+'/../data/peaks/' + \
+                        '_'.join([file_root, '%s_train.p'%event_type])
+        
+        df = pd.read_pickle(data_filename)
+        input_info = io.loadmat(inputInfo_filename)
+        with h5py.File(lfads_filename, 'r+') as h5file:
+            co = h5file['controller_outputs'][:]
+            dt = utils.get_dt(h5file, input_info)
+            trial_len = utils.get_trial_len(h5file, input_info)
+
+        peak_df = pd.read_pickle(peak_filename)
+        args = (peak_df, co, trial_len, dt, df, scoring, dir_scoring, dataset_name, lfads_params, dset_estimator_dict)
+        args_id = ray.put(args)
+        pre_param_dicts = []
+        no_pcs_param_dicts = []
+        for pre_params_set in itertools.product(*preprocess_dict.values()):
+            pre_param_dict = {k:p for k,p in zip(preprocess_dict.keys(), pre_params_set)}
+            dset_results = get_model_results.remote(pre_param_dict, args_id)
+            grid_results.append(dset_results)
 
     output = pd.concat(ray.get(grid_results), ignore_index=True)
     output['total_test_score'] = output[['mean_test_x_score', 'mean_test_y_score']].mean(1)

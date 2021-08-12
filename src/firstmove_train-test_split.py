@@ -24,6 +24,7 @@ reload(ta)
 
 train_filename = snakemake.output.train_data
 test_filename = snakemake.output.test_data
+all_filename = snakemake.output.all_data
 data_filename = snakemake.input[0]
 
 random_state = 1027
@@ -85,6 +86,7 @@ def split_firstmove_df(df):
     df_train, df_test = (df_train.sort_index(), df_test.sort_index())
     df_train.to_pickle(train_filename)
     df_test.to_pickle(test_filename)
+    firstmove_df.to_pickle(all_filename)
 
     return df_train, df_test
 
