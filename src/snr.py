@@ -125,17 +125,27 @@ if __name__=='__main__':
     for dataset in run_info.keys():
         param = open(os.path.dirname(__file__) + '/../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
     
-        data = pd.read_pickle('../data/intermediate/%s.p'%dataset)                  
-        firstmove_df = pd.read_pickle('../data/peaks/%s_targets_all.p'%dataset)
-        corr_df = pd.read_pickle('../data/peaks/%s_corrections_all.p'%dataset)
-        maxima_df = pd.read_pickle('../data/peaks/%s_maxima_all.p'%dataset)
-        input_info = io.loadmat('../data/model_output/%s_inputInfo.mat'%dataset)
+        data = pd.read_pickle(os.path.dirname(__file__) + '/../data/intermediate/%s.p'%dataset)                  
+        firstmove_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_targets-not-one_all.p'%dataset)
+        corr_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_corrections_all.p'%dataset)
+        maxima_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_maxima_all.p'%dataset)
+        input_info = io.loadmat(os.path.dirname(__file__) + '/../data/model_output/%s_inputInfo.mat'%dataset)
         
-        with h5py.File('../data/model_output/%s_%s_all.h5'%(dataset,param),'r') as h5file:
+        with h5py.File(os.path.dirname(__file__) + '/../data/model_output/%s_%s_all.h5'%(dataset,param),'r') as h5file:
             co = h5file['controller_outputs'][:]
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
-            und[run_info[dataset]['name']].append(background)
+
+        all_background[run_info[dataset]['name']] = []
+        all_firstmove[run_info[dataset]['name']] = []
+        all_corrections[run_info[dataset]['name']] = []
+        all_maxima[run_info[dataset]['name']] = []
+        dataset_scores = []
+        for win_start, win_stop in win_lims:
+            background, firstmove, corrections, maxima = all_event_data(data, firstmove_df, corr_df, maxima_df, co, dt, trial_len, win_start, win_stop)
+            win_score = all_rocauc(background, firstmove, corrections, maxima)
+            dataset_scores.append(win_score)
+            all_background[run_info[dataset]['name']].append(background)
             all_firstmove[run_info[dataset]['name']].append(firstmove)
             all_corrections[run_info[dataset]['name']].append(corrections)
             all_maxima[run_info[dataset]['name']].append(maxima)
