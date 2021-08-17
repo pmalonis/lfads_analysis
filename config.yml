@@ -67,34 +67,34 @@ datasets:
 #   hand_time: [0, 0.2, 0.4]
 #   rate_pcs: [20]
 
-# target_preprocessing_search:
-#   fit_direction: [True, False]
-#   reference: ['hand', 'shoulder']
-#   corr: ['ca']
-#   poly_features: [False]
-#   reduce_time: [False]
-#   use_rates: [True, False]
-#   reduce_neurons: [True, False]
-#   filter_co: [True]
-#   win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
-#             '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
-#             '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
-#   hand_time: [-0.1,-0.05, 0, 0.05, 0.1, 0.2]
-#   rate_pcs: [2]
-
 target_preprocessing_search:
-  fit_direction: [True]
-  reference: ['hand']
+  fit_direction: [True, False]
+  reference: ['hand', 'shoulder']
   corr: ['ca']
   poly_features: [False]
   reduce_time: [False]
-  use_rates: [True]
-  reduce_neurons: [False]
+  use_rates: [True, False]
+  reduce_neurons: [True, False]
   filter_co: [True]
   win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
             '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
             '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
-  hand_time: [0]
+  hand_time: [-0.1,-0.05, 0, 0.05, 0.1, 0.2]
+  rate_pcs: [2]
+
+# target_preprocessing_search:
+#   fit_direction: [True]
+#   reference: ['hand']
+#   corr: ['ca']
+#   poly_features: [False]
+#   reduce_time: [False]
+#   use_rates: [True]
+#   reduce_neurons: [False]
+#   filter_co: [True]
+#   win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
+#             '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
+#             '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
+#   hand_time: [0]
 
 # target_preprocessing_search:
 #   fit_direction: [True]

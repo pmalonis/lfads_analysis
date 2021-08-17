@@ -366,12 +366,12 @@ class Fit(Measure):
     def compute_measure(self, run):
         return run_info[run.dataset]['params'][run.param]['fit']['recon_train']
 
-metric_dict = {#'gini': Gini,
+metric_dict = {'gini': Gini,
                #'fit': Fit,
                #'spectral': Spectral_Centroid,
                #'kurtosis': Kurtosis,
                #'power': Power,
-               'decode': Decode,
+               #'decode': Decode,
                #'absolute_target_peak': Absolute_Target_Peak,
                #'relative_target_peak': Relative_Target_Peak,
                #'firstmove_auc': Firstmove_AUC,

@@ -20,7 +20,7 @@ RAW_DIR = "data/raw/"
 INTERMEDIATE_DIR = "data/intermediate/"
 MODEL_OUTPUT_DIR = "data/model_output/"
 PEAK_DIR = "data/peaks/"
-TRIAL_TYPES = ["all"]#["train", "valid", "all"]
+TRIAL_TYPES = ["all"]
 SRC_DIR = "src/"
 PYTHON_SCRIPTS = glob(SRC_DIR + "*.py")
 NOTEBOOKS = glob("notebooks/*.ipynb")
@@ -177,6 +177,32 @@ rule target_split:
     script:
         "src/target_train-test_split.py"
 
+rule target_one_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_targets-one_train.p",
+        test_data = PEAK_DIR + "{dataset}_targets-one_test.p",
+        all_data = PEAK_DIR + "{dataset}_targets-one_all.p"
+
+    script:
+        "src/target-one_train-test_split.py"
+    
+rule target_not_one_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_targets-not-one_train.p",
+        test_data = PEAK_DIR + "{dataset}_targets-not-one_test.p",
+        all_data = PEAK_DIR + "{dataset}_targets-not-one_all.p"
+
+    script:
+        "src/target-not-one_train-test_split.py"
+
 rule random_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
@@ -215,6 +241,20 @@ rule firstmove_split:
 
     script:
         "src/firstmove_train-test_split.py"
+
+rule firstmove_not_one_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "src/firstmove_train-test_split.py",
+        "config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_firstmove-not-one_train.p",
+        test_data = PEAK_DIR + "{dataset}_firstmove-not-one_test.p",
+        all_data = PEAK_DIR + "{dataset}_firstmove-not-one_all.p"
+
+    script:
+        "src/firstmove-not-one_train-test_split.py"
 
 rule correction_split:
     input:

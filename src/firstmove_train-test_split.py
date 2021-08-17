@@ -82,6 +82,7 @@ def split_firstmove_df(df):
     target_df = df.kinematic.query('hit_target')
     firstmove_df = transition_df.groupby('trial').apply(lambda _df: get_firstmove(_df, target_df, df))
     firstmove_df = firstmove_df.groupby('trial').apply(lambda trial: get_next_target(trial, df))
+    firstmove_df.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].iloc[1:])
     df_train, df_test = train_test_split(firstmove_df, test_size=train_test_ratio, random_state=random_state)
     df_train, df_test = (df_train.sort_index(), df_test.sort_index())
     df_train.to_pickle(train_filename)
