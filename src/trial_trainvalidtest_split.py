@@ -17,8 +17,11 @@ import yaml
 from scipy import io
 import pickle
 
+config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+cfg = yaml.safe_load(open(config_path, 'r'))
+
 random_state = 1027
-train_test_ratio = 0.2
+train_test_ratio = cfg['event_split_ratio']
 
 if __name__=='__main__':
     datasets = ['raju-M1-no-bad-trials']

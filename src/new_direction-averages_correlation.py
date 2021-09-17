@@ -19,8 +19,7 @@ plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['font.size'] = 16
 reload(opt)
-reload(utils)
-
+reload(utils)                       
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r')) 
@@ -43,7 +42,8 @@ lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'al
 with h5py.File(lfads_filename, 'r+') as h5file:
     co = h5file['controller_outputs'][:]
 
-n_pcs = 5
+co = savgol_filter(co, 11, 2, axis=1)
+n_co = co.shape[2]
 
 if __name__=='__main__':
     all_means = []
@@ -60,24 +60,25 @@ if __name__=='__main__':
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
 
+        # peak_df_train = pd.read_pickle('../data/peaks/%s_new-firstmove_train.p'%(dataset))
+        # peak_df_test = pd.read_pickle('../data/peaks/%s_new-firstmove_test.p'%(dataset))
+
+        # peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
+        peak_df = pd.read_pickle('../data/peaks/%s_new-firstmove_all.p'%(dataset))
+
+        # fb_peak_df_train = pd.read_pickle('../data/peaks/%s_new-corrections_train.p'%(dataset))
+        # fb_peak_df_test = pd.read_pickle('../data/peaks/%s_new-corrections_test.p'%(dataset))
         
-        peak_df_train = pd.read_pickle('../data/peaks/%s_firstmove_train.p'%(dataset))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_firstmove_test.p'%(dataset))
-
-        peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
-
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
-
-        fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
-
-        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, use_rates=True, rate_pcs=n_pcs,
-                                    reduce_neurons=True, win_start=win_start, 
+        #pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
+        fb_peak_df = pd.read_pickle('../data/peaks/%s_new-corrections_all.p'%(dataset))
+        
+        X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, 
+                                    win_start=win_start, 
                                     win_stop=win_stop)
 
-        fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df, use_rates=True, rate_pcs=n_pcs,
-                                            reduce_neurons=True, win_start=fb_win_start, win_stop=fb_win_stop)
-        
+        fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df,
+                                            win_start=fb_win_start, win_stop=fb_win_stop)
+
         win_size = int((win_stop - win_start)/dt)
         fb_win_size = int((fb_win_stop - fb_win_start)/dt)
 
@@ -86,11 +87,11 @@ if __name__=='__main__':
         assert(nbins%2==0)
         
         bin_theta = np.pi / (nbins/2)
-        mean_zscores = np.zeros(n_pcs*nbins)
-        max_zscores = np.zeros(n_pcs*nbins)
-        fb_mean_zscores = np.zeros(n_pcs*nbins)
-        fb_max_zscores = np.zeros(n_pcs*nbins)
-        for j in range(n_pcs):
+        mean_zscores = np.zeros(n_co*nbins)
+        max_zscores = np.zeros(n_co*nbins)
+        fb_mean_zscores = np.zeros(n_co*nbins)
+        fb_max_zscores = np.zeros(n_co*nbins)
+        for j in range(n_co):
             ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
             fb_co_mean = []
             co_mean = []
@@ -140,10 +141,14 @@ if __name__=='__main__':
         else:
             p_str = 'p > 0.05'
 
+        plt.text(xpos,ypos,
+                'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
+
         plt.yticks([-2, -1, 0, 1, 2])
         plt.xticks([-2, -1, 0, 1, 2])
-        plt.text(xpos, ypos, 'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
 
+        dset_name = run_info[dataset]['name']
+        plt.title('Monkey %s'%dset_name) 
         # plt.figure(2)
         # plt.tight_layout(pad=2)
         # plt.suptitle('Max of Controller Direction-Averages')
@@ -170,7 +175,8 @@ if __name__=='__main__':
     #fig.text(0.02, .75, 'Rate PC 1')
     #fig.text(00.02, .25, 'Rate PC 2')
     fig.set_size_inches(12,6)
-    plt.savefig('../figures/final_figures/rate_averages_correlation-means.svg')
+    #plt.savefig('../figures/final_figures/co_averages_correlation-means.svg')
+    #plt.savefig('../figures/final_figures/numbered/7b.svg')
     #fig = plt.figure(2)
     #fig.text(0.02, .75, 'Rate PC 1')
     #fig.text(0.02, .25, 'Rate PC 2')
@@ -192,7 +198,7 @@ if __name__=='__main__':
     ypos = ymax - .1*(ymax-ymin)
     r_value, p_value = pearsonr(np.concatenate(all_means), np.concatenate(fb_all_means))
     if 0.01 <= p_value < 0.05:
-        p_str = 'p = %0.2f'%p_value
+        p_str = 'p = %0.3f'%p_value
     elif 0.001 <= p_value < 0.01:
         p_str = 'p < 0.01'
     elif p_value < 0.001:
@@ -200,11 +206,10 @@ if __name__=='__main__':
     else:
         p_str = 'p > 0.05'
 
+    plt.text(xpos,ypos,
+            'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
+
     plt.yticks([-2, -1, 0, 1, 2])
     plt.xticks([-2, -1, 0, 1, 2])
-    # plt.text(xpos,ypos,
-    #         'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
-    plt.text(xpos,ypos,
-            'r = %0.2f'%(r_value), fontsize=13)
-    plt.savefig('../figures/final_figures/rate_averages_correlation_with_corrections_means_all.svg')
-    plt.savefig('../../figures/final_figures/numbered/7c.svg')
+    plt.savefig('../figures/final_figures/co_averages_correlation_with_corrections_means_all.svg')
+    #plt.savefig('../figures/final_figures/numbered/7c.svg')

@@ -33,21 +33,24 @@ if __name__=='__main__':
     lns = []
     plt.figure(figsize=(18,6))
     lns += plt.plot(t, speed,'g')
-    plt.ylim([0,500])
+    plt.ylim([0,1000])
     plt.ylabel('Cursor Speed (mm/s)')
     plt.xlabel('Time (s)')
-    # plt.twinx()
-    # lns += plt.plot(t, trial_pop_rate)
-    # plt.ylabel('Population Firing Rate (spikes/s)')
+    plt.twinx()
+    lns += plt.plot(t, trial_pop_rate)
+    plt.ylabel('Population Firing Rate (spikes/s)')
     ymin, ymax = plt.ylim()    
     plt.vlines(t_targets[1:], ymin, ymax)
     plt.text(t_targets[1]+0.02, ymax*.915, "Target 1\nAcquired", fontsize=12)
     for i,t in enumerate(t_targets[2:-1]):
         plt.text(t+0.01, ymax*.95, "Target %d"%(i+2), fontsize=12)
-    
-    plt.arrow(2.02, 45, .10, 40, head_width=.02, head_length=5)
-    plt.text(1.65, 30, "Corrective Movement", fontsize=12)
+
     # plt.legend(handles=lns, labels=['Cursor Speed', 'Population Firing Rate'],
     #            bbox_to_anchor=(0, 1.02, 1, 0.2), loc='lowerleft', ncol=3)
-    plt.savefig('../../figures/final_figures/example_trial.png')
+    
+    plt.text(2.6, 450, 'Cursor Speed', color=lns[0].get_color(), fontsize=16)
+    plt.text(2.5, 925, 'Population\nFiring Rate', color=lns[1].get_color(), fontsize=16)
+
+    plt.savefig('../../figures/final_figures/example_trial.svg')
+    plt.savefig('../../figures/final_figures/1c.svg')
     plt.show()

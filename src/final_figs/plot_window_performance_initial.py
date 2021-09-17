@@ -43,7 +43,7 @@ def plot_window_perf(output, use_rates, event_label, color):
         #computing mean std across monkeys
         win_std = output.loc[idxmax]['std_total_test_score'].values.mean()
         win_stds.append(win_std)
-        win_centers.append(win_start + (win_stop-win_start)/2)
+        win_centers.append(1000 * (win_start + (win_stop-win_start)/2))
 
     idx = np.argsort(win_centers)
     win_centers = np.array(win_centers)[idx]
@@ -51,7 +51,7 @@ def plot_window_perf(output, use_rates, event_label, color):
     win_performances = np.array(win_performances)[idx]
     plt.plot(win_centers, win_performances, color=color)
     plt.fill_between(win_centers, win_performances-win_stds, win_performances+win_stds, color=color, alpha=0.2)
-    plt.ylabel('Decoder Performance (r^2)')
+    plt.ylabel('Decoder Performance ($\mathregular{r^2}$)')
     #plt.xlabel('Window Relative to %s (ms)'%event_label)
     plt.ylim([0, .8])
     
@@ -66,27 +66,17 @@ if __name__=='__main__':
 
     colors = utils.contrasting_colors(**cfg['colors']['window_performance'])
 
-    fig = plt.figure(figsize=(15,8))
-    plt.subplot(1,2,1)
+    fig = plt.figure(figsize=(10,8))
     plot_window_perf(initial_output, use_rates=False, 
                     event_label='Target Appearance', color=colors[0])
-    plt.title('Initial Movement')
-    plt.subplot(1,2,2)
-    plt.title('Corrective Movement')
-    plot_window_perf(correction_output, use_rates=False, 
-                    event_label='Target Appearance', color=colors[0])
-    plt.subplot(1,2,1)
+
     plot_window_perf(initial_output, use_rates=True, 
                     event_label='Target Appearance', color=colors[1])
-    plt.title('Initial Movement')
-    plt.subplot(1,2,2)
-    plt.title('Corrective Movement')
-    plot_window_perf(correction_output, use_rates=True, 
-                    event_label='Target Appearance', color=colors[1])
-    plt.legend(['Controller', 'Rates'])
-    fig.text(0.5, 0.02, "Window Center Relative to Target Appearance (ms)", ha='center')
-    # fig.text(0.02, .75, 'Controller')
-    # fig.text(0.02, .25, 'Rates')
 
-    plt.savefig('../../figures/final_figures/window_performance.png')
+    plt.xlabel("Window Center Relative to Target Appearance (ms)", ha='center')
+    fig.text(0.7, .4, 'Inferred Inputs', color=colors[0])
+    fig.text(0.7, .75, 'Firing Rates', color=colors[1])
+
+    plt.savefig('../../figures/final_figures/window_performance_initial.svg')
+    plt.savefig('../../figures/final_figures/numbered/5b.svg')
     #plt.savefig(snakemake.output[0])

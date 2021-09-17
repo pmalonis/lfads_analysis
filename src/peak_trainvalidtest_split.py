@@ -19,8 +19,11 @@ import pickle
 from importlib import reload
 reload(ta)
 
+config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+cfg = yaml.safe_load(open(config_path, 'r'))
+
 random_state = 1027
-train_test_ratio = 0.2
+train_test_ratio = cfg['event_split_ratio']
 
 def split_target_df(df, dataset):
     target_df = ta.get_targets(df)

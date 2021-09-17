@@ -61,7 +61,7 @@ def get_firstmove(_df, target_df, data):
     firstmoves = []
     speed = np.sqrt(trial_data['x_vel']**2+trial_data['y_vel']**2)
     for j,t in enumerate(target_times[:-1]):
-        if t >= _df.loc[i].index[-1]: #continue if no transition after taget
+        if t >= _df.loc[i].index[-1]: #continue if no transition after target
             continue
         idx = _df.loc[i].index.get_loc(t, 'bfill')
         if _df.loc[i].index[idx] < target_times[j+1]:

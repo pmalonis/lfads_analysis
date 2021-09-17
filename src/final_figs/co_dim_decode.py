@@ -10,6 +10,7 @@ from scipy import io
 sys.path.insert(0, '..')
 import decode_lfads as dl
 import utils
+plt.rcParams['font.size'] = 20
 
 config_path = os.path.dirname(__file__) + '/../../config.yml'
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -17,19 +18,18 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 if __name__=='__main__':
     n_splits = 5
     run_info = yaml.safe_load(open('../../lfads_file_locations.yml', 'r'))
-    datasets = [list(run_info.keys())[0]]
     datasets = run_info.keys()
     params = []
     params_no_co = []
     for dataset in datasets:
         params.append(open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
-        selected_kl_weight = 2.0#run_info[dataset]['params'][params[-1]]['param_values']['kl_co_weight']
+        selected_kl_weight = cfg['selected_kl_weight']#run_info[dataset]['params'][params[-1]]['param_values']['kl_co_weight']
         for dset_param_hash in run_info[dataset]['params'].keys():
             dset_param_dict = run_info[dataset]['params'][dset_param_hash]['param_values']
             if dset_param_dict['co_dim'] == 0 and dset_param_dict['kl_co_weight'] == selected_kl_weight:
                 params_no_co.append(dset_param_hash)
 
-    plt.figure(figsize=(15,5))
+    plt.figure(figsize=(8, 8))
     plot_dfs = []
     for i, (dataset, param, param_no_co) in enumerate(zip(datasets, params, params_no_co)):
         data_filename = '../../data/intermediate/' + dataset + '.p'
@@ -46,42 +46,51 @@ if __name__=='__main__':
         Y = dl.get_kinematics(df, trial_len, dt,
                             kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], 
                             used_inds=None)
-        rs, _ = dl.get_rs(X_lfads, Y, n_splits, kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'], 
+        
+        n_trials = df.index[-1][0] + 1
+        rs, _ = dl.get_rs(X_lfads, Y, n_splits, trial_len, dt, n_trials, kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], 
                         use_reg=False, regularizer='ridge', alpha=1, random_state=None)
 
-        mean_rs = [np.mean([rs[k][i] for k in rs.keys()]) for i in range(n_splits)]
+        mean_rs = [np.mean([rs[k][i] for k in rs.keys()])  for i in range(n_splits)]
 
         lfads_filename = '../../data/model_output/' + '_'.join([dataset, param_no_co, 'all.h5'])
         with h5py.File(lfads_filename) as h5file:
             X_lfads_no_co = dl.get_lfads_predictor(h5file['factors'][:])
 
-        rs_no_co, _ = dl.get_rs(X_lfads_no_co, Y, n_splits, kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'], 
+        rs_no_co, _ = dl.get_rs(X_lfads_no_co, Y, n_splits, trial_len, dt, n_trials, kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'], 
                     use_reg=False, regularizer='ridge', alpha=1, random_state=None)
 
         mean_rs += [np.mean([rs_no_co[k][i] for k in rs_no_co.keys()]) 
                     for i in range(n_splits)]
 
-        rs_smoothed, _ = dl.get_rs(X_smoothed, Y, n_splits, kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'], 
+        rs_smoothed, _ = dl.get_rs(X_smoothed, Y, n_splits, trial_len, dt, n_trials,  kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'], 
                     use_reg=False, regularizer='ridge', alpha=1, random_state=None)
 
-        mean_rs += [np.mean([rs_smoothed[k][i] for k in rs_smoothed.keys()]) 
-                    for i in range(n_splits)]
-
+        mean_rs += [np.mean([rs_smoothed[k][i] for k in rs_smoothed.keys()]) for i in range(n_splits)]
         predictor = ['LFADS Factors\nwith Controller']*n_splits + ['LFADS Factors\nNo Controller']*n_splits + ['Firing Rates']*n_splits
-
-        plot_df = pd.DataFrame.from_dict({'Predictor':predictor,'Variance Explained':mean_rs})
+        monkey = len(predictor) * [run_info[dataset]['name']]
+        plot_df = pd.DataFrame.from_dict({'Predictor':predictor,'Variance Explained':mean_rs, 'Monkey':monkey})
         plot_dfs.append(plot_df)
 
-    for i, (dataset,plot_df) in enumerate(zip(datasets, plot_dfs)):
-        ax = plt.subplot(1, len(datasets), i+1)
-        sns.pointplot(x='Predictor', y='Variance Explained', 
-                        data=plot_dfs[i], markers='.')
-        plt.title("Monkey " + run_info[dataset]['name'])
-        plt.ylim([0.3, 1.0])
-        plt.yticks([0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
-        plt.xlabel('')
-        ax.set_xticklabels(['LFADS\nwith\nController', 
-                            'LFADS\nNo\nController', 
-                            'Firing\nRates'])
+    all_plot_df = pd.concat(plot_dfs)
+    #ax = plt.subplot(1, len(datasets), i+1)
+    # g = sns.pointplot(x='Predictor', y='Variance Explained', 
+    #                     data=plot_dfs[i], markers='')
+    g = sns.pointplot(x='Predictor', y='Variance Explained', 
+                        data=all_plot_df, hue='Monkey')
+    plt.setp(g.axes.lines, linewidth=1.5)
+    plt.locator_params(nbins=5)
+   #plt.title("Monkey " + run_info[dataset]['name'])
+    #plt.ylim([0.35, 0.85])
+    #plt.yticks([0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+    plt.xlabel('')
+    plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
+    ax=plt.gca()
+    ax.set_xticklabels(['LFADS\nwith\nController',
+                        'LFADS\nNo\nController', 
+                        'Firing\nRates'])
     
+    plt.gcf().tight_layout()
+    plt.savefig("../../figures/final_figures/kinematic_decoding.svg")
+    plt.savefig("../../figures/final_figures/numbered/2b.svg")
     plt.savefig("../../figures/final_figures/kinematic_decoding.png")

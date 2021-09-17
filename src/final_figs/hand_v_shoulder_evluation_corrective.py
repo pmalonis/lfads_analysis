@@ -74,10 +74,9 @@ if __name__=='__main__':
     fb_output['Control Type'] = 'Corrective'
     plot_score = 'final_held_out_score'
     plot_columns = ['reference', plot_score, 'std_test_score', 'Control Type', 'final_held_out_std']
-    plt.figure(figsize=(12,5))
     preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(output.columns)
     fb_preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(fb_output.columns)
-    plt.figure(figsize=(12,8))
+    plt.figure(figsize=(20,6))
 
     colors = utils.contrasting_colors(**cfg['colors']['correction_decode'])
     for i, (dset, file_root) in enumerate(datasets):
@@ -91,35 +90,32 @@ if __name__=='__main__':
         hand_std = hand_params['final_held_out_std']
         shoulder_std = shoulder_params['final_held_out_std']
 
-        # fb_dset_out = fb_output.query('dataset==@dset')
+        fb_dset_out = fb_output.query('dataset==@dset')
 
-        # fb_hand_params = fb_dset_out.query('reference=="hand"')
-        # fb_shoulder_params = fb_dset_out.query('reference=="shoulder"')
+        fb_hand_params = fb_dset_out.query('reference=="hand"')
+        fb_shoulder_params = fb_dset_out.query('reference=="shoulder"')
 
-        # fb_hand_score = fb_hand_params[plot_score]
-        # fb_shoulder_score = fb_shoulder_params[plot_score]
-        # fb_hand_std = fb_hand_params['final_held_out_std']
-        # fb_shoulder_std = fb_shoulder_params['final_held_out_std']
+        fb_hand_score = fb_hand_params[plot_score]
+        fb_shoulder_score = fb_shoulder_params[plot_score]
+        fb_hand_std = fb_hand_params['final_held_out_std']
+        fb_shoulder_std = fb_shoulder_params['final_held_out_std']
 
-        # plot_df = pd.DataFrame({'r^2':[hand_score, shoulder_score, fb_hand_score, fb_shoulder_score],
-        #                         'Movement Type': ['Initial', 'Initial', 'Corrective', 'Corrective'],
-        #                         'Reference': ['hand', 'shoulder', 'hand', 'shoulder']})
-
-        plot_df = pd.DataFrame({'r^2': [hand_score, shoulder_score],
-                                'Movement Type': ['Initial', 'Initial'],
-                                'Reference': ['hand', 'shoulder']})
+        plot_df = pd.DataFrame({'r^2':[hand_score, shoulder_score, fb_hand_score, fb_shoulder_score],
+                                'Movement Type': ['Initial', 'Initial', 'Corrective', 'Corrective'],
+                                'Reference': ['hand', 'shoulder', 'hand', 'shoulder']})
 
         plt.subplot(1, len(datasets), i+1)
-        sns.pointplot(x='Reference', y='r^2', hue='Movement Type', data=plot_df, palette=colors)
+        sns.pointplot(x='Reference', y='r^2', hue='Movement Type', data=plot_df, palette=colors, linewidth=3)
         #sns.pointplot(x='Reference', y='r^2', data=plot_df.query('`Movement Type` == "Initial"'))
-        if i < 2:
-            legend = plt.gca().get_legend()
-            if legend is not None:
-                legend.remove()
 
+        plt.errorbar([0,1], [hand_score.values[0], shoulder_score.values[0]], [hand_std.values[0], shoulder_std.values[0]], color=colors[0], linewidth=3)
+        plt.errorbar([0,1], [fb_hand_score.values[0], fb_shoulder_score.values[0]], [fb_hand_std.values[0], fb_shoulder_std.values[0]], color=colors[1], linewidth=3)
         plt.title("Monkey " + dset)
-        plt.ylim([-0.0,0.7])
-    
-    plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
-    #plt.savefig("../../figures/final_figures/hand_v_shoulder_target.png")
+        #plt.ylim([-0.0,0.7])
+        #plt.xlim([-.5,1.5])
+        plt.ylabel('$\mathregular{r^2}$')
+
+    #plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
+    plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.svg")
+    plt.savefig('../../figures/final_figures/numbered/6d.svg')
     #plt.savefig(snakemake.output[0])

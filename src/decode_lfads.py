@@ -5,7 +5,7 @@ from glob import glob
 import pandas as pd
 import os
 import yaml
-from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.model_selection import train_test_split, KFold, cross_val_score, GroupKFold
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -26,11 +26,14 @@ dt = 0.010
 kin_dt = 0.001
 win = int(dt/kin_dt)
 
-def get_rs(X, Y, n_splits, kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'], 
+def get_rs(X, Y, n_splits, trial_len, dt, n_trials, kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], 
            use_reg=False, regularizer='ridge', alpha=1, random_state=None):
-    X = X[:,:-1]
+    
+    T_trial = np.round(trial_len/dt).astype(int)
+    groups = np.repeat(np.arange(n_trials), T_trial)
+
     rs = {k:np.zeros(n_splits) for k in kinematic_vars} 
-    kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    kf = GroupKFold(n_splits=n_splits)
     variance_weighted_rs = np.zeros(n_splits)
     if use_reg == True:
         if regularizer == 'ridge':
@@ -41,7 +44,8 @@ def get_rs(X, Y, n_splits, kinematic_vars = ['x', 'y', 'x_vel', 'y_vel'],
                 raise ValueError("Regularizer must be ridge or lasso")
     else:
         model = LinearRegression()
-    for k, (train_idx, test_idx) in enumerate(kf.split(X)):
+
+    for k, (train_idx, test_idx) in enumerate(kf.split(X, Y, groups=groups)):
         X_train, X_test = X[train_idx], X[test_idx]
         Y_train, Y_test = Y[train_idx], Y[test_idx]
 
@@ -68,7 +72,7 @@ def get_smoothed_rates(data, trial_len, dt, kinematic_vars = ['x', 'y', 'x_vel',
     midpoint_idx = win//2 - 1 #midpoint of lfads time step to take for downsampling kinematics
     n_trials = data.index[-1][0] + 1
     n_neurons = data.neural.shape[1]
-    k = 0 
+    k = 0
     for i in used_inds:
         smoothed = data.loc[i].neural.rolling(window=sigma*6, min_periods=1, win_type='gaussian', center=True).mean(std=sigma)
         smoothed = smoothed.loc[:trial_len].iloc[midpoint_idx::win]
@@ -87,7 +91,7 @@ def get_kinematics(data, trial_len, dt, kinematic_vars=['x', 'y', 'x_vel', 'y_ve
     midpoint_idx = win//2 - 1  #midpoint of lfads time step to take for downsampling kinematics
     downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
     Y = downsampled_kinematics.loc[used_inds].values
-    
+
     return Y
 
 def get_lfads_predictor(predictor):

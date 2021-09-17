@@ -56,13 +56,13 @@ if __name__=='__main__':
             trial_len = utils.get_trial_len(h5file, input_info)
 
         co = savgol_filter(co, 11, 2, axis=1)
-        peak_df_train = pd.read_pickle('../data/peaks/%s_firstmove_train.p'%(dataset))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_firstmove_test.p'%(dataset))
+        peak_df_train = pd.read_pickle('../data/peaks/%s_new-firstmove_train.p'%(dataset))
+        peak_df_test = pd.read_pickle('../data/peaks/%s_new-firstmove_test.p'%(dataset))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
+        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_new-corrections_train.p'%(dataset))
+        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_new-corrections_test.p'%(dataset))
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
@@ -89,8 +89,14 @@ if __name__=='__main__':
 
 
         for j in range(n_co):
-                                         
-            plt.suptitle('%s Inferred Input %s'%(run_info[dataset]['name'],(j+1)))
+            if j==0:              
+                st=plt.suptitle('%s Inferred Input %s'%(run_info[dataset]['name'],(j+1)),fontsize=14)
+            else:
+                #average of minimum of previous plot and maximum of next plot, weighted towards the latter
+                text_y = np.sum([0.75*axplot[j,0].get_position().ymax,
+                                 0.25*axplot[j-1,0].get_position().ymin])
+                plt.figtext(0.5, text_y, '%s Inferred Input %s'%(run_info[dataset]['name'],(j+1)),ha='center', fontsize=14)
+
             ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
             if j == 0:
                 fb_left = .82 #win_start + .8 * (win_stop-win_start)
@@ -121,10 +127,10 @@ if __name__=='__main__':
                 axplot[j,0].plot(t_ms, co_av, color=color)
                 axplot[j,1].plot(fb_t_ms, fb_co_av, color=color)
 
-            if j == 0:
-                fig.text(0.9, 0.25, 'RS Input %d'%j)
-            else:
-                fig.text(0.9, 0.75, 'RS Input %d'%j)
+            # if j == 0:
+            #     fig.text(0.9, 0.25, 'RS Input %d'%j)
+            # else:
+            #     fig.text(0.9, 0.75, 'RS Input %d'%j)
 
             # axplot[j,0].set_yticks([-0.2, 0, 0.2])
             # axplot[j,1].set_yticks([-0.2, 0, 0.2])

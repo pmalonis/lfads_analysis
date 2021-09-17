@@ -15,15 +15,10 @@ sys.path.insert(0, os.path.dirname(__file__) +  '/..')
 import utils
 from optimize_target_prediction import get_inputs_to_model
 plt.rcParams['font.size'] = 16
-plt.rcParams['axes.spines.top'] = False
-plt.rcParams['axes.spines.right'] = False
 
 random_state = 1748
 estimator_dict = {'SVR': MultiOutputRegressor(SVR()), 
                   'Random Forest': RandomForestRegressor(random_state=random_state)}
-
-config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
-cfg = yaml.safe_load(open(config_path, 'r'))
 
 def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
     '''Fit best model for each reference frame on test data and record results'''
@@ -51,66 +46,52 @@ def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
         model.set_params(**model_dict)
 
     X_train, y_train = get_inputs_to_model(train_peak_df, co, trial_len, dt, df, **preprocess_dict)
-    X_test, y_test = get_inputs_to_model(train_peak_df, co, trial_len, dt, df, **preprocess_dict)
+    X_test, y_test = get_inputs_to_model(test_peak_df, co, trial_len, dt, df, **preprocess_dict)
     model.fit(X_train, y_train)
     score = model.score(X_test, y_test)
 
     return score
 
 if __name__=='__main__':
-    output_filename = "../../data/peaks/controller_best_models_targets-not-one.csv"
-    fb_output_filename = "../../data/peaks/controller_best_models_corrections.csv"
+    output_filename = snakemake.input[0]
+    fb_output_filename = snakemake.input[1]
         
-    #output_filename = snakemake.input[0]
-    #fb_output_filename = snakemake.input[1]
-
     output = pd.read_csv(output_filename)
     fb_output = pd.read_csv(fb_output_filename)
-
+    
     run_info = yaml.safe_load(open(os.path.dirname(__file__) + '/../../lfads_file_locations.yml', 'r'))
     datasets = [(v['name'],k) for k,v in run_info.items()]
     print(datasets)
     output['Control Type'] = 'Initial'
     fb_output['Control Type'] = 'Corrective'
-    plot_score = 'final_held_out_score'
-    plot_columns = ['reference', plot_score, 'std_test_score', 'Control Type', 'final_held_out_std']
+    plot_columns = ['reference', 'total_test_score', 'std_test_score', 'Control Type']
     plt.figure(figsize=(12,5))
     preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(output.columns)
     fb_preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(fb_output.columns)
     plt.figure(figsize=(12,8))
-
-    colors = utils.contrasting_colors(**cfg['colors']['correction_decode'])
     for i, (dset, file_root) in enumerate(datasets):
         dset_out = output.query('dataset==@dset')
 
         hand_params = dset_out.query('reference=="hand"')
         shoulder_params = dset_out.query('reference=="shoulder"')
 
-        hand_score = hand_params[plot_score]
-        shoulder_score = shoulder_params[plot_score]
-        hand_std = hand_params['final_held_out_std']
-        shoulder_std = shoulder_params['final_held_out_std']
+        hand_score = hand_params['total_test_score']
+        shoulder_score = shoulder_params['total_test_score']
 
-        # fb_dset_out = fb_output.query('dataset==@dset')
+        fb_dset_out = fb_output.query('dataset==@dset')
 
-        # fb_hand_params = fb_dset_out.query('reference=="hand"')
-        # fb_shoulder_params = fb_dset_out.query('reference=="shoulder"')
+        fb_hand_params = fb_dset_out.query('reference=="hand"')
+        fb_shoulder_params = fb_dset_out.query('reference=="shoulder"')
 
-        # fb_hand_score = fb_hand_params[plot_score]
-        # fb_shoulder_score = fb_shoulder_params[plot_score]
-        # fb_hand_std = fb_hand_params['final_held_out_std']
-        # fb_shoulder_std = fb_shoulder_params['final_held_out_std']
+        fb_hand_score = fb_hand_params['total_test_score']
+        fb_shoulder_score = fb_shoulder_params['total_test_score']
 
-        # plot_df = pd.DataFrame({'r^2':[hand_score, shoulder_score, fb_hand_score, fb_shoulder_score],
-        #                         'Movement Type': ['Initial', 'Initial', 'Corrective', 'Corrective'],
-        #                         'Reference': ['hand', 'shoulder', 'hand', 'shoulder']})
+        plot_df = pd.DataFrame({'r^2':[hand_score, shoulder_score, fb_hand_score, fb_shoulder_score],
+                                'Movement Type': ['Initial', 'Initial', 'Corrective', 'Corrective'],
+                                'Reference': ['hand', 'shoulder', 'hand', 'shoulder']})
 
-        plot_df = pd.DataFrame({'r^2': [hand_score, shoulder_score],
-                                'Movement Type': ['Initial', 'Initial'],
-                                'Reference': ['hand', 'shoulder']})
-
-        plt.subplot(1, len(datasets), i+1)
-        sns.pointplot(x='Reference', y='r^2', hue='Movement Type', data=plot_df, palette=colors)
+        plt.subplot(1,len(datasets),i+1)
+        sns.pointplot(x='Reference', y='r^2', hue='Movement Type', data=plot_df)
         #sns.pointplot(x='Reference', y='r^2', data=plot_df.query('`Movement Type` == "Initial"'))
         if i < 2:
             legend = plt.gca().get_legend()
@@ -120,6 +101,6 @@ if __name__=='__main__':
         plt.title("Monkey " + dset)
         plt.ylim([-0.0,0.7])
     
-    plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
+    #plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
     #plt.savefig("../../figures/final_figures/hand_v_shoulder_target.png")
-    #plt.savefig(snakemake.output[0])
+    plt.savefig(snakemake.output[0])

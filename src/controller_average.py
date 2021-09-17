@@ -25,7 +25,7 @@ run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
 datasets = list(run_info.keys())
 params = []
 for dataset in datasets:
-    params.append(open('../data/peaks/%s_selected_param_spectral.txt'%(dataset)).read())
+    params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
 
 nbins = 12
 win_start = 0#-0.1#-0.1#cfg['post_target_win_start']
@@ -64,7 +64,7 @@ if __name__=='__main__':
         assert(nbins%2==0)
         
         bin_theta = np.pi / (nbins/2)
-        colors = sns.color_palette('hls', nbins)
+        colors = sns.color_palette('husl', nbins)
         t_ms = range(int(win_start/dt), int(win_stop/dt)) * dt * 1000
         win_size = int((win_stop - win_start)/dt)
         for j in range(n_co):

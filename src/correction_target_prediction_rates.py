@@ -35,7 +35,7 @@ random_state = 1748
 np.random.seed(random_state)
 
 train_test_random_state = 1027
-train_test_ratio = 0.2
+train_test_ratio = cfg['event_split_ratio']
 spike_dt = 0.001
 
 if __name__=='__main__':

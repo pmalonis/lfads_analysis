@@ -112,7 +112,7 @@ if __name__=='__main__':
     cfg = yaml.safe_load(open(config_path, 'r'))
 
     run_info = yaml.safe_load(open(os.path.dirname(__file__) + '/../lfads_file_locations.yml', 'r'))
-    win_lims = [literal_eval(w) for w in cfg['target_auc_win_lims']]
+    win_lims = [literal_eval(w) for w in cfg['movement_auc_win_lims']]
     win_centers = [1000*(start + (stop-start)/2) for start,stop in win_lims]
     all_dataset_scores = {}
     all_background = {}
@@ -124,7 +124,7 @@ if __name__=='__main__':
         param = open(os.path.dirname(__file__) + '/../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
     
         data = pd.read_pickle(os.path.dirname(__file__) + '/../data/intermediate/%s.p'%dataset)                  
-        firstmove_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_targets-not-one_all.p'%dataset)
+        firstmove_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_firstmove_all.p'%dataset)
         corr_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_corrections_all.p'%dataset)
         maxima_df = pd.read_pickle(os.path.dirname(__file__) + '/../data/peaks/%s_maxima_all.p'%dataset)
         input_info = io.loadmat(os.path.dirname(__file__) + '/../data/model_output/%s_inputInfo.mat'%dataset)
@@ -152,53 +152,38 @@ if __name__=='__main__':
         all_controllers.append(co)
 
     plot_idx = 0
-    titles = ['']#['First\n Movement', 'Correction']
+    titles = ['First\n Movement', 'Correction']
     fig = plt.figure(figsize=(15,6))
     for event_idx, event in enumerate(titles):
         dset_names = [d['name'] for d in run_info.values()]
         for i, dset_name in enumerate(dset_names):
-            plt.subplot(1, 3, plot_idx+1)
+            plt.subplot(2, 3, plot_idx+1)
             plt.plot(win_centers, all_dataset_scores[dset_name][:,event_idx])
-            #plt.ylabel("ROC AUC")
             plt.plot(win_centers, np.ones_like(win_centers)*0.5, 'k')
             plt.ylim([0.2, 0.9])
             if plot_idx < 3:
                 plt.title("Monkey " + dset_name)
 
-            plt.xticks([-200, -100, 0, 100, 200])
+            plt.xticks([-200, 0, 200], fontsize=14)
+            plt.yticks(fontsize=14)
             plot_idx +=1
 
-        fig.text(0.05, 0.7 - 0.4*event_idx, event, ha='center')
+        fig.text(0.8, 0.7 - 0.4*event_idx, event, ha='center')
         #plt.suptitle(event)
 
-    fig.text(0.5, 0.00, "Window Center Relative to Reference Event (ms)", ha='center')
-    fig.text(0.08, 0.5, "ROC AUC", ha='center', 
+    fig.text(0.5, 0.01, "Window Center Relative to Reference Event (ms)", ha='center')
+    fig.text(0.05, 0.4, "ROC AUC", ha='center', 
              rotation='vertical')
-    
-    plot_idx = 0
-    fig2 = plt.figure(figsize=(12,5))
-    dset_names = [d['name'] for d in run_info.values()]
-    for i, dset_name in enumerate(dset_names):
-        plt.subplot(1, 3, plot_idx+1)
-        plt.plot(win_centers, all_dataset_scores[dset_name][:,2])
-        #plt.ylabel("ROC AUC")j
-        plt.plot(win_centers, np.ones_like(win_centers)*0.5, 'k')
-        plt.ylim([0.2, .9])
-        if plot_idx < 3:
-            plt.title("Monkey " + dset_name)
 
-        plt.xticks([-200, -100, 0, 100, 200])
-        plot_idx +=1
-
-    fig2.text(0.5, 0.00, "Window Center Relative to Speed Maxima (ms)", 
-            ha='center')
-    fig2.text(0.08, 0.5, "ROC AUC", ha='center', 
-             rotation='vertical')
-    
-    fig.tight_layout()
-    fig.savefig(snakemake.output.firstmove_corrections)
-    fig2.tight_layout()
-    fig2.savefig(snakemake.output.maxima)
+    # fig2.text(0.5, 0.00, "Window Center Relative to Speed Maxima (ms)", 
+    #         ha='center')
+    # fig2.text(0.08, 0.5, "ROC AUC", ha='center', 
+    #          rotation='vertical')
+    plt.tight_layout()
+    plt.subplots_adjust(left=.1,right=.75)
+    #fig.savefig(snakemake.output.firstmove_corrections)
+    fig.savefig('auc_corrections_firstmove.svg')
+    fig.savefig('../figures/final_figures/numbered/6c.svg')
 
     # combined_scores = []
     # for win_idx,(win_start, win_stop) in enumerate(win_lims):

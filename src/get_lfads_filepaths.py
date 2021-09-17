@@ -27,6 +27,7 @@ def write_filepaths(output_filename):
     #file_pattern += ' ' + cfg['lfads_dir_path'] + 'wide_kl_range/*/single_rockstar/*/model_runs_*.h5*_posterior_sample_and_average'
     #file_pattern += ' ' + cfg['lfads_dir_path'] + 'wide_kl_range/*/single_mack/*/model_runs_*.h5*_posterior_sample_and_average'
     file_pattern = cfg['lfads_dir_path'] + 'kl_co_dim_search/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
+    #file_pattern = cfg['lfads_dir_path'] + 'final_kl_co_dim_search/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
     #file_pattern += ' ' + cfg['lfads_dir_path'] + 'low_learning_rate_stop/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
     #file_pattern = cfg['lfads_dir_path'] + 'dense_lfads_co_dim_sweep/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
     #file_pattern += ' ' + cfg['lfads_dir_path'] + 'greater_co_dim_sweep/*/*/*/model_runs_*.h5*_posterior_sample_and_average'

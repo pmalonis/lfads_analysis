@@ -317,7 +317,7 @@ def get_endpoint(peak_df, df, dt):
     return peak_df
 
 if __name__=='__main__':
-    event_type = "firstmove"
+    event_type = "targets-not-one"
     output_filename = "optimize_testing.csv"
 
     ray.init(num_cpus=cfg['num_cpus'])

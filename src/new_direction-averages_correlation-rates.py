@@ -66,8 +66,8 @@ if __name__=='__main__':
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
+        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_new-corrections_train.p'%(dataset))
+        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_new-corrections_test.p'%(dataset))
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
@@ -206,5 +206,5 @@ if __name__=='__main__':
     #         'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
     plt.text(xpos,ypos,
             'r = %0.2f'%(r_value), fontsize=13)
-    plt.savefig('../figures/final_figures/rate_averages_correlation_with_corrections_means_all.svg')
-    plt.savefig('../../figures/final_figures/numbered/7c.svg')
+    #plt.savefig('../figures/final_figures/rate_averages_correlation_with_corrections_means_all.svg')
+    #plt.savefig('../figures/final_figures/numbered/7c.svg')

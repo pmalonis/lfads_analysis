@@ -15,6 +15,8 @@ from scipy.signal import savgol_filter
 from matplotlib import rcParams
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
+plt.rcParams['font.size'] = 16
+
 reload(opt)
 reload(utils)
 
@@ -26,14 +28,14 @@ run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
 datasets = list(run_info.keys())
 params = []
 for dataset in run_info.keys():
-    params.append(open('../data/peaks/%s_selected_param_gini.txt'%(dataset)).read())
+    params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read())
 
 #datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
 nbins = 12
-fb_win_start = -0.2#0.00#-0.1#cfg['post_target_win_start']
+fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
 fb_win_stop = 0#0.3#0.1#cfg['post_target_win_stop']
-win_start = -0.2
+win_start = -0.3
 win_stop = 0
 
 lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
@@ -105,7 +107,7 @@ if __name__=='__main__':
             
             plt.figure(1)
             plt.tight_layout(pad=2)
-            plt.suptitle('Mean of Controller Direction-Averages')
+            plt.suptitle('Mean of Inferred Input Direction-Averages')
             #plt.tight_layout()
             plt.subplot(n_co,len(datasets),dset_idx+1+j*len(datasets))
             sns.regplot(co_mean, fb_co_mean)
@@ -118,14 +120,14 @@ if __name__=='__main__':
             xpos = xmin + .1*(xmax-xmin)
             ypos = ymax - .1*(ymax-ymin)
             plt.text(xpos,ypos,
-                    'r = %0.2f'%np.corrcoef(co_mean, fb_co_mean)[1,0])
+                    'r = %0.2f, p = %0.3f'%pearsonr(co_mean, fb_co_mean))
         #plt.figure()
         #plt.scatter(co_max, fb_co_max)
             plt.subplots_adjust(wspace=0.2)
 
             plt.figure(2)
             plt.tight_layout(pad=2)
-            plt.suptitle('Maxima of Controller Direction-Averages')
+            plt.suptitle('Maxima of Inferred Input Direction-Averages')
             #plt.tight_layout()
             plt.subplot(n_co,len(datasets),dset_idx+1+j*len(datasets))
             sns.regplot(co_max, fb_co_max)

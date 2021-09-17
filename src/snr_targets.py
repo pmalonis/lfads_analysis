@@ -153,52 +153,32 @@ if __name__=='__main__':
 
     plot_idx = 0
     titles = ['']#['First\n Movement', 'Correction']
-    fig = plt.figure(figsize=(15,6))
+    fig = plt.figure(figsize=(15,6.5))
     for event_idx, event in enumerate(titles):
         dset_names = [d['name'] for d in run_info.values()]
         for i, dset_name in enumerate(dset_names):
             plt.subplot(1, 3, plot_idx+1)
             plt.plot(win_centers, all_dataset_scores[dset_name][:,event_idx])
-            #plt.ylabel("ROC AUC")
+            if i == 0:
+                plt.ylabel("ROC AUC")
+            else:
+                plt.gca().set_yticklabels([])
             plt.plot(win_centers, np.ones_like(win_centers)*0.5, 'k')
             plt.ylim([0.2, 0.9])
             if plot_idx < 3:
                 plt.title("Monkey " + dset_name)
-
-            plt.xticks([-200, -100, 0, 100, 200])
+            plt.yticks(fontsize=14)
+            plt.xticks([-200, -100, 0, 100, 200], fontsize=14)
             plot_idx +=1
 
-        fig.text(0.05, 0.7 - 0.4*event_idx, event, ha='center')
+        #fig.text(0.05, 0.7 - 0.4*event_idx, event, ha='center')
         #plt.suptitle(event)
 
-    fig.text(0.5, 0.00, "Window Center Relative to Reference Event (ms)", ha='center')
-    fig.text(0.08, 0.5, "ROC AUC", ha='center', 
-             rotation='vertical')
-    
-    plot_idx = 0
-    fig2 = plt.figure(figsize=(12,5))
-    dset_names = [d['name'] for d in run_info.values()]
-    for i, dset_name in enumerate(dset_names):
-        plt.subplot(1, 3, plot_idx+1)
-        plt.plot(win_centers, all_dataset_scores[dset_name][:,2])
-        #plt.ylabel("ROC AUC")j
-        plt.plot(win_centers, np.ones_like(win_centers)*0.5, 'k')
-        plt.ylim([0.2, .9])
-        if plot_idx < 3:
-            plt.title("Monkey " + dset_name)
+    fig.text(0.5, 0.01, "Window Center Relative to Target Appearance (ms)", ha='center')
 
-        plt.xticks([-200, -100, 0, 100, 200])
-        plot_idx +=1
-
-    fig2.text(0.5, 0.00, "Window Center Relative to Speed Maxima (ms)", 
-            ha='center')
-    fig2.text(0.08, 0.5, "ROC AUC", ha='center', 
-             rotation='vertical')
-    
     fig.tight_layout()
-    fig.savefig(snakemake.output.firstmove_corrections)
-    fig2.tight_layout()
-    fig2.savefig(snakemake.output.maxima)
+    fig.savefig('../figures/final_figures/auc_targets.svg')
+    fig.savefig('../figures/final_figures/numbered/4d.svg')
 
     # combined_scores = []
     # for win_idx,(win_start, win_stop) in enumerate(win_lims):

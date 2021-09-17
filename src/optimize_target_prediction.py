@@ -15,7 +15,7 @@ from sklearn.preprocessing import PolynomialFeatures, FunctionTransformer
 from sklearn.pipeline import make_pipeline
 from xgboost import XGBRegressor
 from sklearn.svm import SVR
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split, KFold
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import r2_score,make_scorer
 from sklearn.decomposition import PCA
@@ -36,7 +36,6 @@ importlib.reload(custom_objective)
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
-
 random_state = 1748
 np.random.seed(random_state)
 
@@ -45,6 +44,8 @@ train_test_ratio = 0.2
 spike_dt = 0.001
 nbins = 12
 cv = cfg['target_prediction_cv_splits']
+
+kfold = KFold(n_splits=cv, random_state=train_test_random_state, shuffle=True)
 
 def get_model_results(pre_param_dict, args):
     peak_df, co, trial_len, dt, df, scoring, dir_scoring, dataset_name, lfads_params, estimator_dict, k1, k2 = args
@@ -64,10 +65,10 @@ def get_model_results(pre_param_dict, args):
 
         if pre_param_dict.get('fit_direction') and not pre_param_dict.get('corr')=='ja':
             model = GridSearchCV(estimator, param_grid, scoring=dir_scoring, 
-                                refit=False, cv=cv)
+                                refit=False, cv=kfold)
         else:
             model = GridSearchCV(estimator, param_grid, scoring=scoring, 
-                                refit=False, cv=cv)
+                                refit=False, cv=kfold)
 
         model.fit(X,y)
         n_params = len(model.cv_results_['params']) #number of parameters in sklearn Grid Search
@@ -114,7 +115,7 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
     
     #removing events with a window that starts before the start of the trial
     peak_df = peak_df.iloc[np.where(peak_df.index.get_level_values('time') + min_win_start >= 0)]
-
+    
     used_inds = np.sort(list(set(peak_df.index.get_level_values('trial'))))
 
     k = 0 # target counter
@@ -192,6 +193,7 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
             hand_pos[k,:] = trial_df.kinematic.iloc[df_idx][['x','y']].values
             k += 1
 
+    
     X = np.delete(X, idx_to_remove, axis=0)
 
     X_index = ~np.all(np.isnan(X), axis=1)
@@ -236,6 +238,7 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
     
     #removing examples where hand_pos and target pos are the same. 
     #this occurs if transition_time + hand_time falls exactly on target appearance time
+
     y = y[not_zero_rows]
     X = X[not_zero_rows]
 
@@ -370,6 +373,7 @@ if __name__=='__main__':
     grid_results = []
     scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func)}
     dir_scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func),'r_score':make_scorer(r_score_func)}
+    
     for dataset_name, dataset_dict in dataset_dicts.items():
         for lfads_params in dataset_dict['lfads_params']:
             file_root = dataset_dict['file_root']

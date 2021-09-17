@@ -66,8 +66,8 @@ if __name__=='__main__':
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
+        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_maxima_train.p'%(dataset))
+        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_maxima_test.p'%(dataset))
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
@@ -77,7 +77,7 @@ if __name__=='__main__':
 
         fb_X,fb_y = opt.get_inputs_to_model(fb_peak_df, co, trial_len, dt, df=df, use_rates=True, rate_pcs=n_pcs,
                                             reduce_neurons=True, win_start=fb_win_start, win_stop=fb_win_stop)
-        
+
         win_size = int((win_stop - win_start)/dt)
         fb_win_size = int((fb_win_stop - fb_win_start)/dt)
 
@@ -122,7 +122,7 @@ if __name__=='__main__':
         plt.subplot(1, len(datasets), dset_idx+1)
         sns.regplot(mean_zscores, fb_mean_zscores)
         if dset_idx == 0:
-            plt.ylabel('Corrective Movement Direction-Mean (z-scored)')
+            plt.ylabel('Speed Maximum Direction-Mean (z-scored)')
         if j==0:
             plt.title(run_info[dataset]['name'])
 
@@ -142,7 +142,8 @@ if __name__=='__main__':
 
         plt.yticks([-2, -1, 0, 1, 2])
         plt.xticks([-2, -1, 0, 1, 2])
-        plt.text(xpos, ypos, 'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
+        plt.text(xpos,ypos,
+                'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
 
         # plt.figure(2)
         # plt.tight_layout(pad=2)
@@ -182,7 +183,7 @@ if __name__=='__main__':
     #plt.tight_layout()
     sns.regplot(np.concatenate(all_means), np.concatenate(fb_all_means))
     plt.xlabel('Initial Movement Direction-Mean (z-scored)')
-    plt.ylabel('Corrective Movement Direction-Mean (z-scored)')
+    plt.ylabel('Speed Maximum Direction-Mean (z-scored)')
 
     if j==0:
         plt.title(run_info[dataset]['name'])
@@ -202,9 +203,9 @@ if __name__=='__main__':
 
     plt.yticks([-2, -1, 0, 1, 2])
     plt.xticks([-2, -1, 0, 1, 2])
-    # plt.text(xpos,ypos,
+        # plt.text(xpos,ypos,
     #         'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
     plt.text(xpos,ypos,
             'r = %0.2f'%(r_value), fontsize=13)
-    plt.savefig('../figures/final_figures/rate_averages_correlation_with_corrections_means_all.svg')
-    plt.savefig('../../figures/final_figures/numbered/7c.svg')
+    plt.savefig('../figures/final_figures/rate_averages_correlation_with_maxima_means_all.svg')
+    plt.savefig('../../figures/final_figures/numbered/7e.svg')

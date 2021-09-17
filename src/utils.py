@@ -7,6 +7,9 @@ import os
 import yaml
 from scipy import io
 import h5py
+from matplotlib import colors
+import colorsys
+import seaborn as sns
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -21,6 +24,22 @@ def load_data(data_filename, lfads_filename, inputInfo_filename):
         trial_len = get_trial_len(h5file, input_info)
     
     return df, co, trial_len, dt
+
+def inputs_to_model(dataset, event_type):
+    file_root = dataset
+    lfads_params = open(os.path.dirname(__file__) + '/../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read().strip()
+    data_filename = os.path.dirname(__file__)+'/../data/intermediate/' + file_root + '.p'
+    lfads_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
+                    '_'.join([file_root, lfads_params, 'all.h5'])
+    inputInfo_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
+                        '_'.join([file_root, 'inputInfo.mat'])
+    peak_filename = os.path.dirname(__file__)+'/../data/peaks/' + \
+                    '_'.join([file_root, '%s_train.p'%event_type])
+
+    peak_df = pd.read_pickle(peak_filename)
+    df, co, trial_len, dt = load_data(data_filename, lfads_filename, inputInfo_filename)
+
+    return peak_df, co, trial_len, dt, df
 
 def print_commit():
     '''saves matplotlib figure with hash of current git commit as metadata'''
@@ -101,6 +120,15 @@ def spoke_plot(x, y, labels=['x','y'], ax=None, color=[0,.4,.4,.6]):
         ax.plot([xi, yi], [1, 2], color=color)
 
     return ax
+
+def contrasting_colors(start_hue, n_colors=2, hue_change=1, reverse=False, saturation=0.6, min_lightness=0.25, max_lightness=0.75):
+    hues = [(start_hue + hue_change*i/n_colors)%1 for i in range(n_colors)]
+    lightness = np.linspace(0.25, 0.75, n_colors)
+    if reverse:
+        lightness = lightness[::-1]
+    hls_colors = [[h, l, saturation] for h,l in zip(hues, lightness)]
+    rgb_colors = [colorsys.hls_to_rgb(*hls) for hls in hls_colors]
+    return rgb_colors
 
 # def get_firing_rates(df, dt, spike_dt):
 #     nneurons = sum('neural' in c for c in df.columns)

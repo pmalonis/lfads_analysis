@@ -9,11 +9,13 @@ from scipy.signal import savgol_filter
 import sys
 sys.path.insert(0,'.')
 import utils
+from submovement_core import speed_minima
+from importlib import reload
+reload(utils)
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
-min_submovement_ms = cfg['min_peak_spacing']
-min_speed_prominence = 20 #minimum prominence for peak finder, in mm/s
+
 def trial_intervals(trial_df):
     '''
     Calculates submovement transitions from single trial, based on 
@@ -106,8 +108,200 @@ def trial_transitions(trial_df, exclude_post_target=None, exclude_pre_target=Non
 
     return minima
 
+# def trial_firstmoves(trial_df, exclude_post_target=None, exclude_pre_target=None):
+#     '''Calculates submovement transitions from single trial, based on 
+#     speed profile
+    
+#     Parameters
+#     trial_df: single-trial dataframe
+    
+#     Returns
+#     trial_transitions: List of minima defining starts/ends of submovements, in index
+#     '''
+#     threshold = cfg['firstmove_speed_transition_thresh']
+#     prominence = cfg['firstmove_min_speed_prominence']
+#     distance = cfg['firstmove_min_distance']
 
-def dataset_events(df, func, column_label='transition', exclude_post_target=0.2, exclude_pre_target=0.2):
+#     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+#     minima = speed_minima(x_vel, y_vel, threshold, prominence, distance)
+
+#     targets = trial_df.kinematic.query('hit_target')
+#     t_targets = targets.index.values
+#     targets
+#     t = trial_df.index.values
+#     firstmove = []
+#     for i in range(len(targets)-1):
+#         target_moves = [m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
+#         if len(target_moves) > 0:
+#             target_firstmove = target_moves[0]
+#             firstmove.append(target_firstmove)
+
+#     minima = np.array(firstmove)
+#     if exclude_post_target is not None:
+#         #determine whether event time is in window post target
+#         event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+#         non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+#         minima = minima[non_post_target_events]
+    
+#     if exclude_pre_target is not None:
+#         #determine whether event time is in window post target
+#         event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+#         non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+#         minima = minima[non_pre_target_events]
+
+#     return minima
+
+# def trial_corrections(trial_df, exclude_post_target=None, exclude_pre_target=None):
+#     '''Calculates submovement transitions from single trial, based on 
+#     speed profile
+    
+#     Parameters
+#     trial_df: single-trial dataframe
+    
+#     Returns
+#     trial_transitions: List of minima defining starts/ends of submovements, in index
+#     '''
+#     firstmove_threshold = cfg['not_correction_speed_transition_thresh']
+#     firstmove_prominence = cfg['not_correction_min_speed_prominence']
+#     firstmove_distance = cfg['not_correction_min_distance']
+
+#     threshold = cfg['correction_speed_transition_thresh']
+#     prominence = cfg['correction_min_speed_prominence']
+#     distance = cfg['correction_min_distance']
+
+#     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+#     minima = speed_minima(x_vel, y_vel, threshold, prominence, distance)
+#     firstmove_params_minima = speed_minima(x_vel, y_vel, firstmove_threshold, firstmove_prominence, firstmove_distance)
+#     targets = trial_df.kinematic.query('hit_target')
+#     t_targets = targets.index.values
+#     t = trial_df.index.values
+#     corrections= []
+#     for i in range(len(targets)-1):
+#         target_moves = np.array([m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]])
+#         if len(target_moves) > 1: #must be more that 1 movement, if only one then not a correction
+#             target_firstmoves = [m for m in firstmove_params_minima 
+#                                  if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
+#             if len(target_firstmoves) > 0: #must be a first movement according to firstmove parameters
+#                 target_corrections = target_moves[target_moves > target_firstmoves[0]]
+#                 corrections.append(target_corrections)
+
+#     if len(corrections) > 0:
+#         minima = np.concatenate(corrections)
+#     else:
+#         minima = np.array([])
+#     if exclude_post_target is not None:
+#         #determine whether event time is in window post target
+#         event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+#         non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+#         minima = minima[non_post_target_events]
+    
+#     if exclude_pre_target is not None:
+#         #determine whether event time is in window post target
+#         event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+#         non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+#         minima = minima[non_pre_target_events]
+
+#     return minima
+
+def trial_firstmoves(trial_df, exclude_post_target=None, exclude_pre_target=None):
+    '''Calculates submovement transitions from single trial, based on 
+    speed profile
+    
+    Parameters
+    trial_df: single-trial dataframe
+    
+    Returns
+    trial_transitions: List of minima defining starts/ends of submovements, in index
+    '''
+    threshold = cfg['firstmove_speed_transition_thresh']
+    prominence = cfg['firstmove_min_speed_prominence']
+    distance = cfg['firstmove_min_distance']
+
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    idx_targets = [trial_df.index.get_loc(t_targets[i]) for i in range(len(t_targets))]
+    minima = speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets)
+
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    t = trial_df.index.values
+    firstmove = []
+    for i in range(len(targets)-1):
+        target_moves = [m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
+        if len(target_moves) > 0:
+            target_firstmove = target_moves[0]
+            firstmove.append(target_firstmove)
+
+    minima = np.array(firstmove)
+    if exclude_post_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+        non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+        minima = minima[non_post_target_events]
+    
+    if exclude_pre_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+        non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+        minima = minima[non_pre_target_events]
+
+    return minima
+
+def trial_corrections(trial_df, exclude_post_target=None, exclude_pre_target=None):
+    '''Calculates submovement transitions from single trial, based on 
+    speed profile
+    
+    Parameters
+    trial_df: single-trial dataframe
+    
+    Returns
+    trial_transitions: List of minima defining starts/ends of submovements, in index
+    '''
+    firstmove_threshold = cfg['firstmove_speed_transition_thresh']
+    firstmove_prominence = cfg['firstmove_min_speed_prominence']
+    firstmove_distance = cfg['firstmove_min_distance']
+
+    threshold = cfg['correction_speed_transition_thresh']
+    prominence = cfg['correction_min_speed_prominence']
+    distance = cfg['correction_min_distance']
+
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    idx_targets = [trial_df.index.get_loc(t_targets[i]) for i in range(len(t_targets))]
+    minima = speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets)
+    firstmove_params_minima = speed_minima(x_vel, y_vel, firstmove_threshold, firstmove_prominence, firstmove_distance, idx_targets)    
+    t = trial_df.index.values
+    corrections= []
+    for i in range(len(targets)-1):
+        target_moves = np.array([m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]])
+        if len(target_moves) > 1: #must be more that 1 movement, if only one then not a correction
+            target_firstmoves = [m for m in firstmove_params_minima 
+                                 if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
+            if len(target_firstmoves) > 0: #must be a first movement according to firstmove parameters
+                target_corrections = target_moves[target_moves > target_firstmoves[0]]
+                corrections.append(target_corrections)
+
+    if len(corrections) > 0:
+        minima = np.concatenate(corrections)
+    else:
+        minima = np.array([])
+    if exclude_post_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+        non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+        minima = minima[non_post_target_events]
+    
+    if exclude_pre_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+        non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+        minima = minima[non_pre_target_events]
+
+    return minima
+
+def dataset_events(df, func, column_label='transition', exclude_post_target=None, exclude_pre_target=None):
     '''
     return rows of dataset corresponding to event, based on a function that
     computes events for each trial
@@ -124,10 +318,7 @@ def dataset_events(df, func, column_label='transition', exclude_post_target=0.2,
     
     event_idx = df.groupby('trial').apply(lambda _df: func(_df.loc[_df.index[0][0]], exclude_post_target))
     event_idx = np.concatenate([event_idx.loc[i] + (df.loc[:i-1].shape[0] if i > 0 else 0) for i in range(len(event_idx))])
-    # try:
-    #     event_idx = np.concatenate([event_idx.loc[i] + (df.loc[:i-1].shape[0] if i > 0 else 0) for i in range(len(event_idx))])
-    # except:
-    #     import IPython; IPython.embed()
+
     events = df.kinematic.iloc[event_idx]
 
     return events
@@ -175,87 +366,134 @@ def trial_control_transitions(trial_df):
     
 #     return np.array(minima)
 
-def speed_minima(x_vel, y_vel):
+# def speed_minima(x_vel, y_vel, threshold, prominence, distance):
+#     '''Calculates submovements from velocity coordinates, based on 
+#     speed profile
+    
+#     Parameters
+#     x_vel: velocity in x-axis
+#     y_vel: velocity in y-axis
+#     threshold: threshold above which speed minima will not be returned
+#     prominence: minimum size of the following movement
+
+#     Returns
+#     intervals: List of minima defining starts/ends of submovements
+#     '''
+
+#     speed = utils.get_speed(x_vel, y_vel)
+#     minima, _  = signal.find_peaks(-speed,
+#                                     height=-threshold,
+#                                     distance=distance)
+    
+#     bounds = np.append(minima, len(speed) - 1)
+#     minima = np.array([minima[i] for i in range(len(minima)) if 
+#                         speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence])
+
+#     # while any(np.diff(minima)<distance):
+#     #     idx = np.argmax(np.diff(minima)<distance)
+#     #     remove_candidates = [idx, idx + 1]
+#     #     # deleting greater minimum
+#     #     to_remove = remove_candidates[np.argmax(speed[minima[remove_candidates]])]
+#     #     minima = np.delete(minima, to_remove)
+
+#     return np.array(minima)
+
+def speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets):
     '''Calculates submovements from velocity coordinates, based on 
     speed profile
     
     Parameters
     x_vel: velocity in x-axis
     y_vel: velocity in y-axis
-    
+    threshold: threshold above which speed minima will not be returned
+    prominence: minimum size of the following movement
+
     Returns
     intervals: List of minima defining starts/ends of submovements
     '''
+
     speed = utils.get_speed(x_vel, y_vel)
     minima, _  = signal.find_peaks(-speed,
-                                  height=-cfg['speed_transition_thresh'])
+                                    height=-threshold)
     
-    prominence = cfg['min_speed_prominence']
     bounds = np.append(minima, len(speed) - 1)
-    minima = [minima[i] for i in range(len(minima))
-              if speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence]
-    
+    minima = np.array([minima[i] for i in range(len(minima)) if 
+                        speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence])
+        
+    target_spaced_minima = [m + distance*np.sum(idx_targets<m) for m in minima]
+    all_to_remove = []
+    while any(np.diff(target_spaced_minima)<distance):
+        idx = np.argmax(np.diff(target_spaced_minima)<distance)
+        remove_candidates = [idx, idx + 1]
+        # deleting lesser prominence
+        bounds = np.append(minima, len(speed) - 1)
+        prominences = np.array([speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] 
+                        for i in range(len(minima))])
+        #removing peak with smaller prominence
+        to_remove = remove_candidates[np.argmin(prominences[remove_candidates])]
+        target_spaced_minima.pop(to_remove)
+        minima = np.delete(minima, to_remove)
+
     return np.array(minima)
 
 
-
-def trial_maxima(trial_df, exclude_post_target=None, exclude_pre_target=None):
-    '''Calculates submovement transitions from single trial, based on 
-    speed profile
+# def trial_maxima(trial_df, exclude_post_target=None, exclude_pre_target=None):
+#     '''Calculates submovement transitions from single trial, based on 
+#     speed profile
     
-    Parameters
-    trial_df: single-trial dataframe
+#     Parameters
+#     trial_df: single-trial dataframe
     
-    Returns
-    trial_transitions: List of minima defining starts/ends of submovements, in index
-    '''
-    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
-    maxima = speed_maxima(x_vel, y_vel)
+#     Returns
+#     trial_transitions: List of minima defining starts/ends of submovements, in index
+#     '''
+#     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+#     maxima = speed_maxima(x_vel, y_vel)
 
-    targets = trial_df.kinematic.query('hit_target')
-    if exclude_post_target is not None:
-        #determine whether event time is in window post target
-        event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
-        non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
-        maxima = maxima[non_post_target_events]
+#     targets = trial_df.kinematic.query('hit_target')
+#     if exclude_post_target is not None:
+#         #determine whether event time is in window post target
+#         event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+#         non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
+#         maxima = maxima[non_post_target_events]
     
-    if exclude_pre_target is not None:
-        #determine whether event time is in window post target
-        event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
-        non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
-        maxima = maxima[non_pre_target_events]
+#     if exclude_pre_target is not None:
+#         #determine whether event time is in window post target
+#         event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+#         non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
+#         maxima = maxima[non_pre_target_events]
 
-    return maxima
+#     return maxima
 
-def impulse_corrections(trial_df):
-    '''Finds points of impulse control corrections, based on speed'''
+# def impulse_corrections(trial_df):
+#     '''Finds points of impulse control corrections, based on speed'''
     
-    t = trial_df.index.values
-    speed = np.linalg.norm(trial_df.kinematic[['x_vel', 'y_vel']].values)
-    speed = savgol_filter(speed, cfg['speed_filter_win'], cfg['speed_filter_order'])
+#     t = trial_df.index.values
+#     speed = np.linalg.norm(trial_df.kinematic[['x_vel', 'y_vel']].values)
+#     speed = savgol_filter(speed, cfg['speed_filter_win'], cfg['speed_filter_order'])
     
-    accel = np.gradient(speed, t)
-    jerk = np.gradient(accel, t)
+#     accel = np.gradient(speed, t)
+#     jerk = np.gradient(accel, t)
 
-    return accel
+#     return accel
 
-def filter_peaks(peak_df):
-    peak_df = peak_df[peak_df[['latency_0', 'latency_1']].notnull().any(axis=1)]
-    return peak_df
+# def filter_peaks(peak_df):
+#     peak_df = peak_df[peak_df[['latency_0', 'latency_1']].notnull().any(axis=1)]
+#     return peak_df
 
-def peak_speed(trial_df, exclude_pre_target=None, exclude_post_target=None):
-    speed = np.linalg.norm(trial_df.kinematic[['x_vel', 'y_vel']].values, axis=1)
-    idx_targets = np.where(trial_df.kinematic['hit_target'])[0]
-    peaks = []
-    for i in range(len(idx_targets)-1):
-        target_peaks,_ = find_peaks(speed[idx_targets[i]:idx_targets[i+1]])
-        if len(target_peaks) > 0:
-            target_peaks += idx_targets[i]
-            peaks.append(target_peaks[speed[target_peaks].argmax()])
-        else:
-            continue
+# def peak_speed(trial_df, exclude_pre_target=None, exclude_post_target=None):
+#     speed = np.linalg.norm(trial_df.kinematic[['x_vel', 'y_vel']].values, axis=1)
+#     idx_targets = np.where(trial_df.kinematic['hit_target'])[0]
+#     peaks = []
+#     for i in range(len(idx_targets)-1):
+#         target_peaks,_ = find_peaks(speed[idx_targets[i]:idx_targets[i+1]])
+#         if len(target_peaks) > 0:
+#             target_peaks += idx_targets[i]
+#             peaks.append(target_peaks[speed[target_peaks].argmax()])
+#         else:
+#             continue
 
-    return np.array(peaks)
+#     return np.array(peaks)
 
 def pre_peak(trial_df, exclude_pre_target=None, exclude_post_target=None):
     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
@@ -348,8 +586,8 @@ def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
     trial_len = len(trial_co) * dt
     targets = trial_df.loc[:trial_len].kinematic.query('hit_target')[['x', 'y']].values.T
     f, ax = plt.subplots(figsize=(10,8))
-    ax.plot(*targets[:,0], 'ro')
-    ax.plot(*targets[:,1:], 'bs')
+    ax.plot(*targets[:,0], 'ko')
+    ax.plot(*targets[:,1:], 'gs')
     xs, ys = targets[:,:-1]
     dxs, dys = np.diff(targets, axis=1)
     arrow_shorten = 1
@@ -407,7 +645,7 @@ def plot_abs_trajectory_co(trial_df, trial_co, co_norm, dt, co_max=3):
 
     return trial_co, mean_co
 
-def plot_trial(trial_df, trial_co, dt):
+def plot_trial(trial_df, trial_co, dt, trial_firstmove_df, trial_correction_df):
     '''
     Plots the speed profile, controller outputs, and target times
     
@@ -416,32 +654,62 @@ def plot_trial(trial_df, trial_co, dt):
     trial_co: controller outputs for one trial (time X n_outputs)
     '''
     trial_len = trial_co.shape[0] * dt
-    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].loc[:trial_len].T.values
+    #x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].loc[:trial_len].T.values
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].T.values
     speed = np.sqrt(x_vel**2 + y_vel**2)
+    filt_speed = utils.get_speed(x_vel, y_vel)
     t_targets = trial_df.kinematic.query('hit_target').index.values
     t = trial_df.loc[:trial_len].index.values
+    t = trial_df.index.values
     lns = [] #for legend
-    transitions = trial_maxima(trial_df)
+    #transitions = trial_transitions(trial_df)
+    fm = trial_firstmove_df.index.values
+    nc = trial_correction_df.index.values
+    
+    fm = [np.argmin(np.abs(t-fm[i])) for i in range(len(fm))]
+    nc = [np.argmin(np.abs(t-nc[i])) for i in range(len(nc))]
+
     trial_len_ms = trial_len*1000
-    transitions = transitions[transitions < trial_len_ms]
+    #transitions = transitions[transitions < trial_len_ms]
     plt.figure(figsize=(12,6))
+    #filt_speed = get_normal_accel(x_vel, y_vel, t)
     lns.append(plt.plot(t, speed,'g'))
-    accel = np.gradient(speed, t)
+    lns.append(plt.plot(t, filt_speed, 'k'))
     #plt.twinx()
-    #lns.append(plt.plot(t, accel, 'c'))
-    plt.plot(t[transitions], speed[transitions],'r.')
+    
+    fm_line = plt.plot(t[fm], filt_speed[fm],'r.',markersize=15, label='First Movement')
+    c_line = plt.plot(t[nc], filt_speed[nc],'b.',markersize=15, label='Correction')
+    plt.legend(handles=[fm_line[0], c_line[0]], fontsize=12)
     plt.ylabel('Speed (mm/s)')
     plt.xlabel('Time (s)')
-    plt.twinx()
-    t_co = np.arange(0, trial_len, dt) 
-    lns.append(plt.plot(t_co, trial_co[:,0]))
-    lns.append(plt.plot(t_co, trial_co[:,1]))
-    plt.legend(lns, ['Cursor Speed', 'Controller 1', 'Controller 2'])
-    plt.ylabel('Controller Value')
-    ymin, ymax = (-1, 1)#plt.ylim()
+    # plt.twinx()
+    # t_co = np.arange(0, trial_len, dt) 
+    # lns.append(plt.plot(t_co, trial_co[:,0]))
+    # lns.append(plt.plot(t_co, trial_co[:,1]))
+    # plt.legend(lns, ['Cursor Speed', 'Controller 1', 'Controller 2'])
+    # plt.ylabel('Controller Value')
+    ymin, ymax = plt.ylim()
     plt.vlines(t_targets, ymin, ymax)
-    plt.xlim([0, trial_len])
-    plt.ylim([ymin, ymax])
+    # plt.xlim([0, trial_len])
+    # plt.ylim([ymin, ymax])
+
+    #return t, filt_speed, transitions
+
+def get_normal_accel(x_vel, y_vel, t):
+    """
+    computes normal acceleration at each time point
+    """
+    x_vel = savgol_filter(x_vel, 101, 2)
+    y_vel = savgol_filter(y_vel, 101, 2)
+    x_accel = np.gradient(x_vel, t)
+    y_accel = np.gradient(y_vel, t)
+
+    speed = np.sqrt(x_vel**2 + y_vel**2)
+    x_tang_velocity = x_vel/speed
+    y_tang_velocity = y_vel/speed
+    normal_accel = np.sqrt(np.gradient(x_tang_velocity, t)**2 + np.gradient(y_tang_velocity, t)**2)
+
+    return normal_accel
 
 def speed_maxima(x_vel, y_vel):
     '''Calculates submovements from velocity coordinates, based on 

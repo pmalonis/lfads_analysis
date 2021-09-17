@@ -17,6 +17,7 @@ from sklearn.metrics import roc_auc_score, precision_recall_curve, average_preci
 from snr import get_event_co, get_background_co
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
+plt.rcParams['font.size'] = 18
 
 absolute_min_heights = 0.3
 relative_min_heights = 3
@@ -31,27 +32,27 @@ run_info = yaml.safe_load(open(run_info_path, 'r'))
 
 class Dataset_Info():
     def __init__(self, dataset):
-        self.co_dim = {'gaussian':[], 'laplace':[]}
+        self.kl_weight = {'gaussian':[], 'laplace':[]}
         self.measure = {'gaussian':[], 'laplace':[]}
         self.name = run_info[dataset]['name']
 
     def plot(self, ax):
         try:
             for k in ['gaussian', 'laplace']:
-                assert(len(self.co_dim[k]) == len(self.measure[k]))
+                assert(len(self.kl_weight[k]) == len(self.measure[k]))
         except AssertionError:
-            raise ValueError("co_dims and measure must have the same length")
+            raise ValueError("kl_weights and measure must have the same length")
 
-        for prior in self.co_dim.keys():
-            idx = np.argsort(self.co_dim[prior])
-            self.co_dim[prior] = np.array(self.co_dim[prior])[idx]
+        for prior in self.kl_weight.keys():
+            idx = np.argsort(self.kl_weight[prior])
+            self.kl_weight[prior] = np.array(self.kl_weight[prior])[idx]
             self.measure[prior] = np.array(self.measure[prior])[idx]
         
-        ax.plot(self.co_dim['gaussian'], self.measure['gaussian'])
-        ax.plot(self.co_dim['laplace'], self.measure['laplace'])
-        ax.set_xlabel('Controller Penalty')
-        ax.set_title(self.name)
-        ax.legend(['Dense Prior', 'Sparse Prior'])
+        ax.plot(self.kl_weight['gaussian'], self.measure['gaussian'])
+        #ax.plot(self.kl_weight['laplace'], self.measure['laplace'])
+        ax.set_xlabel('Input Dimensionality')
+        #ax.set_title("Monkey " + self.name)
+        #ax.'legend'(['Dense Prior', 'Sparse Prior'])
 
 class Run_Data():
     def __init__(self, dataset, param, df, co, trial_len, dt):
@@ -73,11 +74,11 @@ class Measure():
     def add_dataset(self, dataset):
         self.datasets[dataset] = Dataset_Info(dataset)
 
-    def add_run(self, prior, co_dim, dataset, param, df, co, trial_len, dt):
+    def add_run(self, prior, kl_weight, dataset, param, df, co, trial_len, dt):
         if dataset not in self.datasets.keys():
             self.add_dataset(dataset)
 
-        self.datasets[dataset].co_dim[prior].append(co_dim)
+        self.datasets[dataset].kl_weight[prior].append(kl_weight)
         run = Run_Data(dataset, param, df, co, trial_len, dt)
         m = self.compute_measure(run)
         self.datasets[dataset].measure[prior].append(m)
@@ -86,14 +87,18 @@ class Measure():
         pass
 
     def plot(self):
-        fig = plt.figure(figsize=figsize)
-        axes = fig.subplots(1, len(self.datasets.keys()))
+        # fig = plt.figure(figsize=figsize)
+        # axes = fig.subplots(1, len(self.datasets.keys()))
+        fig, ax = plt.subplots(figsize=figsize)
         for i,k in enumerate(self.datasets.keys()):
-            self.datasets[k].plot(axes[i])
-            axes[i].set_ylabel(self.ylabel)
+            # self.datasets[k].plot(axes[i])
+            # axes[i].set_ylabel(self.ylabel)
+            self.datasets[k].plot(ax)
+            ax.set_ylabel(self.ylabel)
         
         fig.suptitle(self.title)
-
+        ax.legend(['Monkey %s'%d.name for d in self.datasets.values()])
+        plt.locator_params(num_ticks=4)
         self.fig = fig
 
     def savefig(self):
@@ -189,74 +194,104 @@ class Decode(Measure):
         super().__init__(*args, **kwargs)
         self.kinematics = {}
         self.firing_rates = {}
-        self.ylabel='Decoding Accuracy'
+        self.ylabel='Decoding Accuracy ($\mathregular{r^2}$)'
 
-    def add_dataset(self, dataset, kin, firing_rates):
-        self.datasets[dataset] = Dataset_Info(dataset)
-        self.kinematics[dataset] = kin      
+    def add_dataset(self, dataset, firing_rates):
+        self.datasets[dataset] = Dataset_Info(dataset) 
         self.firing_rates[dataset] = firing_rates
 
-    def add_run(self, prior, co_dim, dataset, param, df, co, trial_len, dt):
+    def add_run(self, prior, kl_weight, dataset, param, df, co, trial_len, dt):
         if dataset not in self.datasets.keys():
-            Y = dl.get_kinematics(df, trial_len, dt)
-            X_smoothed = dl.get_smoothed_rates(df, trial_len, dt)
-            self.add_dataset(dataset, Y, X_smoothed)
+            #X_smoothed = dl.get_smoothed_rates(df, trial_len, dt)
+            X_smoothed = None
+            self.add_dataset(dataset, X_smoothed)
 
-        self.datasets[dataset].co_dim[prior].append(co_dim)
+        self.datasets[dataset].kl_weight[prior].append(kl_weight)
         run = Run_Data(dataset, param, df, co, trial_len, dt)
         m = self.compute_measure(run)
         self.datasets[dataset].measure[prior].append(m)
 
     def compute_measure(self, run):
-        lfads_filename = '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
+        lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
         with h5py.File(lfads_filename, 'r') as h5file:
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
-        Y = self.kinematics[run.dataset]
-        return self.get_decoding_performance(X, Y)
+        Y = dl.get_kinematics(df, trial_len, dt)
+        n_trials = run.df.index[-1][0] + 1
+        return self.get_decoding_performance(X, Y, run.trial_len, 
+                                            run.dt, n_trials)
 
-    def get_decoding_performance(self, X, Y, n_splits=n_splits):
-        rs,_ = dl.get_rs(X, Y, n_splits=n_splits)
-        rs = {k:v for k,v in rs.items() if 'vel' in k}
-        decode_perf = np.array(list(rs.values())).mean()
+    def get_decoding_performance(self, X, Y, trial_len, dt, n_trials, n_splits=n_splits):
+        rs,_ = dl.get_rs(X, Y, n_splits, trial_len, dt, n_trials)
+        #rs = {k:v for k,v in rs.items() if 'vel' in k}
+        decode_perf = [np.mean([rs[k][i] for k in rs.keys()]) 
+                        for i in range(n_splits)] #mean over kinematic variables for each split
+        decode_mean = np.mean(decode_perf)
+        decode_std = np.std(decode_perf)
+        return decode_mean, decode_std
 
-        return decode_perf
-
-    def plot(self, fig=None):
-        if fig is None:
-            fig = plt.figure(figsize=figsize)
-        axes = fig.subplots(1, len(self.datasets.keys()))
-        if len(self.datasets.keys()) == 1:
-            axes = [axes]
+    def plot(self):
+        fig, ax = plt.subplots(figsize=figsize)
         for i,k in enumerate(self.datasets.keys()):
-            self.datasets[k].plot(axes[i])
-            axes[i].set_ylabel(self.ylabel)
-
-            #adding firing rate decoding performancce
-            Y = self.kinematics[k] 
-            X_smoothed = self.firing_rates[k]
-            rate_decode = self.get_decoding_performance(X_smoothed, Y)
-            n_points = len(self.datasets[k].co_dim['gaussian'])
-            axes[i].plot(self.datasets[k].co_dim['gaussian'], 
-                            np.ones(n_points) * rate_decode, 'g')
-            
-            #adding autolfads performance for rockstar
-            if k=='rockstar':
-                with h5py.File('../data/model_output/rockstar_autolfads-laplace-prior_all.h5', 'r') as h5file:
-                    X_autolfads = dl.get_lfads_predictor(h5file['factors'][:])
-                
-                autolfads_decode = self.get_decoding_performance(X_autolfads, Y)
-                n_points = len(self.datasets[k].co_dim['gaussian'])
-                axes[i].plot(self.datasets[k].co_dim['gaussian'], 
-                            np.ones(n_points) * autolfads_decode, 'r')
-                axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode', 
-                                'Autolfads Decode'])
-            else:
-                axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode'])
-
+            decode_mean, decode_std = zip(*self.datasets[k].measure['gaussian'])
+            idx = np.argsort(self.datasets[k].kl_weight['gaussian'])
+            decode_mean = np.array(decode_mean)[idx]   
+            decode_std = np.array(decode_std)[idx]  
+            kl_weight = np.array(self.datasets[k].kl_weight['gaussian'])[idx]
+            plt.plot(kl_weight, decode_mean)
+            plt.fill_between(kl_weight, 
+                            decode_mean - decode_std,
+                            decode_mean + decode_std, alpha=0.2)
+            ax.legend(['Monkey %s'%d.name for d in self.datasets.values()])
+            plt.locator_params(num_ticks=4)
+            ax.set_ylabel(self.ylabel)
+            ax.set_xlabel('Controller Dimensionality')
+        
         fig.suptitle(self.title)
+        ax.legend(['Monkey %s'%d.name for d in self.datasets.values()])
+        plt.locator_params(num_ticks=4)
         self.fig = fig
 
+    # def plot(self, fig=None):
+    #     if fig is None:
+    #         fig = plt.figure(figsize=figsize)
+    #     axes = fig.subplots(1, len(self.datasets.keys()))
+    #     if len(self.datasets.keys()) == 1:
+    #         axes = [axes]
+            
+    #     for i,k in enumerate(self.datasets.keys()):
+    #         self.datasets[k].plot(axes[i])
+    #         axes[i].set_ylabel(self.ylabel)
+
+    #         #adding firing rate decoding performancce
+    #         Y = self.kinematics[k] 
+    #         X_smoothed = self.firing_rates[k]
+    #         rate_decode = self.get_decoding_performance(X_smoothed, Y)
+    #         n_points = len(self.datasets[k].kl_weight['gaussian'])
+    #         axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
+    #                         np.ones(n_points) * rate_decode)
+            
+            #adding autolfads performance for rockstar
+            # if k=='rockstar':
+            #     with h5py.File('../data/model_output/rockstar_autolfads-laplace-prior_all.h5', 'r') as h5file:
+            #         X_autolfads,_ = dl.get_lfads_predictor(h5file['factors'][:])
+                
+            #     autolfads_decode = self.get_decoding_performance(X_autolfads, Y)
+            #     n_points = len(self.datasets[k].kl_weight['gaussian'])
+            #     axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
+            #                 np.ones(n_points) * autolfads_decode, 'r')
+            #     axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode', 
+            #                     'Autolfads Decode'])
+            # else:
+            #     axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode'])
+
+        # lns = axes[0].get_lines()
+        # lns.pop(1)
+        # plt.legend(handles=lns, labels=['Decoding from LFADS Factors', 'Decoding from Firing Rates'],
+        #             bbox_to_anchor=(0.5, 0.8, 0.5, 0.5), loc='lower center', ncol=1)
+        # fig.suptitle(self.title)
+        # self.fig = fig
+    
 # class Total_Peaks(Measure):
 #     def __init__(self, *args, **kwargs):
 #         super().__init__(*args, **kwargs)
@@ -296,7 +331,13 @@ class Gini(Measure):
         self.ylabel='Controller Gini Coefficient'
 
     def compute_measure(self, run):
-        return np.mean([sa.gini(run.co[:,:,i].flatten()) for i in range(run.co.shape[2])])
+        co_ginis = np.zeros(run.co.shape[2])
+        co_power_weight = (run.co**2).sum((0,1))
+        co_power_weight /= np.sum(co_power_weight)
+        for co_idx in range(co.shape[2]):
+            co_ginis[co_idx] = sa.gini(run.co[:,:,co_idx].flatten())
+            
+        return np.sum(co_ginis * co_power_weight)
 
 class Spectral_Centroid(Measure):
     def __init__(self, *args, **kwargs):
@@ -344,7 +385,9 @@ class Fit(Measure):
     def compute_measure(self, run):
         return run_info[run.dataset]['params'][run.param]['fit']['recon_train']
 
-metric_dict = {#'gini': Gini,
+if __name__=='__main__':
+
+    metric_dict = {#'gini': Gini,
                #'fit': Fit,
                #'spectral': Spectral_Centroid,
                #'kurtosis': Kurtosis,
@@ -355,14 +398,14 @@ metric_dict = {#'gini': Gini,
                #'firstmove_auc': Firstmove_AUC,
                #'firstmove_precision': Firstmove_Precision
                 }
-if __name__=='__main__':
 
     for kl_weight in [2.0]:
-        measures = [m(filename='%s.png'%k) for k,m in metric_dict.items()]    
+        # measures = [m(filename='../figures/final_figures/%s_co_dim.svg'%k) for k,m in 
+        #             metric_dict.items()]    
+        measures = [m(filename='../figures/final_figures/numbered/2e.svg') for k,m in 
+                    metric_dict.items()]    
         for dataset in run_info.keys():
-        
             df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
-            
             for param in run_info[dataset]['params'].keys():
                 lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
                 if 'raju' in dataset and not os.path.exists(lfads_filename):
@@ -386,10 +429,13 @@ if __name__=='__main__':
                     prior = 'gaussian'
 
                 co_dim = run_info[dataset]['params'][param]['param_values']['co_dim']
-
+                if co_dim > 4:
+                    continue 
                 for measure in measures:
                     measure.add_run(prior, co_dim, dataset, param, df, co, trial_len, dt)
                     
         for measure in measures:
             measure.plot()
+            plt.xticks([0,1,2,3,4])
+            plt.tight_layout()
             measure.savefig()

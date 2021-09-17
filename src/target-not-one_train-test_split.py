@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
 import timing_analysis as ta
+import yaml
 from importlib import reload
 reload(ta)
 
@@ -10,8 +11,11 @@ test_filename = snakemake.output.test_data
 all_filename = snakemake.output.all_data
 data_filename = snakemake.input[0]
 
+config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+cfg = yaml.safe_load(open(config_path, 'r'))
+
 random_state = 1027
-train_test_ratio = 0.2
+train_test_ratio = cfg['event_split_ratio']
 
 def split_target_df(df):
     target_df = ta.get_targets(df)

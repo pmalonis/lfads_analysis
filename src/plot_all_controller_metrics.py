@@ -17,14 +17,14 @@ from sklearn.metrics import roc_auc_score, precision_recall_curve, average_preci
 from snr import get_event_co, get_background_co
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
-plt.rcParams['font.size'] = 14
+plt.rcParams['font.size'] = 18
 
 absolute_min_heights = 0.3
 relative_min_heights = 3
 win_start = 0.0
 win_stop = 0.3
 peak_with_threshold = 0.9
-figsize = (15,5)
+figsize = (8,5)
 n_splits = 5
 
 run_info_path = os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml')
@@ -49,9 +49,9 @@ class Dataset_Info():
             self.measure[prior] = np.array(self.measure[prior])[idx]
         
         ax.plot(self.kl_weight['gaussian'], self.measure['gaussian'])
-        ax.plot(self.kl_weight['laplace'], self.measure['laplace'])
+        #ax.plot(self.kl_weight['laplace'], self.measure['laplace'])
         ax.set_xlabel('Controller Penalty')
-        ax.set_title("Monkey " + self.name)
+        #ax.set_title("Monkey " + self.name)
         #ax.'legend'(['Dense Prior', 'Sparse Prior'])
 
 class Run_Data():
@@ -87,14 +87,18 @@ class Measure():
         pass
 
     def plot(self):
-        fig = plt.figure(figsize=figsize)
-        axes = fig.subplots(1, len(self.datasets.keys()))
+        # fig = plt.figure(figsize=figsize)
+        # axes = fig.subplots(1, len(self.datasets.keys()))
+        fig, ax = plt.subplots(figsize=figsize)
         for i,k in enumerate(self.datasets.keys()):
-            self.datasets[k].plot(axes[i])
-            axes[i].set_ylabel(self.ylabel)
+            # self.datasets[k].plot(axes[i])
+            # axes[i].set_ylabel(self.ylabel)
+            self.datasets[k].plot(ax)
+            ax.set_ylabel(self.ylabel)
         
         fig.suptitle(self.title)
-
+        ax.legend(['Monkey %s'%d.name for d in self.datasets.values()])
+        plt.locator_params(num_ticks=4)
         self.fig = fig
 
     def savefig(self):
@@ -190,7 +194,7 @@ class Decode(Measure):
         super().__init__(*args, **kwargs)
         self.kinematics = {}
         self.firing_rates = {}
-        self.ylabel='Decoding Accuracy (r^2)'
+        self.ylabel='Decoding Accuracy ($\mathregular{r^2}$)'
 
     def add_dataset(self, dataset, kin, firing_rates):
         self.datasets[dataset] = Dataset_Info(dataset)
@@ -214,38 +218,64 @@ class Decode(Measure):
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
         Y = self.kinematics[run.dataset]
-        return self.get_decoding_performance(X, Y)
+        n_trials = run.df.index[-1][0] + 1
+        return self.get_decoding_performance(X, Y, run.trial_len, 
+                                            run.dt, n_trials)
 
-    def get_decoding_performance(self, X, Y, n_splits=n_splits):
-        rs,_ = dl.get_rs(X, Y, n_splits=n_splits)
-        rs = {k:v for k,v in rs.items() if 'vel' in k}
-        decode_perf = np.array(list(rs.values())).mean()
+    def get_decoding_performance(self, X, Y, trial_len, dt, n_trials, n_splits=n_splits):
+        rs,_ = dl.get_rs(X, Y, n_splits, trial_len, dt, n_trials)
+        #rs = {k:v for k,v in rs.items() if 'vel' in k}
+        decode_perf = [np.mean([rs[k][i] for k in rs.keys()]) 
+                        for i in range(n_splits)] #mean over kinematic variables for each split
+        decode_mean = np.mean(decode_perf)
+        decode_std = np.std(decode_perf)
+        return decode_mean, decode_std
 
-        return decode_perf
-
-    def plot(self, fig=None):
-        if fig is None:
-            fig = plt.figure(figsize=figsize)
-        axes = fig.subplots(1, len(self.datasets.keys()))
-        if len(self.datasets.keys()) == 1:
-            axes = [axes]
-            
+    def plot(self):
+        fig, ax = plt.subplots(figsize=figsize)
         for i,k in enumerate(self.datasets.keys()):
-            self.datasets[k].plot(axes[i])
-            axes[i].set_ylabel(self.ylabel)
+            decode_mean, decode_std = zip(*self.datasets[k].measure['gaussian'])
+            idx = np.argsort(self.datasets[k].kl_weight['gaussian'])
+            decode_mean = np.array(decode_mean)[idx]   
+            decode_std = np.array(decode_std)[idx]  
+            kl_weight = np.array(self.datasets[k].kl_weight['gaussian'])[idx]
+            plt.plot(kl_weight, decode_mean)
+            plt.fill_between(kl_weight, 
+                            decode_mean - decode_std,
+                            decode_mean + decode_std, alpha=0.2)
+            ax.legend(['Monkey %s'%d.name for d in self.datasets.values()])
+            plt.locator_params(num_ticks=4)
+            ax.set_ylabel(self.ylabel)
+            ax.set_xlabel('Controller Penalty')
+        
+        fig.suptitle(self.title)
+        ax.legend(['Monkey %s'%d.name for d in self.datasets.values()])
+        plt.locator_params(num_ticks=4)
+        self.fig = fig
 
-            #adding firing rate decoding performancce
-            Y = self.kinematics[k] 
-            X_smoothed = self.firing_rates[k]
-            rate_decode = self.get_decoding_performance(X_smoothed, Y)
-            n_points = len(self.datasets[k].kl_weight['gaussian'])
-            axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
-                            np.ones(n_points) * rate_decode)
+    # def plot(self, fig=None):
+    #     if fig is None:
+    #         fig = plt.figure(figsize=figsize)
+    #     axes = fig.subplots(1, len(self.datasets.keys()))
+    #     if len(self.datasets.keys()) == 1:
+    #         axes = [axes]
+            
+    #     for i,k in enumerate(self.datasets.keys()):
+    #         self.datasets[k].plot(axes[i])
+    #         axes[i].set_ylabel(self.ylabel)
+
+    #         #adding firing rate decoding performancce
+    #         Y = self.kinematics[k] 
+    #         X_smoothed = self.firing_rates[k]
+    #         rate_decode = self.get_decoding_performance(X_smoothed, Y)
+    #         n_points = len(self.datasets[k].kl_weight['gaussian'])
+    #         axes[i].plot(self.datasets[k].kl_weight['gaussian'], 
+    #                         np.ones(n_points) * rate_decode)
             
             #adding autolfads performance for rockstar
             # if k=='rockstar':
             #     with h5py.File('../data/model_output/rockstar_autolfads-laplace-prior_all.h5', 'r') as h5file:
-            #         X_autolfads = dl.get_lfads_predictor(h5file['factors'][:])
+            #         X_autolfads,_ = dl.get_lfads_predictor(h5file['factors'][:])
                 
             #     autolfads_decode = self.get_decoding_performance(X_autolfads, Y)
             #     n_points = len(self.datasets[k].kl_weight['gaussian'])
@@ -256,15 +286,13 @@ class Decode(Measure):
             # else:
             #     axes[i].legend(['Dense Prior', 'Sparse Prior', 'Firing Rate Decode'])
 
-        lns = axes[0].get_lines()
-        lns.pop(1)
-        plt.legend(handles=lns, labels=['Decoding from LFADS Factors', 'Decoding from Firing Rates'],
-                    bbox_to_anchor=(0.5, 0.8, 0.5, 0.5), loc='lower center', ncol=1)
-        fig.suptitle(self.title)
-        self.fig = fig
-
+        # lns = axes[0].get_lines()
+        # lns.pop(1)
+        # plt.legend(handles=lns, labels=['Decoding from LFADS Factors', 'Decoding from Firing Rates'],
+        #             bbox_to_anchor=(0.5, 0.8, 0.5, 0.5), loc='lower center', ncol=1)
+        # fig.suptitle(self.title)
+        # self.fig = fig
     
-
 # class Total_Peaks(Measure):
 #     def __init__(self, *args, **kwargs):
 #         super().__init__(*args, **kwargs)
@@ -304,21 +332,13 @@ class Gini(Measure):
         self.ylabel='Controller Gini Coefficient'
 
     def compute_measure(self, run):
-        gini_win = 20
-        window = np.ones(gini_win)#windows.gaussian(gini_win, std=2)
-        filtered_co = savgol_filter(run.co, 11, 2, axis=1)
-        filtered_co -= np.mean(filtered_co)
         co_ginis = np.zeros(run.co.shape[2])
         co_power_weight = (run.co**2).sum((0,1))
         co_power_weight /= np.sum(co_power_weight)
         for co_idx in range(co.shape[2]):
-            # window_powers = np.concatenate([np.sum((filtered_co[:,j:j+gini_win,co_idx]*window)**2, axis=1) 
-            #                                 for j in range(run.co.shape[1]-gini_win)])
+            co_ginis[co_idx] = sa.gini(run.co[:,:,co_idx].flatten())
             
-            # co_ginis[co_idx] = sa.gini(window_powers)
-            co_ginis[co_idx] = sa.gini(filtered_co[:,:,co_idx].flatten())
-            
-        return np.mean(co_ginis * co_power_weight)
+        return np.sum(co_ginis * co_power_weight)
 
 class Spectral_Centroid(Measure):
     def __init__(self, *args, **kwargs):
@@ -371,7 +391,7 @@ metric_dict = {'gini': Gini,
                #'spectral': Spectral_Centroid,
                #'kurtosis': Kurtosis,
                #'power': Power,
-               #'decode': Decode,
+               'decode': Decode,
                #'absolute_target_peak': Absolute_Target_Peak,
                #'relative_target_peak': Relative_Target_Peak,
                #'firstmove_auc': Firstmove_AUC,
@@ -380,7 +400,9 @@ metric_dict = {'gini': Gini,
 
 if __name__=='__main__':
     for co_dim in [2]:
-        measures = [m(filename='%s.png'%k) for k,m in metric_dict.items()]    
+        #measures = [m(filename='../figures/final_figures/%s.svg'%k) for k,m in metric_dict.items()]    
+        measures = [Decode(filename='../figures/final_figures/numbererd/2c.svg'), 
+                    Gini(filename='../figures/final_figures/numbererd/2d.svg')]
         for dataset in run_info.keys():
             df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
             
@@ -415,4 +437,5 @@ if __name__=='__main__':
 
         for measure in measures:
             measure.plot()
+            plt.tight_layout()
             measure.savefig()

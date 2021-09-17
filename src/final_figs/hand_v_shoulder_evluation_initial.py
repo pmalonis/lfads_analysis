@@ -65,19 +65,18 @@ if __name__=='__main__':
     #fb_output_filename = snakemake.input[1]
 
     output = pd.read_csv(output_filename)
-    fb_output = pd.read_csv(fb_output_filename)
+    #fb_output = pd.read_csv(fb_output_filename)
 
     run_info = yaml.safe_load(open(os.path.dirname(__file__) + '/../../lfads_file_locations.yml', 'r'))
     datasets = [(v['name'],k) for k,v in run_info.items()]
     print(datasets)
     output['Control Type'] = 'Initial'
-    fb_output['Control Type'] = 'Corrective'
+    #fb_output['Control Type'] = 'Corrective'
     plot_score = 'final_held_out_score'
     plot_columns = ['reference', plot_score, 'std_test_score', 'Control Type', 'final_held_out_std']
-    plt.figure(figsize=(12,5))
     preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(output.columns)
-    fb_preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(fb_output.columns)
-    plt.figure(figsize=(12,8))
+    #fb_preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(fb_output.columns)
+    plt.figure(figsize=(20,6))
 
     colors = utils.contrasting_colors(**cfg['colors']['correction_decode'])
     for i, (dset, file_root) in enumerate(datasets):
@@ -110,16 +109,16 @@ if __name__=='__main__':
                                 'Reference': ['hand', 'shoulder']})
 
         plt.subplot(1, len(datasets), i+1)
-        sns.pointplot(x='Reference', y='r^2', hue='Movement Type', data=plot_df, palette=colors)
+        sns.pointplot(x='Reference', y='r^2', data=plot_df, palette=colors, markers='', linewidth=50)
         #sns.pointplot(x='Reference', y='r^2', data=plot_df.query('`Movement Type` == "Initial"'))
-        if i < 2:
-            legend = plt.gca().get_legend()
-            if legend is not None:
-                legend.remove()
 
+        plt.errorbar([0,1], [hand_score.values[0], shoulder_score.values[0]], [hand_std.values[0], shoulder_std.values[0]], color=colors[0], linewidth=3)
         plt.title("Monkey " + dset)
-        plt.ylim([-0.0,0.7])
-    
-    plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
-    #plt.savefig("../../figures/final_figures/hand_v_shoulder_target.png")
+        #plt.ylim([-0.0,0.7])
+        plt.xlim([-.5,1.5])
+        plt.ylabel('$\mathregular{r^2}$')
+
+    #plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
+    plt.savefig("../../figures/final_figures/hand_v_shoulder_target.svg")
+    plt.savefig("../../figures/final_figures/numbered/5c.svg")
     #plt.savefig(snakemake.output[0])
