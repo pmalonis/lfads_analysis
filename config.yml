@@ -1,4 +1,20 @@
-align_peaks: true
+#submovement transitions
+firstmove_speed_transition_thresh: 1000
+firstmove_min_speed_prominence: 25
+firstmove_min_distance: 300
+
+correction_speed_transition_thresh: 1000
+correction_min_speed_prominence: 25
+correction_min_distance: 300
+
+speed_filter_win: 201
+speed_filter_order: 2
+
+# speed_transition_thresh: 100
+# min_speed_prominence: 100
+# min_distance: 0
+
+
 center_out:
   rockstar: pmalonis@205.208.57.121:~/center_out/rs1050225_clean_SNRgt4.mat
 integration_win_size: 0.2
@@ -7,7 +23,7 @@ peri_target_kinematics_stop: 0
 post_peak_win: 0.15
 post_target_win_start: 0.05
 post_target_win_stop: 0.3
-min_peak_spacing: 5 #minimum time, in ms, between peaks of controller output to count peak (as fed to scipy findpeaks)
+min_peak_spacing: 5 #minimum time, in 10s of ms, between peaks of controller output to count peak (as fed to scipy findpeaks)
 target_prediction_cv_splits: 5
 target_decoding_smoothed_control_std: 10
 #kinematic decoding
@@ -23,20 +39,36 @@ preprocess:
   post_trial_pad: 0.5
   win_size: 25
 
-lfads_file_server: cri-syncmon.cri.uchicago.edu
-lfads_dir_path: /gpfs/data/nicho-lab/pmalonis/data/model_output/
-username: pmalonis
-#lfads_file_pattern: */*/*/*/model_runs_*.h5*_posterior_sample_and_average # will work for other patterns as long as first wildcard corresponds to the dataset and the second is "train" or "valid"
+#arguments to src/utils.contrasting_colors for each plot
+colors:
+  controller_example:
+    start_hue: 0
+    reverse: True
+  window_performance:
+    start_hue: 0.3
+    saturation: 1.0
+  correction_decode:
+    start_hue: 0.38
+    saturation: 0.9
+    hue_change: 1.5
+    reverse: True
+  target_vs_firstmove:
+    start_hue: 0.12
+    saturation: 0.7
+    reverse: True
 
-#submovement transitions
-speed_transition_thresh: 100
-min_speed_prominence: 100
-speed_filter_win: 101
-speed_filter_order: 2
+# lfads_file_server: cri-syncmon.cri.uchicago.edu
+# lfads_dir_path: /gpfs/data/nicho-lab/pmalonis/data/model_output/
+# username: pmalonis
+lfads_file_server: 205.208.22.225
+lfads_dir_path: ~/peter/lfads_analysis/data/model_output/
+username: macleanlab
+#lfads_file_pattern: */*/*/*/model_runs_*.h5*_posterior_sample_and_average # will work for other patterns as long as first wildcard corresponds to the dataset and the second is "train" or "valid"
 
 # select which metric to use to select model
 selection_metric: adhoc ##decode
 selected_co_dim: 2
+selected_kl_weight: 2.0
 
 # order will be preserved in lfads yaml file
 datasets:
@@ -55,32 +87,38 @@ datasets:
   #raju_M1: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_M1.mat
   #raju_PMd: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_PMd.mat
 
+event_split_ratio: 0.2
+
+window_compare_length: 0.25
+
+target_auc_win_lims: ['(-0.3,-0.2)', '(-0.25,-0.15)',
+             '(-0.2,-0.1)','(-0.15,-0.05)','(-0.1,0.0)',
+             '(-0.05,0.05)','(0,0.1)','(0.05,0.15)', '(0.10,0.2)',
+             '(0.15,0.25)', '(0.2,0.3)', '(0.25,0.35)','(0.3,0.4)']
+
+
+movement_auc_win_lims: ['(-0.4,-0.3)','(-0.35,-0.25)','(-0.3,-0.2)', '(-0.25,-0.15)',
+              '(-0.2,-0.1)','(-0.15,-0.05)','(-0.1,0.0)',
+             '(-0.05,0.05)','(0,0.1)','(0.05,0.15)', '(0.10,0.2)',
+             '(0.15,0.25)', '(0.2,0.3)', '(0.25,0.35)','(0.3,0.4)']
+
+
 # target_preprocessing_search:
 #   fit_direction: [True, False]
 #   reference: ['hand', 'shoulder']
-#   poly_features: [True, False]
-#   reduce_time: [True, False]
+#   corr: ['ca']
+#   poly_features: [False]
+#   reduce_time: [False]
 #   use_rates: [True, False]
+#   reduce_neurons: [True, False]
 #   filter_co: [True]
-#   time_pcs: [5, 10, 15, 20]
-#   win_lim: ['(0,0.2)','(0.4,0.6)']
-#   hand_time: [0, 0.2, 0.4]
-#   rate_pcs: [20]
-
-target_preprocessing_search:
-  fit_direction: [True, False]
-  reference: ['hand', 'shoulder']
-  corr: ['ca']
-  poly_features: [False]
-  reduce_time: [False]
-  use_rates: [True, False]
-  reduce_neurons: [True, False]
-  filter_co: [True]
-  win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
-            '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
-            '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
-  hand_time: [-0.1,-0.05, 0, 0.05, 0.1, 0.2]
-  rate_pcs: [2]
+#   win_lim: ['(-0.3,-0.05)', '(-0.25,-0.0)',
+#             '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
+#             '(-0.05,0.2)','(0,0.25)','(0.05,0.3)', '(0.10,0.35)',
+#             '(0.15,0.4)']
+#   hand_time: [-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 
+#               0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+#   rate_pcs: [2]
 
 # target_preprocessing_search:
 #   fit_direction: [True]
@@ -88,26 +126,52 @@ target_preprocessing_search:
 #   corr: ['ca']
 #   poly_features: [False]
 #   reduce_time: [False]
-#   use_rates: [True]
+#   use_rates: [False]
 #   reduce_neurons: [False]
 #   filter_co: [True]
-#   win_lim: ['(-0.3,-0.1)', '(-0.25,-0.05)',
-#             '(-0.2,0)','(-0.15,0.05)','(-0.1,0.1)',
-#             '(-0.05,0.15)','(0,0.2)','(0.1,0.3)', '(0.2,0.4)']
-#   hand_time: [0]
+#   win_lim: ['(-0.3,-0.05)', '(-0.25,-0.0)',
+#             '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
+#             '(-0.05,0.2)','(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+#             '(0.15,0.4)']
+#   hand_time: [-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 
+#               0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+#   rate_pcs: [2]
 
 # target_preprocessing_search:
 #   fit_direction: [True]
-#   reference: ['hand']
+#   reference: ['shoulder']
 #   corr: ['ca']
 #   poly_features: [False]
-#   reduce_time: [True, False]
+#   reduce_time: [False]
 #   use_rates: [False]
-#   filter_co: [False]
-#   time_pcs: [15]
-#   win_lim: ['(-0.2,0)']
-#   hand_time: [0]
-#   rate_pcs: [20]
+#   reduce_neurons: [False]
+#   filter_co: [True]
+#   win_lim: ['(-0.3,-0.05)', '(-0.25,-0.0)',
+#             '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
+#             '(-0.05,0.2)','(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+#             '(0.15,0.4)']
+#   hand_time: [-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 
+#               0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+#   rate_pcs: [2]
+
+#shoulder don't fit direction
+target_preprocessing_search:
+  fit_direction: [True]
+  reference: ['shoulder']
+  corr: ['ca']
+  poly_features: [False]
+  reduce_time: [False]
+  use_rates: [False]
+  reduce_neurons: [False]
+  filter_co: [True]
+  win_lim: ['(-0.3,-0.05)', '(-0.25,-0.0)',
+            '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
+            '(-0.05,0.2)','(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+            '(0.15,0.4)']
+  hand_time: [-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 
+              0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+  rate_pcs: [2]
+
 
 used_estimator: SVR
 

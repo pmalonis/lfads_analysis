@@ -104,7 +104,7 @@ rule download_all:
 #             os.replace(MODEL_OUTPUT_DIR + os.path.basename(download), output_file)
 rule file_locations:
     input:
-        "config.yml",
+        #"config.yml",
         "src/get_lfads_filepaths.py"
 
     output:
@@ -131,7 +131,6 @@ rule select_model:
     input:
         "src/select_lfads_model.py",
         "lfads_file_locations.yml",
-        "config.yml",
         inputInfo_files = lambda wildcards: [(MODEL_OUTPUT_DIR + 
         "{dataset}_{param}_inputInfo.mat").format(dataset=wildcards.dataset, param=p) 
         for p in dataset_info[wildcards.dataset]["params"]],
@@ -158,7 +157,9 @@ rule auc_window_fig:
         # input_info =
         "src/snr.py"
     output:
-        firstmove_corrections = "figures/final_figures/firstmove_corrections_auc.svg",
+        #firstmove_corrections = "figures/final_figures/firstmove_corrections_auc.svg",
+        #maxima = "figures/final_figures/maxima_auc.svg"
+        firstmove_corrections = "figures/final_figures/firstmove_corrections_auc.png",
         maxima = "figures/final_figures/maxima_auc.svg"
     script:
         "src/snr.py"
@@ -167,7 +168,7 @@ rule auc_window_fig:
 rule target_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_targets_train.p",
@@ -180,7 +181,7 @@ rule target_split:
 rule target_one_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_targets-one_train.p",
@@ -193,7 +194,7 @@ rule target_one_split:
 rule target_not_one_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_targets-not-one_train.p",
@@ -206,7 +207,7 @@ rule target_not_one_split:
 rule random_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_random_train.p",
@@ -219,7 +220,7 @@ rule maxima_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         "src/maxima_train-test_split.py",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_maxima_train.p",
@@ -232,7 +233,7 @@ rule firstmove_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         "src/firstmove_train-test_split.py",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_firstmove_train.p",
@@ -246,7 +247,7 @@ rule firstmove_not_one_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         "src/firstmove_train-test_split.py",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_firstmove-not-one_train.p",
@@ -260,7 +261,7 @@ rule correction_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
         "src/correction_train-test_split.py",
-        "config.yml"
+        #"config.yml"
 
     output:
         train_data = PEAK_DIR + "{dataset}_corrections_train.p",
@@ -272,7 +273,7 @@ rule correction_split:
 
 rule optimize_target_prediction:
     input:
-        "config.yml",
+        #"config.yml",
         "src/optimize_target_prediction.py",
         selection_files = expand_filename(PEAK_DIR + 
         "{dataset}_selected_param_%s.txt"%config['selection_metric']),
@@ -285,7 +286,7 @@ rule optimize_target_prediction:
 
 rule download_model:
     params:
-         source = lambda wildcards: dataset_info[wildcards.dataset]["params"][wildcards.param][wildcards.trial_set]
+        source = lambda wildcards: dataset_info[wildcards.dataset]["params"][wildcards.param][wildcards.trial_set]
     output:
         MODEL_OUTPUT_DIR + "{dataset}_{param}_{trial_set}.h5"
     wildcard_constraints:
@@ -453,11 +454,12 @@ rule rate_pcs_target_prediction_evaluation:
 
 rule hand_v_shoulder_fig:
     input:
-        PEAK_DIR + 'controller_best_models_firstmove.csv',
-        PEAK_DIR + 'controller_best_models_corrections.csv',
+        PEAK_DIR + 'controller_best_models_targets-not-one.csv',
+        PEAK_DIR + 'controller_best_models_targets-not-one.csv',
+        #PEAK_DIR + 'controller_best_models_corrections.csv',
         "src/final_figs/hand_v_shoulder_evaluation.py"
     output:
-        'figures/final_figures/hand_v_shoulder_initial.png'
+        'figures/final_figures/hand_v_shoulder_initial_corrections.png'
     script:
         "src/final_figs/hand_v_shoulder_evaluation.py"
 
@@ -474,7 +476,7 @@ rule rate_pcs_fig:
 
 rule window_search_fig:
     input:
-        PEAK_DIR + "params_search_firstmove.csv",
+        PEAK_DIR + "params_search_targets-not-one.csv",
         PEAK_DIR + "params_search_corrections.csv",
         "src/final_figs/plot_window_performance.py"
     output:
