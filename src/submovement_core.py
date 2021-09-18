@@ -35,11 +35,12 @@ def speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets):
     minima, _  = signal.find_peaks(-speed,
                                     height=-threshold)
     
-    import pdb;pdb.set_trace()
     # removes minima below right-prominence threshold
-    bounds = np.append(minima, len(speed) - 1)
-    minima = np.array([minima[i] for i in range(len(minima)) if 
-                       speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence])
+    all_prominences = get_right_prominence(minima, speed)
+    idx_too_small = np.array([i for i in range(len(minima)) if 
+                               all_prominences[i] < prominence])
+    minima = np.delete(minima, idx_too_small)
+    all_prominences = np.delete(all_prominences, idx_too_small)
         
     # array of minima indices, with space added in at target boundaries so 
     # submovements on other sides of the boundary aren't removed
@@ -49,13 +50,20 @@ def speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets):
     while any(np.diff(target_spaced_minima) < distance):
         idx = np.argmax(np.diff(target_spaced_minima)< distance)
         remove_candidates = [idx, idx + 1]
-        # deleting lesser prominence
-        bounds = np.append(minima, len(speed) - 1)
-        prominences = np.array([speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] 
-                                for i in range(len(minima))])
-        #removing peak with smaller prominence
-        to_remove = remove_candidates[np.argmin(prominences[remove_candidates])]
+        # removing peak with smaller prominence
+        to_remove = remove_candidates[np.argmin(all_prominences[remove_candidates])]
         target_spaced_minima = np.delete(target_spaced_minima, to_remove)
         minima = np.delete(minima, to_remove)
+        all_prominences = np.delete(all_prominences, to_remove)
 
     return minima
+
+def get_right_prominence(minima, speed):
+    maxima,_ = signal.find_peaks(speed)
+    maxima = np.append(maxima, len(speed)-1) #in case of no local max after local min
+    prominences = np.zeros(len(minima))
+    for i, mi in enumerate(minima):
+        next_peak = maxima[maxima > mi][0]
+        prominences[i] = speed[next_peak] - speed[mi]
+
+    return prominences

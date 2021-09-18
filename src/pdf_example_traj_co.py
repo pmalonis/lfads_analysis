@@ -17,6 +17,10 @@ plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['font.size'] = 16
 
+#removing any old pngs
+for png in glob.glob('../figures/speed_with_corrections/*.png'):
+    os.remove(png)
+
 config_path = '../config.yml'
 cfg = yaml.safe_load(open(config_path, 'r'))
 spike_dt = 0.001

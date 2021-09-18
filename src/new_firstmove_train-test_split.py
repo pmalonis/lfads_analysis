@@ -32,7 +32,6 @@ train_test_ratio = 0.2
 
 run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
 datasets = list(run_info.keys())
-datasets = [datasets[0]]
 for dataset in datasets:
     train_filename = "../data/peaks/%s_new-firstmove_train.p"%dataset
     test_filename = "../data/peaks/%s_new-firstmove_test.p"%dataset

@@ -32,7 +32,7 @@ for dataset in run_info.keys():
 
 #datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
-nbins = 12
+nbins = 6
 fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
 fb_win_stop = 0.0#0.3#0.1#cfg['post_target_win_stop']
 win_start = -0.3

@@ -18,6 +18,10 @@ plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = True
 plt.rcParams['font.size'] = 18
 
+# removing old pngs
+for png in glob.glob('../figures/speed_with_corrections/*.png'):
+    os.remove(png)
+
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
@@ -28,6 +32,7 @@ for dataset in run_info.keys():
     params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read())
 
 for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
+    
     data_filename = '../data/intermediate/' + dataset + '.p'
     lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
     inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
@@ -41,7 +46,7 @@ for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
 
     fm = pd.read_pickle('../data/peaks/%s_new-firstmove_all.p'%(dataset))
     c = pd.read_pickle('../data/peaks/%s_new-corrections_all.p'%(dataset))
-    
+
     n_trials = df.index[-1][0] + 1
     #for i in range(n_trials):
     for i in range(50):

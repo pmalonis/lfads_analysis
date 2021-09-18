@@ -323,7 +323,7 @@ def dataset_events(df, func, column_label='transition', exclude_post_target=None
 
     return events
 
-def trial_control_transitions(trial_df):
+def trial_control_transitions(trial_df):    
     return
 
 # def speed_minima(x_vel, y_vel):
@@ -398,43 +398,52 @@ def trial_control_transitions(trial_df):
 
 #     return np.array(minima)
 
-def speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets):
-    '''Calculates submovements from velocity coordinates, based on 
-    speed profile
-    
-    Parameters
-    x_vel: velocity in x-axis
-    y_vel: velocity in y-axis
-    threshold: threshold above which speed minima will not be returned
-    prominence: minimum size of the following movement
+def right_prominences(minima, speed):
+    maxima,_ = signal.find_peaks(speed)
+    prominences = np.zeros(len(minima))
+    for i, mi in enumerate(minima):
+        next_peak = maxima[maxima > mi][0]
+        prominences[i] = speed[next_peak] - mi
 
-    Returns
-    intervals: List of minima defining starts/ends of submovements
-    '''
+    return prominences
 
-    speed = utils.get_speed(x_vel, y_vel)
-    minima, _  = signal.find_peaks(-speed,
-                                    height=-threshold)
+# def speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets):
+#     '''Calculates submovements from velocity coordinates, based on 
+#     speed profile
     
-    bounds = np.append(minima, len(speed) - 1)
-    minima = np.array([minima[i] for i in range(len(minima)) if 
-                        speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence])
+#     Parameters
+#     x_vel: velocity in x-axis
+#     y_vel: velocity in y-axis
+#     threshold: threshold above which speed minima will not be returned
+#     prominence: minimum size of the following movement
+
+#     Returns
+#     intervals: List of minima defining starts/ends of submovements
+#     '''
+
+#     speed = utils.get_speed(x_vel, y_vel)
+#     minima, _  = signal.find_peaks(-speed,
+#                                     height=-threshold)
+    
+#     bounds = np.append(minima, len(speed) - 1)
+#     minima = np.array([minima[i] for i in range(len(minima)) if 
+#                         speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] > prominence])
         
-    target_spaced_minima = [m + distance*np.sum(idx_targets<m) for m in minima]
-    all_to_remove = []
-    while any(np.diff(target_spaced_minima)<distance):
-        idx = np.argmax(np.diff(target_spaced_minima)<distance)
-        remove_candidates = [idx, idx + 1]
-        # deleting lesser prominence
-        bounds = np.append(minima, len(speed) - 1)
-        prominences = np.array([speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] 
-                        for i in range(len(minima))])
-        #removing peak with smaller prominence
-        to_remove = remove_candidates[np.argmin(prominences[remove_candidates])]
-        target_spaced_minima.pop(to_remove)
-        minima = np.delete(minima, to_remove)
+#     target_spaced_minima = [m + distance*np.sum(idx_targets<m) for m in minima]
+#     all_to_remove = []
+#     while any(np.diff(target_spaced_minima)<distance):
+#         idx = np.argmax(np.diff(target_spaced_minima)<distance)
+#         remove_candidates = [idx, idx + 1]
+#         # deleting lesser prominence
+#         bounds = np.append(minima, len(speed) - 1)
+#         prominences = np.array([speed[bounds[i]:bounds[i+1]].max() - speed[minima[i]] 
+#                         for i in range(len(minima))])
+#         #removing peak with smaller prominence
+#         to_remove = remove_candidates[np.argmin(prominences[remove_candidates])]
+#         target_spaced_minima.pop(to_remove)
+#         minima = np.delete(minima, to_remove)
 
-    return np.array(minima)
+#     return np.array(minima)
 
 
 # def trial_maxima(trial_df, exclude_post_target=None, exclude_pre_target=None):
