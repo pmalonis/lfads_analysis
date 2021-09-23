@@ -28,6 +28,7 @@ import os
 import yaml
 import multiprocessing
 from scipy.signal import savgol_filter
+from sklearn.metrics.pairwise import cosine_similarity
 import sys
 importlib.reload(utils)
 importlib.reload(ta)
@@ -192,7 +193,6 @@ def get_inputs_to_model(peak_df, co, trial_len, dt, df, win_start=0.05, win_stop
             df_idx = trial_df.index.get_loc(transition_time + hand_time, method='nearest')
             hand_pos[k,:] = trial_df.kinematic.iloc[df_idx][['x','y']].values
             k += 1
-
     
     X = np.delete(X, idx_to_remove, axis=0)
 
@@ -289,15 +289,21 @@ def cartesian_to_joint_vel(pos, vel, k1, k2):
         
     return R.dot(vel.T)[range(n),:,range(n)]
 
-def x_score_func(y, y_true):
-    return r2_score(y[:,0], y_true[:,0])
+def x_score_func(y, y_pred):
+    return r2_score(y[:,0], y_pred[:,0])
 
-def y_score_func(y, y_true):
-    return r2_score(y[:,1], y_true[:,1])
+def y_score_func(y, y_pred):
+    return r2_score(y[:,1], y_pred[:,1])
 
-def r_score_func(y, y_true):
-    return r2_score(y[:,2], y_true[:,2])
+def r_score_func(y, y_pred):
+    return r2_score(y[:,2], y_pred[:,2])
 
+def var_weighted_score_func(y, y_pred):
+    return r2_score(y, y_pred, multioutput='variance_weighted')
+
+def mean_cosine_score_func(y, y_pred):
+    return np.mean(np.diag(cosine_similarity(y[:,:2], y_pred[:,:2])))
+    
 def get_endpoint(peak_df, df, dt):
     used_inds = list(set(peak_df.index.get_level_values('trial')))
     endpoint_x = np.zeros(peak_df.shape[0])
@@ -371,8 +377,12 @@ if __name__=='__main__':
     trained = {}
     inputs = {}
     grid_results = []
-    scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func)}
-    dir_scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func),'r_score':make_scorer(r_score_func)}
+    scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func), 
+            'var_weighted_score':make_scorer(var_weighted_score_func)}
+    dir_scoring={'x_score':make_scorer(x_score_func),
+                 'y_score':make_scorer(y_score_func),
+                 'r_score':make_scorer(r_score_func), 
+                 'cosine_score':make_scorer(mean_cosine_score_func)}
     
     for dataset_name, dataset_dict in dataset_dicts.items():
         for lfads_params in dataset_dict['lfads_params']:

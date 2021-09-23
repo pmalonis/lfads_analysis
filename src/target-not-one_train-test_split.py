@@ -13,9 +13,8 @@ data_filename = snakemake.input[0]
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
-
-random_state = 1027
-train_test_ratio = cfg['event_split_ratio']
+train_test_ratio = cfg['total_train_test_split_ratio']
+random_state = cfg['split_random_state']
 
 def split_target_df(df):
     target_df = ta.get_targets(df)

@@ -32,7 +32,6 @@ post_peak_win: 0.15
 post_target_win_start: 0.05
 post_target_win_stop: 0.3
 min_peak_spacing: 5 #minimum time, in 10s of ms, between peaks of controller output to count peak (as fed to scipy findpeaks)
-target_prediction_cv_splits: 5
 target_decoding_smoothed_control_std: 10
 #kinematic decoding
 rate_sigma_kin_decoding: 25 #sigma of smoothing kernel for decoding kinematics from firing rate
@@ -40,6 +39,8 @@ kin_decoding_cv_splits: 5
 rate_sigma_example_plot: 25
 
 target_prediction_cv_splits: 5
+total_train_test_split_ratio: 0.5
+split_random_state: 1217
 
 preprocess:
   cutoff: 20
@@ -163,23 +164,55 @@ movement_auc_win_lims: ['(-0.4,-0.3)','(-0.35,-0.25)','(-0.3,-0.2)', '(-0.25,-0.
 #   rate_pcs: [2]
 
 #shoulder don't fit direction
+# target_preprocessing_search:
+#   fit_direction: [True, False]
+#   reference: ['hand']
+#   corr: ['ca']
+#   poly_features: [False]
+#   reduce_time: [False]
+#   use_rates: [False]
+#   reduce_neurons: [False]
+#   filter_co: [True]
+#   win_lim: ['(-0.3,-0.05)', '(-0.25,-0.0)',
+#             '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
+#             '(-0.05,0.2)','(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+#             '(0.15,0.4)']
+#   hand_time: [-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 
+#               0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+#   rate_pcs: [2]
+
+#targets
 target_preprocessing_search:
-  fit_direction: [True]
-  reference: ['shoulder']
+  fit_direction: [True, False]
+  reference: ['hand','shoulder']
   corr: ['ca']
   poly_features: [False]
   reduce_time: [False]
-  use_rates: [False]
+  use_rates: [False, True]
   reduce_neurons: [False]
-  filter_co: [True]
+  filter_co: [False]
   win_lim: ['(-0.3,-0.05)', '(-0.25,-0.0)',
-            '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
-            '(-0.05,0.2)','(0,0.25)','(0.05,0.3)','(0.10,0.35)',
-            '(0.15,0.4)']
+             '(-0.2,0.05)','(-0.15,0.1)','(-0.1,0.15)',
+             '(-0.05,0.2)','(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+             '(0.15,0.4)']
   hand_time: [-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 0.05, 
               0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
   rate_pcs: [2]
 
+#corrections
+# target_preprocessing_search:
+#   fit_direction: [True, False]
+#   reference: ['hand','shoulder']
+#   corr: ['ca']
+#   poly_features: [False]
+#   reduce_time: [False]
+#   use_rates: [False, True]
+#   reduce_neurons: [False]
+#   filter_co: [False]
+#   win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+#             '(0.15,0.4)']
+#   hand_time: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+#   rate_pcs: [2]
 
 used_estimator: SVR
 

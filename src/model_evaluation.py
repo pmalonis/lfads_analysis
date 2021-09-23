@@ -64,44 +64,6 @@ def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
         trial_len = utils.get_trial_len(h5file, input_info)
 
     preprocess_dict, model = get_row_params(model_row)
-    
-    preprocess_dict.pop('min_win_start')
-    preprocess_dict.pop('max_win_stop')
-
-    X_train, y_train = get_inputs_to_model(train_peak_df, co, trial_len, dt, df, **preprocess_dict)
-    X_test, y_test = get_inputs_to_model(test_peak_df, co, trial_len, dt, df, **preprocess_dict)
-    model.fit(X_train, y_train)
-    nsplits = 5
-    scores = []
-    y_pred = model.predict(X_test)
-    for i in range(nsplits):
-        y_test_sample, y_pred_sample = resample(y_test, y_pred)
-        scores.append(r2_score(y_test_sample, y_pred_sample))
-
-    score_mean = np.mean(scores)
-    score_std = np.std(scores)
-
-    return score_mean, score_std
-
-
-def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
-    '''Fit best model for each reference frame on test data and record results'''
-
-    lfads_params = model_row['lfads_params']
-    lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + \
-                        '_'.join([file_root, lfads_params, 'all.h5'])
-    with h5py.File(lfads_filename, 'r+') as h5file:
-        co = h5file['controller_outputs'][:]
-        dt = utils.get_dt(h5file, input_info)
-        trial_len = utils.get_trial_len(h5file, input_info)
-
-    preprocess_dict, model_dict = get_row_params(model_row)
-
-    model = estimator_dict[model_row['estimator']]
-    if isinstance(model, MultiOutputRegressor):
-        model.estimator.set_params(**model_dict)
-    else:
-        model.set_params(**model_dict)
 
     preprocess_dict.pop('min_win_start')
     preprocess_dict.pop('max_win_stop')
