@@ -139,17 +139,18 @@ if __name__=='__main__':
             win_stop = 0
 
         width_df = plot_average(event_name, win_start, win_stop, event_label, axes=axes)
+        if event_name in ["targets-not-one", "firstmove"]:
+            width_dfs.append(width_df)
 
         #plt.text(-190, 0.015, 'Aligned to \n Target', color=colors[0], fontdict={'fontsize':16})
         #plt.text(-160, 0.009, 'Aligned to \n First Movement', color=colors[1], fontdict={'fontsize':16})
         #plt.locator_params(num_ticks=4)
 
+
     plt.savefig('../figures/final_figures/co_average_all_dir_%s.svg'%event_name)
     plt.savefig('../figures/final_figures/numbered/4a.svg'%event_name)
         
-        # if event_name in ["targets-not-one", "firstmove"]:
-        #     width_dfs.append(width_df)
 
-    #plot_df = pd.concat(width_dfs)
-    #sns.pointplot(data=plot_df, x='Reference Event', y='Peak Width (ms)', hue='Dataset')
-    #plt.savefig('../figures/final_figures/co_av_widths.svg')
+    plot_df = pd.concat(width_dfs)
+    sns.pointplot(data=plot_df, x='Reference Event', y='Peak Width (ms)', hue='Dataset')
+    plt.savefig('../figures/final_figures/co_av_widths.svg')

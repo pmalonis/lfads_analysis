@@ -81,5 +81,5 @@ for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
     
     print('Creating PDF')
     os.system('convert ../figures/traj_co_with_corrections/%s_*.png ../figures/traj_co_with_corrections/%s_trajectory.pdf'%(dataset,dataset))
-    for png in glob.glob('../figures/speed_with_corrections/*.png'):
+    for png in glob.glob('../figures/traj_co_with_corrections/*.png'):
         os.remove(png)

@@ -1,14 +1,22 @@
 #submovement transitions
 firstmove_speed_transition_thresh: 1000
 firstmove_min_speed_prominence: 25
-firstmove_min_distance: 300
+firstmove_min_distance: 200
 
 correction_speed_transition_thresh: 1000
 correction_min_speed_prominence: 25
-correction_min_distance: 300
+correction_min_distance: 200
 
-speed_filter_win: 201
+speed_filter_win: 101
 speed_filter_order: 2
+
+angle_win: 50 #half-length of window (in ms) to compute angle around speed local minimum 
+angle_threshold: 15 # angle threshold (in degrees) to count as a submovement, if 
+                    # prominence criterion not met 
+
+right_prominence_ratio: 5
+left_prominence_thresh: 10
+exclude_movement_post_target_win: 50
 
 # speed_transition_thresh: 100
 # min_speed_prominence: 100

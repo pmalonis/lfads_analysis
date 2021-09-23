@@ -73,6 +73,19 @@ if __name__=='__main__':
         plot_dfs.append(plot_df)
 
     all_plot_df = pd.concat(plot_dfs)
+    
+    for predictor in set(all_plot_df['Predictor']):
+        print(predictor.replace('\n',' ') + ':')
+        monkey_means = all_plot_df.query('Predictor==@predictor').groupby('Monkey').mean()
+        monkey_std = all_plot_df.query('Predictor==@predictor').groupby('Monkey').std()
+        monkey_means = pd.concat([monkey_means, monkey_std], axis=1)
+        monkey_means.columns = ['Mean', 'Standard Deviation']
+        print(monkey_means)
+        print('\t All mean: %f'%monkey_means['Mean'].values.mean())
+        print('\t All standard deviation: %f'%monkey_means['Mean'].values.std())
+        print('\t All standard error: %f'%(monkey_means['Mean'].values.std()/monkey_means['Mean'].shape[0]))
+
+            
     #ax = plt.subplot(1, len(datasets), i+1)
     # g = sns.pointplot(x='Predictor', y='Variance Explained', 
     #                     data=plot_dfs[i], markers='')

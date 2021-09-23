@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy import io
+from scipy import io, stats
 import h5py
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -9,7 +9,7 @@ import inspect
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import r2_score
 import itertools
 import os
@@ -28,7 +28,6 @@ config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
 def get_row_params(model_row):
-
     model_args = [c for c in model_row.index if c[:6]=='param_' and 
                     not (isinstance(model_row[c], float) and np.isnan(model_row[c]))]
 
@@ -45,7 +44,45 @@ def get_row_params(model_row):
     if 'min_samples_leaf' in model_dict.keys():
         model_dict['min_samples_leaf'] = int(model_dict['min_samples_leaf'])
 
-    return preprocess_dict, model_dict
+    model = estimator_dict[model_row['estimator']]
+    if isinstance(model, MultiOutputRegressor):
+        model.estimator.set_params(**model_dict)
+    else:
+        model.set_params(**model_dict)
+
+    return preprocess_dict, model
+
+def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
+    '''Fit best model for each reference frame on test data and record results'''
+
+    lfads_params = model_row['lfads_params']
+    lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + \
+                        '_'.join([file_root, lfads_params, 'all.h5'])
+    with h5py.File(lfads_filename, 'r+') as h5file:
+        co = h5file['controller_outputs'][:]
+        dt = utils.get_dt(h5file, input_info)
+        trial_len = utils.get_trial_len(h5file, input_info)
+
+    preprocess_dict, model = get_row_params(model_row)
+    
+    preprocess_dict.pop('min_win_start')
+    preprocess_dict.pop('max_win_stop')
+
+    X_train, y_train = get_inputs_to_model(train_peak_df, co, trial_len, dt, df, **preprocess_dict)
+    X_test, y_test = get_inputs_to_model(test_peak_df, co, trial_len, dt, df, **preprocess_dict)
+    model.fit(X_train, y_train)
+    nsplits = 5
+    scores = []
+    y_pred = model.predict(X_test)
+    for i in range(nsplits):
+        y_test_sample, y_pred_sample = resample(y_test, y_pred)
+        scores.append(r2_score(y_test_sample, y_pred_sample))
+
+    score_mean = np.mean(scores)
+    score_std = np.std(scores)
+
+    return score_mean, score_std
+
 
 def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
     '''Fit best model for each reference frame on test data and record results'''
@@ -68,7 +105,7 @@ def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
 
     preprocess_dict.pop('min_win_start')
     preprocess_dict.pop('max_win_stop')
-        
+
     X_train, y_train = get_inputs_to_model(train_peak_df, co, trial_len, dt, df, **preprocess_dict)
     X_test, y_test = get_inputs_to_model(test_peak_df, co, trial_len, dt, df, **preprocess_dict)
     model.fit(X_train, y_train)
@@ -80,10 +117,28 @@ def test_model(model_row, train_peak_df, test_peak_df, input_info, df):
         scores.append(r2_score(y_test_sample, y_pred_sample))
 
     score_mean = np.mean(scores)
-    score_std = np.std(scores)    
-    #score = model.score(X_test, y_test)
+    score_std = np.std(scores)
 
     return score_mean, score_std
+
+def corrected_ttest(x, k, r):
+    '''
+    x: differences between paired samples
+    k: folds 
+    r: repetitions
+
+    See:
+    Evaluating the Replicability of Significance Tests for Comparing Learning Algorithms
+    Remco R. Bouckaert
+    and Eibe Frank
+    '''
+    m = np.mean(x)
+    v = np.var(x, ddof=1)
+    ratio = 1/(k-1)
+
+    t = m/np.sqrt((1/(k*r) + ratio)*v)
+
+    return t, stats.t.pdf(t, df=k*r-1)
 
 if __name__=='__main__':
     output_filename = snakemake.input[0]

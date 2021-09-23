@@ -119,6 +119,9 @@ if __name__=='__main__':
                         latencies = peak_times[event][i][thresh_idx]
                         latency_idx = ~np.isnan(latencies)
                         latencies_notnull = latencies[latency_idx]
+                        print(dataset)
+                        print(len(latencies_notnull))
+                        print('\n')
                         samples.append(latencies_notnull)
                         if dset_idx == 0:
                             plt.ylabel(' Probability Density')

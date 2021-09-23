@@ -53,18 +53,21 @@ def convert_angle(angle_diff):
     angle_diff[angle_diff<=-np.pi] = angle_diff[angle_diff<=-np.pi]%np.pi
     return angle_diff
 
+
+def angle_to_xy(theta):
+    '''angle in radians to unit vector xy'''
+    return np.array([np.cos(theta), np.sin(theta)])
+
 def angle_difference(a, b):
     '''Difference between two angles, which are
-    given in randients between -pi and pi a is reference'''
-
-    #converting to 0 to 2pi
-    a += np.pi
-    b += np.pi
-    angle_diff = (b - a)%(2*np.pi)
-    angle_diff -= 2*np.pi
-    angle_diff[angle_diff<=-np.pi] = angle_diff[angle_diff<=-np.pi]%np.pi
-    return angle_diff
-
+    given in randians between -pi and pi'''
+    #this ensures that precision error doesn't give an invalid arccos
+    dotprod = angle_to_xy(a).dot(angle_to_xy(b))
+    dotprod = min(1, dotprod)
+    dotprod = max(-1, dotprod)
+    
+    return np.arccos(dotprod)
+    
 def peak_error(trial_df, exclude_post_target=None, exclude_pre_target=None):
     targets = trial_df.kinematic.query('hit_target')
     next_target = targets[['x', 'y']].iloc[1:]
@@ -686,8 +689,11 @@ def plot_trial(trial_df, trial_co, dt, trial_firstmove_df, trial_correction_df):
     lns.append(plt.plot(t, filt_speed, 'k'))
     #plt.twinx()
     
-    fm_line = plt.plot(t[fm], filt_speed[fm],'r.',markersize=15, label='First Movement')
-    c_line = plt.plot(t[nc], filt_speed[nc],'b.',markersize=15, label='Correction')
+    #fm_line = plt.plot(t[fm], filt_speed[fm],'r.',markersize=15, label='First Movement')
+    #c_line = plt.plot(t[nc], filt_speed[nc],'b.',markersize=15, label='Correction')
+    fm_line = plt.plot(t[fm], filt_speed[fm],'r.',markersize=10, label='First Movement')
+    c_line = plt.plot(t[nc], filt_speed[nc],'b.',markersize=10, label='Correction')
+
     plt.legend(handles=[fm_line[0], c_line[0]], fontsize=12)
     plt.ylabel('Speed (mm/s)')
     plt.xlabel('Time (s)')

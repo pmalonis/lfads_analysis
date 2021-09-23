@@ -31,10 +31,78 @@ def get_targets(df, used_inds=None):
 
     return targets
 
-def get_peaks(co, dt, min_height, relative=False, min_distance=cfg['min_peak_spacing'], 
-                exclude_post_target=None, df=None):
+# def get_peaks(co, dt, min_height, relative=False, min_distance=cfg['min_peak_spacing'], 
+#                 exclude_post_target=None, df=None):
+#     '''
+#     Returns times of peaks of controller outputs
+
+#     Parameters
+#     co: LFADS controller outputs. 3D numpy array with dimensions
+#     trials X time X controller output
+
+#     dt: time in between samples of controller outputs 
+
+#     min_height: minimum height of peak to consider, in number of standard deviations of absolute value above the mean absolute value. 
+#     Either scalar or vector with length equal to co.shape[2]. The later sets a separate 
+#     height treshold for each controller output
+
+#     min_distance: minimum distance to neighboring peak, as given to 
+#     scipy.signal.find_peaks as the "distance" argument. As with min_height, 
+#     can be a float or a vector. the unit of the distance is the index ste
+#     (1ms for the processed dataframes)
+
+#     Returns:
+#     peaks: object array of shape (trial X outputs). Each entry is a 
+#     lists of floats representing time in trial, in seconds, of each peak 
+#     in controller output that meet specifications given by min_height
+#     and min_distance
+#     peak_vals: 
+#     '''
+#     peaks = np.empty(shape=(co.shape[0], co.shape[2]), dtype='object')
+#     # filling array with empty lists. The default object is None, but empty list is simpler 
+#     # to work with since it can be pass to dataframe as slice with no error
+#     peaks.fill([])
+#     t_lfads = np.arange(co.shape[1]) * dt #time labels of lfads input
+#     abs_co = np.abs(co-co.mean((0,1)))
+#     if isinstance(min_height, (int, float)):
+#         min_height = np.ones(co.shape[2]) * min_height
+
+#     for trial_idx in range(co.shape[0]):
+#         for input_idx in range(co.shape[2]):
+#             if isinstance(min_distance, int):
+#                 distance_arg = min_distance
+#             elif isinstance(min_distance, list):
+#                 distance_arg = min_distance[input_idx]
+
+#             if relative:
+#                 height_arg = abs_co[:,:,input_idx].mean() + min_height[input_idx]*abs_co[:,:,input_idx].std()
+#                 p, _ = signal.find_peaks(abs_co[trial_idx, :, input_idx], 
+#                                 height=height_arg, distance=distance_arg)
+#             else:
+#                 p, _ = signal.find_peaks(abs_co[trial_idx, :, input_idx], 
+#                                 height=min_height[input_idx], distance=distance_arg)
+
+
+#             if (exclude_post_target is not None) and (df is not None): #TODO used_indx
+#                 times = []
+#                 for i in range(len(p)):
+#                     t = t_lfads[p[i]]
+#                     t_targets = df.loc[trial_idx].kinematic.query('hit_target').index
+#                     if np.any((t - t_targets < exclude_post_target) & (t - t_targets > 0)):
+#                         continue
+#                     else:
+#                         times.append(t)
+#                 times = np.array(times)
+#             else:
+#                 times = t_lfads[p]
+
+#             peaks[trial_idx, input_idx] = times
+ 
+#     return peaks
+
+def get_maximum_peaks(co, dt, df, firstmove_df, min_peak_time=0.05, min_firstmove_time=0.1):
     '''
-    Returns times of peaks of controller outputs
+    Returns times of maximum in controller output prior to first movement
 
     Parameters
     co: LFADS controller outputs. 3D numpy array with dimensions
@@ -42,14 +110,9 @@ def get_peaks(co, dt, min_height, relative=False, min_distance=cfg['min_peak_spa
 
     dt: time in between samples of controller outputs 
 
-    min_height: minimum height of peak to consider, in number of standard deviations of absolute value above the mean absolute value. 
-    Either scalar or vector with length equal to co.shape[2]. The later sets a separate 
-    height treshold for each controller output
+    df: dataframe containing preprocessed trial data
 
-    min_distance: minimum distance to neighboring peak, as given to 
-    scipy.signal.find_peaks as the "distance" argument. As with min_height, 
-    can be a float or a vector. the unit of the distance is the index ste
-    (1ms for the processed dataframes)
+    post_target: window after target to look for maximum
 
     Returns:
     peaks: object array of shape (trial X outputs). Each entry is a 
@@ -58,46 +121,71 @@ def get_peaks(co, dt, min_height, relative=False, min_distance=cfg['min_peak_spa
     and min_distance
     peak_vals: 
     '''
-    peaks = np.empty(shape=(co.shape[0], co.shape[2]), dtype='object')
-    # filling array with empty lists. The default object is None, but empty list is simpler 
-    # to work with since it can be pass to dataframe as slice with no error
-    peaks.fill([])
+
     t_lfads = np.arange(co.shape[1]) * dt #time labels of lfads input
-    abs_co = np.abs(co-co.mean((0,1)))
-    if isinstance(min_height, (int, float)):
-        min_height = np.ones(co.shape[2]) * min_height
+    co = signal.savgol_filter(co, 11,2, axis=1)
+    abs_co = np.abs(co)
+    
+    trial_len = co.shape[1] * dt
+    output_df = get_targets(df)
+    n_inputs = co.shape[2]
+    n_trials = co.shape[0]
+    target_latency = []
+    firstmove_latency = []
+    k = 0
+    for trial_idx in range(n_trials):
+        t_firstmoves = firstmove_df.loc[trial_idx].index.values
 
-    for trial_idx in range(co.shape[0]):
-        for input_idx in range(co.shape[2]):
-            if isinstance(min_distance, int):
-                distance_arg = min_distance
-            elif isinstance(min_distance, list):
-                distance_arg = min_distance[input_idx]
+        trial_target_latency = [] # list of lists of latencies, one list for each input
+        trial_firstmove_latency = [] # list of lists of latencies, one list for each input
+        for input_idx in range(n_inputs):
+            t_targets = output_df.loc[trial_idx].loc[:trial_len].index.values
+            t_targets = np.append(t_targets, t_lfads[-1])
+            input_target_latency = []
+            input_firstmove_latency = []
+            for t_target, t_next_target in zip(t_targets[:-1], t_targets[1:]):
+                t_firstmove = t_firstmoves[np.argmax(t_firstmoves > t_target)] # getting initial movement after target
+                if t_firstmove >= t_next_target or t_firstmove - t_target < min_firstmove_time: #if no first movement before next target continue
+                    output_df.drop(index=(trial_idx, t_target), inplace=True)
+                    continue
 
-            if relative:
-                height_arg = abs_co[:,:,input_idx].mean() + min_height[input_idx]*abs_co[:,:,input_idx].std()
-                p, _ = signal.find_peaks(abs_co[trial_idx, :, input_idx], 
-                                height=height_arg, distance=distance_arg)
-            else:
-                p, _ = signal.find_peaks(abs_co[trial_idx, :, input_idx], 
-                                height=min_height[input_idx], distance=distance_arg)
+                assert np.any(t_lfads > t_target)
+                assert np.any(t_lfads > t_firstmove)
+                idx_target = np.argmax(t_lfads > t_target)# first index after target
+                idx_firstmove = np.argmax(t_lfads > t_firstmove) # first index after target
 
-            if (exclude_post_target is not None) and (df is not None): #TODO used_indx
-                times = []
-                for i in range(len(p)):
-                    t = t_lfads[p[i]]
-                    t_targets = df.loc[trial_idx].kinematic.query('hit_target').index
-                    if np.any((t - t_targets < exclude_post_target) & (t - t_targets > 0)):
-                        continue
-                    else:
-                        times.append(t)
-                times = np.array(times)
-            else:
-                times = t_lfads[p]
+                #p = np.argmax(abs_co[trial_idx,idx_target:idx_firstmove+10,input_idx])
+                p,_ = signal.find_peaks(abs_co[trial_idx,idx_target:idx_firstmove,input_idx])
+                if len(p) == 0:
+                    output_df.drop(index=(trial_idx, t_target), inplace=True)
+                    continue
 
-            peaks[trial_idx, input_idx] = times
- 
-    return peaks
+                p = p[np.argmax(abs_co[trial_idx, idx_target+p, input_idx])]
+                if p == idx_firstmove - idx_target - 1:
+                    k += 1
+
+                if p * dt < min_peak_time:
+                    output_df.drop(index=(trial_idx, t_target), inplace=True)
+                    continue
+
+                t_max = t_lfads[idx_target + p]
+                input_target_latency.append(t_max - t_target)
+                input_firstmove_latency.append(t_max - t_firstmove)
+            
+            trial_target_latency.append(input_target_latency)
+            trial_firstmove_latency.append(input_firstmove_latency)
+
+        target_latency += list(zip(*trial_target_latency))
+        firstmove_latency += list(zip(*trial_firstmove_latency))
+
+    target_columns = ['target_latency_%d'%(i+1) for i in range(n_inputs)]
+    firstmove_columns = ['firstmove_latency_%d'%(i+1) for i in range(n_inputs)]
+    output_df = output_df.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[:trial_len])
+    output_df[target_columns] = np.array(target_latency)
+    output_df[firstmove_columns] = np.array(firstmove_latency)
+    
+    print(k)
+    return output_df
 
 def assign_target_column(_df):
     trial_df = _df.loc[_df.index[0][0]]
@@ -156,7 +244,7 @@ def get_latencies(targets, peaks, win_start, win_stop, trial_len):
 
     peaks: Return of get_peaks, object array of shape (trial X outputs). 
     Each entry is a lists of floats representing time in trial, in seconds, 
-    of each peak in controller output that mean specifications given by min_height
+    of each peak in controller output that mean specifications given by 
     and min_distance
 
     win_start: start of window after target to include controller peak
