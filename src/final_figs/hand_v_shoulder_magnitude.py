@@ -35,9 +35,9 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
     kf = RepeatedKFold(k, r, random_state=random_state)
     references = ['hand', 'shoulder']
     out_dict = {}
-    scorer = make_scorer(opt.var_weighted_score_func)
+    scorer = make_scorer(opt.r_score_func)
     for reference in references:
-        best_idx = output.query('~fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['mean_test_var_weighted_score'].idxmax()
+        best_idx = output.query('fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['mean_test_r_score'].idxmax()
         model_row = output.loc[best_idx]
         preprocess_dict, model = me.get_row_params(model_row)
         X, y = get_inputs_to_model(test_peak_df, co, trial_len, 
@@ -80,10 +80,11 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
 
 
 if __name__=='__main__':
-    plot_data_path = '../../data/model_output/hand_v_shoulder_inital.p'
+    plot_data_path = '../../data/model_output/hand_v_shoulder_initial_magnitude.p'
     if os.path.exists(plot_data_path):
         all_plot_dfs = pd.read_pickle(plot_data_path)
     else:
+
         output_filename = "../../data/peaks/params_search_targets-not-one.csv"
             
         #output_filename = snakemake.input[0]
@@ -145,10 +146,10 @@ if __name__=='__main__':
     plt.xlim([-.5,1.5])
     _,ymax = plt.ylim()
     plt.ylim([-0.1, ymax])
-    plt.title('Position Decoder')
+    plt.title('Magnititude Decoder')
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
 plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
 plt.savefig("../../figures/final_figures/hand_v_shoulder_target.svg")
-plt.savefig("../../figures/final_figures/numbered/5c.pdf")
+plt.savefig("../../figures/final_figures/numbered/5e.pdf")
     #plt.savefig(snakemake.output[0])

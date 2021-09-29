@@ -39,11 +39,6 @@ fb_win_stop = 0.0#0.3#0.1#cfg['post_target_win_stop']
 win_start = -0.3
 win_stop = 0.0
 
-lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
-with h5py.File(lfads_filename, 'r+') as h5file:
-    co = h5file['controller_outputs'][:]
-
-n_co = co.shape[2]
 if __name__=='__main__':
     all_means = []
     fb_all_means = []
@@ -84,6 +79,8 @@ if __name__=='__main__':
         fb_theta = np.arctan2(fb_y[:,1], fb_y[:,0])
         assert(nbins%2==0)
         
+        n_co = co.shape[2]
+
         bin_theta = np.pi / (nbins/2)
         mean_zscores = np.zeros(n_co*nbins)
         max_zscores = np.zeros(n_co*nbins)
@@ -174,12 +171,12 @@ if __name__=='__main__':
     #fig.text(00.02, .25, 'Rate PC 2')
     fig.set_size_inches(12,6)
     plt.savefig('../figures/final_figures/co_averages_correlation-means.svg')
-    plt.savefig('../figures/final_figures/numbered/7b.svg')
+    plt.savefig('../figures/final_figures/numbered/7b.pdf')
     fig = plt.figure(2)
-    #fig.text(0.02, .75, 'Rate PC 1')
-    #fig.text(0.02, .25, 'Rate PC 2')
-    #fig.set_size_inches(12,6)
-    #plt.savefig('../figures/final_figures/co_averages_correlation-maxima.png')
+    fig.text(0.02, .75, 'Rate PC 1')
+    fig.text(0.02, .25, 'Rate PC 2')
+    fig.set_size_inches(12,6)
+    plt.savefig('../figures/final_figures/co_averages_correlation-maxima.png')
 
     plt.figure(figsize=(8,6))
     #plt.tight_layout(pad=2)
@@ -210,4 +207,3 @@ if __name__=='__main__':
     plt.yticks([-2, -1, 0, 1, 2])
     plt.xticks([-2, -1, 0, 1, 2])
     plt.savefig('../figures/final_figures/co_averages_correlation_with_corrections_means_all.svg')
-    plt.savefig('../figures/final_figures/numbered/7c.svg')

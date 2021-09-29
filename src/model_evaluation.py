@@ -20,12 +20,11 @@ sys.path.insert(0, '..')
 import utils
 from optimize_target_prediction import get_inputs_to_model
 
-random_state = 1748
-estimator_dict = {'SVR': MultiOutputRegressor(SVR()),
-                  'Random Forest': RandomForestRegressor(random_state=random_state)}
-
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
+
+estimator_dict = {'SVR': MultiOutputRegressor(SVR()),
+                  'Random Forest': RandomForestRegressor(random_state=cfg['random_forest_random_state'])}
 
 def get_row_params(model_row):
     model_args = [c for c in model_row.index if c[:6]=='param_' and 
@@ -49,6 +48,9 @@ def get_row_params(model_row):
         model.estimator.set_params(**model_dict)
     else:
         model.set_params(**model_dict)
+
+    preprocess_dict.pop('min_win_start') # removing these since not needed for comparison on test set
+    preprocess_dict.pop('max_win_stop') 
 
     return preprocess_dict, model
 
@@ -99,8 +101,8 @@ def corrected_ttest(x, k, r):
     ratio = 1/(k-1)
 
     t = m/np.sqrt((1/(k*r) + ratio)*v)
-
-    return t, stats.t.pdf(t, df=k*r-1)
+    p = 2*(1-stats.t.cdf(np.abs(t), df=k*r-1)) # two-sided p value
+    return t, p
 
 if __name__=='__main__':
     output_filename = snakemake.input[0]

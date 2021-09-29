@@ -212,7 +212,7 @@ class Decode(Measure):
         self.datasets[dataset].measure[prior].append(m)
 
     def compute_measure(self, run):
-        lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
+        lfads_filename = os.path.dirname(__file__) + '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
         with h5py.File(lfads_filename, 'r') as h5file:
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
@@ -402,7 +402,7 @@ if __name__=='__main__':
     for kl_weight in [2.0]:
         # measures = [m(filename='../figures/final_figures/%s_co_dim.svg'%k) for k,m in 
         #             metric_dict.items()]    
-        measures = [m(filename='../figures/final_figures/numbered/2e.svg') for k,m in 
+        measures = [m(filename='../figures/final_figures/numbered/2e.pdf') for k,m in 
                     metric_dict.items()]    
         for dataset in run_info.keys():
             df = pd.read_pickle('../data/intermediate/%s.p'%dataset)

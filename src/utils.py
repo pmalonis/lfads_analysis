@@ -25,16 +25,16 @@ def load_data(data_filename, lfads_filename, inputInfo_filename):
     
     return df, co, trial_len, dt
 
-def inputs_to_model(dataset, event_type):
+def inputs_to_model(dataset, event_type, split='train'):
     file_root = dataset
-    lfads_params = open(os.path.dirname(__file__) + '/../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read().strip()
-    data_filename = os.path.dirname(__file__)+'/../data/intermediate/' + file_root + '.p'
-    lfads_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
+    lfads_params = open(os.path.dirname(__file__) + '../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read().strip()
+    data_filename = os.path.dirname(__file__)+'../data/intermediate/' + file_root + '.p'
+    lfads_filename = os.path.dirname(__file__)+'../data/model_output/' + \
                     '_'.join([file_root, lfads_params, 'all.h5'])
-    inputInfo_filename = os.path.dirname(__file__)+'/../data/model_output/' + \
+    inputInfo_filename = os.path.dirname(__file__)+'../data/model_output/' + \
                         '_'.join([file_root, 'inputInfo.mat'])
-    peak_filename = os.path.dirname(__file__)+'/../data/peaks/' + \
-                    '_'.join([file_root, '%s_train.p'%event_type])
+    peak_filename = os.path.dirname(__file__)+'../data/peaks/' + \
+                    '_'.join([file_root, '%s_%s.p'%(event_type,split)])
 
     peak_df = pd.read_pickle(peak_filename)
     df, co, trial_len, dt = load_data(data_filename, lfads_filename, inputInfo_filename)

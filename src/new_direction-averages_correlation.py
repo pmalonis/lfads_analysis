@@ -32,7 +32,7 @@ for dataset in run_info.keys():
 
 #datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
-nbins = 6
+nbins = 12
 fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
 fb_win_stop = 0.0#0.3#0.1#cfg['post_target_win_stop']
 win_start = -0.3
@@ -64,13 +64,13 @@ if __name__=='__main__':
         # peak_df_test = pd.read_pickle('../data/peaks/%s_new-firstmove_test.p'%(dataset))
 
         # peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
-        peak_df = pd.read_pickle('../data/peaks/%s_new-firstmove_all.p'%(dataset))
+        peak_df = pd.read_pickle('../data/peaks/%s_firstmove_all.p'%(dataset))
 
         # fb_peak_df_train = pd.read_pickle('../data/peaks/%s_new-corrections_train.p'%(dataset))
         # fb_peak_df_test = pd.read_pickle('../data/peaks/%s_new-corrections_test.p'%(dataset))
         
         #pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
-        fb_peak_df = pd.read_pickle('../data/peaks/%s_new-corrections_all.p'%(dataset))
+        fb_peak_df = pd.read_pickle('../data/peaks/%s_corrections_all.p'%(dataset))
         
         X,y = opt.get_inputs_to_model(peak_df, co, trial_len, dt, df=df, 
                                     win_start=win_start, 
@@ -182,7 +182,7 @@ if __name__=='__main__':
     #fig.text(0.02, .25, 'Rate PC 2')
     #fig.set_size_inches(12,6)
     #plt.savefig('../figures/final_figures/co_averages_correlation-maxima.png')
-
+    plt.savefig('../figures/final_figures/numbered/7b.svg')
     plt.figure(figsize=(8,6))
     #plt.tight_layout(pad=2)
     #plt.tight_layout()
@@ -212,4 +212,4 @@ if __name__=='__main__':
     plt.yticks([-2, -1, 0, 1, 2])
     plt.xticks([-2, -1, 0, 1, 2])
     plt.savefig('../figures/final_figures/co_averages_correlation_with_corrections_means_all.svg')
-    #plt.savefig('../figures/final_figures/numbered/7c.svg')
+    plt.savefig('../figures/final_figures/numbered/7c.svg')

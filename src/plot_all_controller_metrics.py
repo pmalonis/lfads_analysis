@@ -213,7 +213,7 @@ class Decode(Measure):
         self.datasets[dataset].measure[prior].append(m)
 
     def compute_measure(self, run):
-        lfads_filename = os.path.dirname(__file__) + '/../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
+        lfads_filename = os.path.dirname(__file__) + '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
         with h5py.File(lfads_filename, 'r') as h5file:
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
@@ -399,43 +399,46 @@ metric_dict = {'gini': Gini,
                 }
 
 if __name__=='__main__':
-    for co_dim in [2]:
-        #measures = [m(filename='../figures/final_figures/%s.svg'%k) for k,m in metric_dict.items()]    
-        measures = [Decode(filename='../figures/final_figures/numbererd/2c.svg'), 
-                    Gini(filename='../figures/final_figures/numbererd/2d.svg')]
-        for dataset in run_info.keys():
-            df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
+    #measures = [m(filename='../figures/final_figures/%s.svg'%k) for k,m in metric_dict.items()]    
+    measures = [Decode(filename='../figures/final_figures/numbered/2c.pdf'), 
+                Gini(filename='../figures/final_figures/numbered/2d.pdf')]
+    config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+    cfg = yaml.safe_load(open(config_path, 'r'))
+
+    
+    for dataset in run_info.keys():
+        df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
+        
+        for param in run_info[dataset]['params'].keys():
+            lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
+            selected_params = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read()
+            co_dim = run_info[dataset]['params'][selected_params]['param_values']['co_dim']
+
+            if run_info[dataset]['params'][param]['param_values'].get('co_dim') != co_dim:
+                continue
+
+            inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+            input_info = io.loadmat(inputInfo_filename)
+            with h5py.File(lfads_filename, 'r') as h5file:
+                dt = utils.get_dt(h5file, input_info)
+                trial_len = utils.get_trial_len(h5file, input_info)
+                if 'controller_outputs' in h5file.keys():
+                    co = h5file['controller_outputs'][:]
+                else:
+                    co = np.zeros((df.index[-1][0], int(trial_len/dt), 2))
+
             
-            for param in run_info[dataset]['params'].keys():
-                lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
-                if 'raju' in dataset and not os.path.exists(lfads_filename):
-                    continue
-                
-                if run_info[dataset]['params'][param]['param_values'].get('co_dim') != co_dim:
-                    continue
+            prior = run_info[dataset]['params'][param]['param_values'].get('ar_prior_dist')
+            if prior is None:
+                prior = 'gaussian'
+            if prior != 'gaussian': continue
+            kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
+            co_power = np.abs(co).sum()/co.shape[0]
+            for measure in measures:
+                measure.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
+                #measure.add_run(prior, co_power, dataset, param, df, co, trial_len, dt)
 
-                inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
-                input_info = io.loadmat(inputInfo_filename)
-                with h5py.File(lfads_filename, 'r') as h5file:
-                    dt = utils.get_dt(h5file, input_info)
-                    trial_len = utils.get_trial_len(h5file, input_info)
-                    if 'controller_outputs' in h5file.keys():
-                        co = h5file['controller_outputs'][:]
-                    else:
-                        co = np.zeros((df.index[-1][0], int(trial_len/dt), 2))
-
-                
-                prior = run_info[dataset]['params'][param]['param_values'].get('ar_prior_dist')
-                if prior is None:
-                    prior = 'gaussian'
-                if prior != 'gaussian': continue
-                kl_weight = run_info[dataset]['params'][param]['param_values']['kl_co_weight']
-                co_power = np.abs(co).sum()/co.shape[0]
-                for measure in measures:
-                    measure.add_run(prior, kl_weight, dataset, param, df, co, trial_len, dt)
-                    #measure.add_run(prior, co_power, dataset, param, df, co, trial_len, dt)
-
-        for measure in measures:
-            measure.plot()
-            plt.tight_layout()
-            measure.savefig()
+    for measure in measures:
+        measure.plot()
+        plt.tight_layout()
+        measure.savefig()

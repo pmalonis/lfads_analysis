@@ -10,7 +10,7 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RepeatedKFold, cross_val_score
-from sklearn.metrics import make_scorer
+from sklearn.metrics import make_scorer,r2_score
 import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__) +  '..')
@@ -19,8 +19,8 @@ from optimize_target_prediction import get_inputs_to_model
 import optimize_target_prediction as opt
 import model_evaluation as me
 plt.rcParams['font.size'] = 20
-plt.rcParams['axes.spines.top'] = False
-plt.rcParams['axes.spines.right'] = False
+#plt.rcParams['axes.spines.top'] = False
+#plt.rcParams['axes.spines.left'] = False
 
 config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -28,21 +28,25 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 random_state = cfg['split_random_state']
 r = cfg['significance_cv_repeats']
 k = cfg['significance_cv_folds']
-
+def uniform_score_func(y,y_pred):
+    x_score = opt.x_score_func(y,y_pred)
+    y_score = opt.y_score_func(y,y_pred)
+    return np.mean([x_score, y_score])
+    
 def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt, df):
     '''Fit best model for each reference frame on test data and record results'''
 
     kf = RepeatedKFold(k, r, random_state=random_state)
     references = ['hand', 'shoulder']
     out_dict = {}
-    scorer = make_scorer(opt.var_weighted_score_func)
+    scorer = make_scorer(lambda y,y_pred: r2_score(y,y_pred,multioutput='uniform_average'))
     for reference in references:
-        best_idx = output.query('~fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['mean_test_var_weighted_score'].idxmax()
+        best_idx = output.query('fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['total_test_score'].idxmax()
         model_row = output.loc[best_idx]
         preprocess_dict, model = me.get_row_params(model_row)
         X, y = get_inputs_to_model(test_peak_df, co, trial_len, 
                                                 dt, df, **preprocess_dict)
-        out_dict[reference] = cross_val_score(model, X, y, 
+        out_dict[reference] = cross_val_score(model, X, y[:,:2], 
                                                 scoring=scorer, 
                                                 cv=kf)
 
@@ -80,10 +84,11 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
 
 
 if __name__=='__main__':
-    plot_data_path = '../../data/model_output/hand_v_shoulder_inital.p'
+    plot_data_path = '../../data/model_output/hand_v_shoulder_initial_normalized.p'
     if os.path.exists(plot_data_path):
         all_plot_dfs = pd.read_pickle(plot_data_path)
     else:
+
         output_filename = "../../data/peaks/params_search_targets-not-one.csv"
             
         #output_filename = snakemake.input[0]
@@ -136,7 +141,8 @@ if __name__=='__main__':
         all_plot_dfs = pd.concat(all_plot_dfs)
         all_plot_dfs.to_pickle(plot_data_path)    
 
-    sns.pointplot(x='Reference', y='r^2', data=all_plot_dfs, hue='Monkey', linewidth=50, ci='sd')
+    sns.pointplot(x='Reference', y='r^2', data=all_plot_dfs, hue='Monkey', 
+                    linewidth=50, ci='sd')
     #sns.pointplot(x='Reference', y='r^2', data=plot_df.query('`Movement Type` == "Initial"'))
 
     #plt.errorbar([0,1], [hand_score.values[0], shoulder_score.values[0]], [hand_std.values[0], shoulder_std.values[0]], color=colors[0], linewidth=3)
@@ -145,10 +151,10 @@ if __name__=='__main__':
     plt.xlim([-.5,1.5])
     _,ymax = plt.ylim()
     plt.ylim([-0.1, ymax])
-    plt.title('Position Decoder')
+    plt.title('Direction Decoder')
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
 plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
 plt.savefig("../../figures/final_figures/hand_v_shoulder_target.svg")
-plt.savefig("../../figures/final_figures/numbered/5c.pdf")
+plt.savefig("../../figures/final_figures/numbered/5d.pdf")
     #plt.savefig(snakemake.output[0])

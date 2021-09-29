@@ -92,7 +92,7 @@ def plot_average(event_name, win_start, win_stop, event_label,
                 plt.sca(axes[dset_idx])
             else:
                 plt.sca(axes)
-    
+        
         plt.plot(t_ms, co_mag_av)
         width,_,_,_ = peak_widths(co_mag_av, [np.argmax(co_mag_av)])
         dset_name = run_info[dataset]['name']
@@ -103,6 +103,7 @@ def plot_average(event_name, win_start, win_stop, event_label,
             if dset_idx == 0:
                 plt.ylabel('Controller Magnitude (Z-Score)')
 
+        print("%s Peak: %f"%(dset_name,t_ms[np.argmax(co_mag_av)]))
         plt.xticks([0, 100, 200])
         # if 'raju' in dataset:
         #     plt.yticks([0, 0.2, 0.4])
@@ -127,8 +128,8 @@ if __name__=='__main__':
     # event_names = ['targets-one', "targets-not-one", "firstmove", "corrections"]
     # event_labels = ["Target Appearance", "Target Appearance",
     #                 "Initial Movement", "Corrective Movement"]
-    event_names = ["targets-not-one"]
-    event_labels = ["Target Appearance"]
+    event_names = ["corrections"]
+    event_labels = ["Correction"]
     fig = plt.figure(figsize=(8,6))
     axes = fig.subplots(1,1)
     for event_idx, (event_name, event_label) in enumerate(zip(event_names, event_labels)):
@@ -136,7 +137,7 @@ if __name__=='__main__':
             win_start = 0.0
             win_stop = 0.3
         else:
-            win_start = -0.3
+            win_start = -0.4
             win_stop = 0
 
         width_df = plot_average(event_name, win_start, win_stop, event_label, axes=axes)
@@ -148,7 +149,7 @@ if __name__=='__main__':
         #plt.locator_params(num_ticks=4)
 
     plt.savefig('../figures/final_figures/co_average_all_dir_%s.svg'%event_name)
-    plt.savefig('../figures/final_figures/numbered/4a.pdf')
+    #plt.savefig('../figures/final_figures/numbered/4a.pdf')
     # plot_df = pd.concat(width_dfs)
     # sns.pointplot(data=plot_df, x='Reference Event', y='Peak Width (ms)', hue='Dataset')
     # plt.savefig('../figures/final_figures/co_av_widths.svg')

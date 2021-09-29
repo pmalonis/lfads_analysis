@@ -24,15 +24,15 @@ if __name__=='__main__':
     yticks = [0.5, 0.5, 0.25]
     ymins = [-0.7, -0.7, -0.3]
     ymaxs = [0.7, 0.7, 0.3]
-    label_ctrl_1 = [(0.7, 0.4), (0.57, -0.5), (0.6, -0.25)]
-    label_ctrl_2 = [(0.7, -0.6), (0.52, 0.2), (0.63, 0.15)]
+    label_ctrl_1 = [(0.7, 0.4), (0.57, -0.5), (0.64, 0.15)]
+    label_ctrl_2 = [(0.7, -0.6), (0.52, 0.2), (1.1, -0.12)]
     panels = ['a', 'b', 'c']
     for i, (dataset, example_trial, lc1, lc2, ytick) in enumerate(zip(datasets, example_trials, label_ctrl_1, label_ctrl_2, yticks)):
-        example_filename = os.path.dirname(__file__) + '/../../data/intermediate/%s.p'%dataset
-        param = open(os.path.dirname(__file__)+'/../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
-        lfads_filename = os.path.dirname(__file__)+'/../../data/model_output/' + \
+        example_filename = os.path.dirname(__file__) + '../../data/intermediate/%s.p'%dataset
+        param = open(os.path.dirname(__file__)+'../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
+        lfads_filename = os.path.dirname(__file__)+'../../data/model_output/' + \
                                 '_'.join([dataset, param, 'all.h5'])
-        inputInfo_filename = os.path.dirname(__file__)+'/../../data/model_output/' + \
+        inputInfo_filename = os.path.dirname(__file__)+'../../data/model_output/' + \
                         '_'.join([dataset, 'inputInfo.mat'])
         input_info = io.loadmat(inputInfo_filename)
         with h5py.File(lfads_filename) as h5file:
@@ -51,6 +51,11 @@ if __name__=='__main__':
         plt.plot(t, co[example_trial,:, 1], color=colors[1])
         plt.text(*lc2, "Controller 2",  color=colors[1], fontsize=16)
 
+        if co.shape[2] == 3:
+            color = [0.5, 0.0, 0.5]
+            plt.plot(t, co[example_trial,:, 2], color=color)
+            plt.text(0.645, -0.25, 'Controller 3', color=color, fontsize=16)
+
         plt.xlabel('Time (s)')
         plt.ylabel('LFADS Controller Value (a.u.)')
         
@@ -65,4 +70,4 @@ if __name__=='__main__':
         
         plt.yticks([-ytick, 0, ytick])
         plt.savefig('../../figures/final_figures/example_co_%d.svg'%i)
-        plt.savefig('../../figures/final_figures/numbered/3%s.svg'%panels[i])
+        plt.savefig('../../figures/final_figures/numbered/3%s.pdf'%panels[i])

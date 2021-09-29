@@ -377,12 +377,12 @@ if __name__=='__main__':
     trained = {}
     inputs = {}
     grid_results = []
-    scoring={'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func), 
-            'var_weighted_score':make_scorer(var_weighted_score_func)}
-    dir_scoring={'x_score':make_scorer(x_score_func),
-                 'y_score':make_scorer(y_score_func),
-                 'r_score':make_scorer(r_score_func), 
-                 'cosine_score':make_scorer(mean_cosine_score_func)}
+    scoring = {'x_score':make_scorer(x_score_func),'y_score':make_scorer(y_score_func), 
+                'var_weighted_score':make_scorer(var_weighted_score_func)}
+    dir_scoring = {'x_score':make_scorer(x_score_func),
+                    'y_score':make_scorer(y_score_func),
+                    'r_score':make_scorer(r_score_func), 
+                    'cosine_score':make_scorer(mean_cosine_score_func)}
     
     for dataset_name, dataset_dict in dataset_dicts.items():
         for lfads_params in dataset_dict['lfads_params']:

@@ -18,7 +18,7 @@ import utils
 from optimize_target_prediction import get_inputs_to_model
 import optimize_target_prediction as opt
 import model_evaluation as me
-plt.rcParams['font.size'] = 20
+plt.rcParams['font.size'] = 16
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 
@@ -45,46 +45,19 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
         out_dict[reference] = cross_val_score(model, X, y, 
                                                 scoring=scorer, 
                                                 cv=kf)
-
+    
     _, p = me.corrected_ttest(out_dict['hand']-out_dict['shoulder'], k, r)
 
     out_dict['p'] = p
 
     return out_dict
 
-# def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt, df):
-#     '''Fit best model for each reference frame on test data and record results'''
-
-#     kf = RepeatedKFold(k, r, random_state=random_state)
-#     references = ['hand', 'shoulder']
-#     scorer_names = ['x','y','r']
-#     scorers = [make_scorer(opt.x_score_func), make_scorer(opt.y_score_func), make_scorer(opt.r_score_func)]
-#     out_dict = {}
-#     scorer = make_scorer(opt.var_weighted_score_func)
-#     for reference in references:
-#         best_idx = output.query('fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['mean_test_cosine_score'].idxmax()
-#         model_row = output.loc[best_idx]
-#         preprocess_dict, model = me.get_row_params(model_row)
-#         X, y = get_inputs_to_model(test_peak_df, co, trial_len, 
-#                                                 dt, df, **preprocess_dict)
-#         out_dict[reference] = cross_val_score(model, X, y, 
-#                                                 scoring=scorer, 
-#                                                 cv=kf)
-#         print(model)
-    
-#     _, p = me.corrected_ttest(out_dict['hand']-out_dict['shoulder'], k, r)
-
-#     out_dict['p'] = p
-
-#     return out_dict
-
-
 if __name__=='__main__':
-    plot_data_path = '../../data/model_output/hand_v_shoulder_inital.p'
+    plot_data_path = '../../data/model_output/hand_v_shoulder_correction.p'
     if os.path.exists(plot_data_path):
         all_plot_dfs = pd.read_pickle(plot_data_path)
     else:
-        output_filename = "../../data/peaks/params_search_targets-not-one.csv"
+        output_filename = "../../data/peaks/params_search_corrections.csv"
             
         #output_filename = snakemake.input[0]
         #fb_output_filename = snakemake.input[1]
@@ -100,6 +73,7 @@ if __name__=='__main__':
         plot_columns = ['reference', plot_score, 'std_test_score', 'Control Type', 'final_held_out_std']
         preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(output.columns)
         #fb_preprocess_args = set(inspect.getargs(get_inputs_to_model.__code__).args).intersection(fb_output.columns)
+        plt.figure(figsize=(8,6))
 
         colors = utils.contrasting_colors(**cfg['colors']['correction_decode'])
         all_cv_results = []
@@ -111,7 +85,7 @@ if __name__=='__main__':
             inputInfo_filename = '../../data/model_output/' + \
                             '_'.join([dataset, 'inputInfo.mat'])
             peak_filename = '../../data/peaks/' + \
-                        '_'.join([dataset, 'targets-not-one_test.p'])
+                        '_'.join([dataset, 'corrections_test.p'])
 
             df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
             peak_df = pd.read_pickle(peak_filename)
@@ -123,7 +97,6 @@ if __name__=='__main__':
             print('%s p-value: %f'%(dset_name, cv_results['p']))
             all_cv_results.append(cv_results)
 
-        plt.figure(figsize=(10,8))
         all_plot_dfs = []
         for i, (dataset, dset_cv_results) in enumerate(zip(datasets, all_cv_results)):
             dset_name = run_info[dataset]['name']
@@ -134,8 +107,8 @@ if __name__=='__main__':
             #plt.subplot(1, len(datasets), i+1)
 
         all_plot_dfs = pd.concat(all_plot_dfs)
-        all_plot_dfs.to_pickle(plot_data_path)    
-
+        all_plot_dfs.to_pickle(plot_data_path) 
+    
     sns.pointplot(x='Reference', y='r^2', data=all_plot_dfs, hue='Monkey', linewidth=50, ci='sd')
     #sns.pointplot(x='Reference', y='r^2', data=plot_df.query('`Movement Type` == "Initial"'))
 
@@ -145,10 +118,7 @@ if __name__=='__main__':
     plt.xlim([-.5,1.5])
     _,ymax = plt.ylim()
     plt.ylim([-0.1, ymax])
-    plt.title('Position Decoder')
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
-plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
-plt.savefig("../../figures/final_figures/hand_v_shoulder_target.svg")
-plt.savefig("../../figures/final_figures/numbered/5c.pdf")
+plt.savefig("../../figures/final_figures/numbered/6d.pdf")
     #plt.savefig(snakemake.output[0])

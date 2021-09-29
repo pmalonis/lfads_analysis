@@ -11,8 +11,9 @@ sys.path.insert(0, '..')
 import decode_lfads as dl
 import utils
 plt.rcParams['font.size'] = 20
+plt.rcParams['pdf.fonttype'] = 42
 
-config_path = os.path.dirname(__file__) + '/../../config.yml'
+config_path = os.path.dirname(__file__) + '../../config.yml'
 cfg = yaml.safe_load(open(config_path, 'r'))
 
 if __name__=='__main__':
@@ -23,7 +24,7 @@ if __name__=='__main__':
     params_no_co = []
     for dataset in datasets:
         params.append(open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
-        selected_kl_weight = cfg['selected_kl_weight']#run_info[dataset]['params'][params[-1]]['param_values']['kl_co_weight']
+        selected_kl_weight = run_info[dataset]['params'][params[-1]]['param_values']['kl_co_weight']
         for dset_param_hash in run_info[dataset]['params'].keys():
             dset_param_dict = run_info[dataset]['params'][dset_param_hash]['param_values']
             if dset_param_dict['co_dim'] == 0 and dset_param_dict['kl_co_weight'] == selected_kl_weight:
@@ -105,5 +106,5 @@ if __name__=='__main__':
     
     plt.gcf().tight_layout()
     plt.savefig("../../figures/final_figures/kinematic_decoding.svg")
-    plt.savefig("../../figures/final_figures/numbered/2b.svg")
+    plt.savefig("../../figures/final_figures/numbered/2b.pdf")
     plt.savefig("../../figures/final_figures/kinematic_decoding.png")

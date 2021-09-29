@@ -10,7 +10,9 @@ sys.path.insert(0, '..')
 import utils
 import timing_analysis as ta
 import seaborn as sns
-plt.rcParams['font.size'] = 20
+plt.rcParams['font.size'] = 18
+plt.rcParams['axes.spines.top'] = False
+plt.rcParams['axes.spines.right'] = False
 
 win_start = 0
 win_stop = 0.3
@@ -22,13 +24,12 @@ selection_metric = cfg['selection_metric']
 
 if __name__=='__main__':
     run_info = yaml.safe_load(open('../../lfads_file_locations.yml', 'r'))
-    datasets = run_info.keys()
-    #datasets=[list(datasets)[0]]
+    datasets = list(run_info.keys())
     params = []
-    n_inputs = cfg['selected_co_dim']
-    thresholds = [0.1, 0.2, 0.3, 0.4]
+
+    raju_thresholds = [0.05, 0.1, 0.15, 0.2]
+    other_thresholds = [0.1, 0.2, 0.3, 0.4]
     event = 'targets-not-one'
-    #thresholds = [0.4, 0.5]
     all_peak_times = {}
     for dataset in datasets:
         params.append(open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric)).read())
@@ -39,12 +40,17 @@ if __name__=='__main__':
         inputInfo_filename = '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
 
         df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
-
+        n_inputs = co.shape[2]
         #plt.figure()
         #plt.suptitle(run_info[dataset]['name'])
+        if 'raju' in dataset:
+            thresholds = raju_thresholds
+        else:
+            thresholds = other_thresholds
+
         peak_times = [[[] for thresh_idx in range(len(thresholds))] for i in range(n_inputs)]
         for thresh_idx,threshold in enumerate(thresholds):
-            peak_path = '../../data/peaks/separated_%s_%s_%s_all_thresh=%0.1f.p'%(dataset, param, event, threshold)
+            peak_path = '../../data/peaks/separated_%s_%s_%s_all_thresh=%0.4f.p'%(dataset, param, event, threshold)
             if os.path.exists(peak_path):
                 peak_df = pd.read_pickle(peak_path)
             else:
@@ -69,12 +75,23 @@ if __name__=='__main__':
 
     for dataset in datasets:
         plt.figure(figsize=(9,13))
+        dset_name = run_info[dataset]['name']
+        if 'raju' in dataset:
+            thresholds = raju_thresholds
+        else:
+            thresholds = other_thresholds
+
         colors = plt.cm.jet(np.linspace(0.5,1,len(thresholds)))
         peak_times = all_peak_times[dataset]
         for thresh_idx,threshold in enumerate(thresholds):
+            n_inputs = len(peak_times)
             for i in range(n_inputs):
                 plt.subplot(n_inputs, 1, i+1)
-                label = 'threshold = %0.1f'%threshold
+                if 'raju' in dataset:
+                    label = 'threshold = %0.2f'%threshold
+                else:
+                    label = 'threshold = %0.1f'%threshold
+
                 sns.distplot(np.concatenate(peak_times[i][thresh_idx]), 
                             hist=False, label=label, color=list(colors[thresh_idx]))
                 # sns.distplot(np.concatenate(peak_times[i][thresh_idx]), 
@@ -83,9 +100,10 @@ if __name__=='__main__':
                 plt.ylabel('Probability Density')
                 ymin, ymax  = plt.yticks()[0][[0,-1]]
                 plt.yticks([0, 0.01])
+                plt.suptitle('Monkey %s'%dset_name)
                 plt.tight_layout()
         
         #plt.savefig('../../figures/final_figures/peak_timing.svg')
         for fignum in plt.get_fignums():
             plt.figure(fignum)
-            plt.savefig('../../figures/final_figures/4b-%d.svg'%fignum)
+            plt.savefig('../../figures/final_figures/numbered/4b-%d.pdf'%fignum)

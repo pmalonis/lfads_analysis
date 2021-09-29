@@ -171,7 +171,8 @@ if __name__=='__main__':
     #fig.text(0.02, .75, 'Rate PC 1')
     #fig.text(00.02, .25, 'Rate PC 2')
     fig.set_size_inches(12,6)
-    plt.savefig('../figures/final_figures/rate_averages_correlation-means.svg')
+    #plt.savefig('../figures/final_figures/rate_averages_correlation-means.svg')
+    plt.savefig('../figures/final_figures/numbered/7d-datasets.pdf')
     #fig = plt.figure(2)
     #fig.text(0.02, .75, 'Rate PC 1')
     #fig.text(0.02, .25, 'Rate PC 2')
@@ -208,4 +209,4 @@ if __name__=='__main__':
     plt.text(xpos,ypos,
             'r = %0.2f'%(r_value), fontsize=13)
     plt.savefig('../figures/final_figures/rate_averages_correlation_with_maxima_means_all.svg')
-    plt.savefig('../../figures/final_figures/numbered/7e.svg')
+    plt.savefig('../figures/final_figures/numbered/7d-combined.pdf')

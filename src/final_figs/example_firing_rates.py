@@ -10,6 +10,8 @@ sys.path.insert(0, '..')
 import utils
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = True
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['font.sans-serif'] = "Arial"
 plt.rcParams['font.size'] = 18
 
 config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
@@ -52,5 +54,5 @@ if __name__=='__main__':
     plt.text(2.5, 925, 'Population\nFiring Rate', color=lns[1].get_color(), fontsize=16)
 
     plt.savefig('../../figures/final_figures/example_trial.svg')
-    plt.savefig('../../figures/final_figures/1c.svg')
+    plt.savefig('../../figures/final_figures/numbered/1c.pdf')
     plt.show()

@@ -15,7 +15,7 @@ from scipy.signal import savgol_filter
 from matplotlib import rcParams
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
-plt.rcParams['font.size'] = 14
+plt.rcParams['font.size'] = 18
 reload(opt)
 reload(utils)
 
@@ -80,17 +80,17 @@ if __name__=='__main__':
         fb_theta = np.arctan2(fb_y[:,1], fb_y[:,0])
         assert(nbins%2==0)
 
-        fig = plt.figure(figsize=(12,12))
+        fig = plt.figure(figsize=(12,10))
         axplot = fig.subplots(2,2) 
         bin_theta = np.pi / (nbins/2)
-        colors = sns.color_palette('husl', nbins)
+        colors = sns.color_palette('hsv', nbins+2)
+        colors = colors[:3] + colors[5:]
         t_ms = np.arange(win_start, win_stop, dt) * 1000
         fb_t_ms = np.arange(fb_win_start, fb_win_stop, dt) * 1000
 
-
         for j in range(n_co):
                                          
-            plt.suptitle('%s Inferred Input %s'%(run_info[dataset]['name'],(j+1)))
+            #plt.suptitle('%s Inferred Input %s'%(run_info[dataset]['name'],(j+1)))
             ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
             if j == 0:
                 fb_left = .82 #win_start + .8 * (win_stop-win_start)
@@ -122,9 +122,9 @@ if __name__=='__main__':
                 axplot[j,1].plot(fb_t_ms, fb_co_av, color=color)
 
             if j == 0:
-                fig.text(0.9, 0.25, 'RS Input %d'%j)
+                fig.text(0.9, 0.75, 'RS\nInput %d'%(j+1))
             else:
-                fig.text(0.9, 0.75, 'RS Input %d'%j)
+                fig.text(0.9, 0.25, 'RS\nInput %d'%(j+1))
 
             # axplot[j,0].set_yticks([-0.2, 0, 0.2])
             # axplot[j,1].set_yticks([-0.2, 0, 0.2])
@@ -134,4 +134,4 @@ if __name__=='__main__':
         #plt.tight_layout()     
         fig.subplots_adjust(right=.88)   
         plt.savefig('../figures/final_figures/%s_controller_averages_initial_corrections.svg'%(dataset))
-        plt.savefig('../figures/final_figures/numbered/7a.svg')
+        plt.savefig('../figures/final_figures/numbered/7a.pdf')

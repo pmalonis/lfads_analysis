@@ -154,58 +154,6 @@ def trial_transitions(trial_df, exclude_post_target=None, exclude_pre_target=Non
 
 #     return minima
 
-# def trial_corrections(trial_df, exclude_post_target=None, exclude_pre_target=None):
-#     '''Calculates submovement transitions from single trial, based on 
-#     speed profile
-    
-#     Parameters
-#     trial_df: single-trial dataframe
-    
-#     Returns
-#     trial_transitions: List of minima defining starts/ends of submovements, in index
-#     '''
-#     firstmove_threshold = cfg['not_correction_speed_transition_thresh']
-#     firstmove_prominence = cfg['not_correction_min_speed_prominence']
-#     firstmove_distance = cfg['not_correction_min_distance']
-
-#     threshold = cfg['correction_speed_transition_thresh']
-#     prominence = cfg['correction_min_speed_prominence']
-#     distance = cfg['correction_min_distance']
-
-#     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
-#     minima = speed_minima(x_vel, y_vel, threshold, prominence, distance)
-#     firstmove_params_minima = speed_minima(x_vel, y_vel, firstmove_threshold, firstmove_prominence, firstmove_distance)
-#     targets = trial_df.kinematic.query('hit_target')
-#     t_targets = targets.index.values
-#     t = trial_df.index.values
-#     corrections= []
-#     for i in range(len(targets)-1):
-#         target_moves = np.array([m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]])
-#         if len(target_moves) > 1: #must be more that 1 movement, if only one then not a correction
-#             target_firstmoves = [m for m in firstmove_params_minima 
-#                                  if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
-#             if len(target_firstmoves) > 0: #must be a first movement according to firstmove parameters
-#                 target_corrections = target_moves[target_moves > target_firstmoves[0]]
-#                 corrections.append(target_corrections)
-
-#     if len(corrections) > 0:
-#         minima = np.concatenate(corrections)
-#     else:
-#         minima = np.array([])
-#     if exclude_post_target is not None:
-#         #determine whether event time is in window post target
-#         event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
-#         non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
-#         minima = minima[non_post_target_events]
-    
-#     if exclude_pre_target is not None:
-#         #determine whether event time is in window post target
-#         event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
-#         non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
-#         minima = minima[non_pre_target_events]
-
-#     return minima
-
 def trial_firstmoves(trial_df, exclude_post_target=None, exclude_pre_target=None):
     '''Calculates submovement transitions from single trial, based on 
     speed profile
@@ -250,6 +198,64 @@ def trial_firstmoves(trial_df, exclude_post_target=None, exclude_pre_target=None
         minima = minima[non_pre_target_events]
 
     return minima
+
+def trial_first_accel(trial_df, exclude_post_target=None, exclude_pre_target=None):
+    '''Calculates submovement transitions from single trial, based on 
+    speed profile
+    
+    Parameters
+    trial_df: single-trial dataframe
+    
+    Returns
+    trial_transitions: List of minima defining starts/ends of submovements, in index
+    '''
+    threshold = cfg['firstmove_speed_transition_thresh']
+    prominence = cfg['firstmove_min_speed_prominence']
+    distance = cfg['firstmove_min_distance']
+
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+    speed = utils.get_speed(x_vel, y_vel)
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    idx_targets = [trial_df.index.get_loc(t_targets[i]) for i in range(len(t_targets))]
+    minima = speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets)
+
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    t = trial_df.index.values
+    firstmove = []
+    for i in range(len(targets)-1):
+        target_moves = [m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
+        if len(target_moves) > 0:
+            target_firstmove = target_moves[0]
+            p,_ = signal.find_peaks(speed[target_firstmove:]) #get peaks after firstmove 
+            if len(p) < 1:                
+                continue
+                
+            next_peak = target_firstmove + p[0]
+            #find threshold to take crossing of
+            thresh = speed[target_firstmove] + cfg['accel_thresh']*(speed[next_peak] - speed[target_firstmove])
+            # get point where threshold is reached (relative to firstmove)
+            cross_thresh = np.argmax(speed[target_firstmove:] > thresh)
+            # make relative to stat of trial
+            target_firstmove += cross_thresh
+            firstmove.append(target_firstmove)
+
+    minima = np.array(firstmove)
+    if exclude_post_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+        non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+        minima = minima[non_post_target_events]
+    
+    if exclude_pre_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+        non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[minima].index]
+        minima = minima[non_pre_target_events]
+
+    return minima
+
 
 def trial_corrections(trial_df, exclude_post_target=None, exclude_pre_target=None):
     '''Calculates submovement transitions from single trial, based on 
@@ -598,8 +604,8 @@ def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
     trial_len = len(trial_co) * dt
     targets = trial_df.loc[:trial_len].kinematic.query('hit_target')[['x', 'y']].values.T
     f, ax = plt.subplots(figsize=(10,8))
-    ax.plot(*targets[:,0], 'ko')
-    ax.plot(*targets[:,1:], 'gs')
+    ax.plot(*targets[:,0], 'ks', markersize=10)
+    ax.plot(*targets[:,1:], 'ks', markersize=10)
     xs, ys = targets[:,:-1]
     dxs, dys = np.diff(targets, axis=1)
     arrow_shorten = 1
@@ -608,23 +614,23 @@ def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
         c = (arrow_len - arrow_shorten)/arrow_len
         plt.arrow(x, y, dx*c, dy*c, width=.00001, head_width=2, length_includes_head=True, alpha=.2)
     
-    t = np.arange(len(trial_co)) * dt    
+    t = np.arange(len(trial_co)) * dt
     idx = [trial_df.index.get_loc(time, method='nearest') for time in t]
     x, y = trial_df.iloc[idx].kinematic[['x', 'y']].values.T
     cm = plt.cm.get_cmap('coolwarm')
     norm = matplotlib.colors.TwoSlopeNorm(vcenter=0, vmin=co_min, vmax=co_max)
-    plt.scatter(x, y, s=10, c=trial_co, cmap=cm, norm=norm)
+    plt.scatter(x, y, s=20, c=trial_co, cmap=cm, norm=norm)
     cb = plt.colorbar()
-    cb.set_label('Controller Value')
+    cb.set_label('Inferred Input 1 Value')
 
-def plot_abs_trajectory_co(trial_df, trial_co, co_norm, dt, co_max=3):
+def plot_abs_trajectory_co(trial_df, trial_co, dt, co_max=3):
     '''
     Plots trajectory of trial, sampled at points where controller output is recorded
 
     Parameters
     trial_df: single-trial dataframe corresponding to trial to plot
     trial_co: controller outputs for one trial (time X n_outputs)
-    co_norm: normalizing factor for controller output. can be
+    co_norm: normalizing factor for controller output.
     dt: sampling period of lfads
     co_max: maximum of colorbar scale for controller output (in units of co_norm)
     '''
@@ -643,7 +649,6 @@ def plot_abs_trajectory_co(trial_df, trial_co, co_norm, dt, co_max=3):
     
     t = np.arange(trial_co.shape[0]) * dt
     trial_co = np.copy(trial_co)
-    trial_co /= co_norm
     trial_co = np.abs(trial_co)
     trial_co = trial_co.sum(1)
     mean_co = np.mean(trial_co)
@@ -666,17 +671,18 @@ def plot_trial(trial_df, trial_co, dt, trial_firstmove_df, trial_correction_df):
     trial_co: controller outputs for one trial (time X n_outputs)
     '''
     trial_len = trial_co.shape[0] * dt
+    trial_df = trial_df.loc[:trial_len]
+    t_targets = trial_df.kinematic.query('hit_target').index.values
     #x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].loc[:trial_len].T.values
     x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].T.values
     speed = np.sqrt(x_vel**2 + y_vel**2)
     filt_speed = utils.get_speed(x_vel, y_vel)
-    t_targets = trial_df.kinematic.query('hit_target').index.values
     t = trial_df.loc[:trial_len].index.values
     t = trial_df.index.values
     lns = [] #for legend
     #transitions = trial_transitions(trial_df)
-    fm = trial_firstmove_df.index.values
-    nc = trial_correction_df.index.values
+    fm = trial_firstmove_df.loc[:trial_len].index.values
+    nc = trial_correction_df.loc[:trial_len].index.values
     
     fm = [np.argmin(np.abs(t-fm[i])) for i in range(len(fm))]
     nc = [np.argmin(np.abs(t-nc[i])) for i in range(len(nc))]
@@ -685,16 +691,22 @@ def plot_trial(trial_df, trial_co, dt, trial_firstmove_df, trial_correction_df):
     #transitions = transitions[transitions < trial_len_ms]
     plt.figure(figsize=(12,6))
     #filt_speed = get_normal_accel(x_vel, y_vel, t)
-    lns.append(plt.plot(t, speed,'g'))
+    #lns.append(plt.plot(t, speed,'g'))
     lns.append(plt.plot(t, filt_speed, 'k'))
     #plt.twinx()
     
     #fm_line = plt.plot(t[fm], filt_speed[fm],'r.',markersize=15, label='First Movement')
     #c_line = plt.plot(t[nc], filt_speed[nc],'b.',markersize=15, label='Correction')
-    fm_line = plt.plot(t[fm], filt_speed[fm],'r.',markersize=10, label='First Movement')
-    c_line = plt.plot(t[nc], filt_speed[nc],'b.',markersize=10, label='Correction')
+    fm_line = plt.plot(t[fm], filt_speed[fm],'m.',markersize=12, label='First Movement')
+    c_line = plt.plot(t[nc], filt_speed[nc],'g.',markersize=12, label='Correction')
 
-    plt.legend(handles=[fm_line[0], c_line[0]], fontsize=12)
+    
+    ymin, ymax = plt.ylim() 
+    plt.vlines(t_targets[1:], ymin, ymax)   
+    plt.text(t_targets[1]+0.02, ymax*.915, "Target 1\nAcquired", fontsize=12)
+    for i,t in enumerate(t_targets[2:]):
+        plt.text(t+0.01, ymax*.95, "Target %d"%(i+2), fontsize=12)
+    plt.legend(handles=[fm_line[0], c_line[0]], fontsize=12, loc=(.15,.9))
     plt.ylabel('Speed (mm/s)')
     plt.xlabel('Time (s)')
     # plt.twinx()
@@ -704,7 +716,6 @@ def plot_trial(trial_df, trial_co, dt, trial_firstmove_df, trial_correction_df):
     # plt.legend(lns, ['Cursor Speed', 'Controller 1', 'Controller 2'])
     # plt.ylabel('Controller Value')
     ymin, ymax = plt.ylim()
-    plt.vlines(t_targets, ymin, ymax)
     # plt.xlim([0, trial_len])
     # plt.ylim([ymin, ymax])
 

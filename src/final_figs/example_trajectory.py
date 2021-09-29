@@ -12,6 +12,7 @@ from segment_submovements import plot_trajectory_co
 import utils
 from matplotlib.patches import Rectangle,Circle
 plt.rcParams['axes.spines.top'] = True
+plt.rcParams['pdf.fonttype'] = 42
 
 config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -20,11 +21,11 @@ target_size = 10 #target size in millimeters
 cursor_size = 3
 if __name__=='__main__':
     dataset = 'rockstar'
-    example_filename = os.path.dirname(__file__) + '/../../data/intermediate/%s.p'%dataset
+    example_filename = os.path.dirname(__file__) + '../../data/intermediate/%s.p'%dataset
     example_trial = 22
-    param = open(os.path.dirname(__file__)+'/../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
+    param = open(os.path.dirname(__file__)+'../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
     
-    inputInfo_filename = os.path.dirname(__file__)+'/../../data/model_output/' + \
+    inputInfo_filename = os.path.dirname(__file__)+'../../data/model_output/' + \
                     '_'.join([dataset, 'inputInfo.mat'])
     input_info = io.loadmat(inputInfo_filename)
 
@@ -55,4 +56,4 @@ if __name__=='__main__':
     #plt.ylabel('Y (mm)')
     #plt.show()
     plt.savefig('../../figures/final_figures/example_trajectory.svg')
-    plt.savefig('../../figures/final_figures/numbered/1b.svg')
+    plt.savefig('../../figures/final_figures/numbered/1b.pdf')

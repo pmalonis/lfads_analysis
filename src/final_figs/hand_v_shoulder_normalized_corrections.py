@@ -10,7 +10,7 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RepeatedKFold, cross_val_score
-from sklearn.metrics import make_scorer
+from sklearn.metrics import make_scorer,r2_score
 import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__) +  '..')
@@ -35,14 +35,14 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
     kf = RepeatedKFold(k, r, random_state=random_state)
     references = ['hand', 'shoulder']
     out_dict = {}
-    scorer = make_scorer(opt.var_weighted_score_func)
+    scorer = make_scorer(lambda y,y_pred: r2_score(y,y_pred,multioutput='uniform_average'))
     for reference in references:
-        best_idx = output.query('~fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['mean_test_var_weighted_score'].idxmax()
+        best_idx = output.query('fit_direction & ~use_rates & reference == @reference & dataset == @dset_name')['total_test_score'].idxmax()
         model_row = output.loc[best_idx]
         preprocess_dict, model = me.get_row_params(model_row)
         X, y = get_inputs_to_model(test_peak_df, co, trial_len, 
                                                 dt, df, **preprocess_dict)
-        out_dict[reference] = cross_val_score(model, X, y, 
+        out_dict[reference] = cross_val_score(model, X, y[:,:2], 
                                                 scoring=scorer, 
                                                 cv=kf)
 
@@ -80,11 +80,11 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
 
 
 if __name__=='__main__':
-    plot_data_path = '../../data/model_output/hand_v_shoulder_inital.p'
+    plot_data_path = '../../data/model_output/hand_v_shoulder_corrections_normalized.p'
     if os.path.exists(plot_data_path):
         all_plot_dfs = pd.read_pickle(plot_data_path)
     else:
-        output_filename = "../../data/peaks/params_search_targets-not-one.csv"
+        output_filename = "../../data/peaks/params_search_corrections.csv"
             
         #output_filename = snakemake.input[0]
         #fb_output_filename = snakemake.input[1]
@@ -111,7 +111,7 @@ if __name__=='__main__':
             inputInfo_filename = '../../data/model_output/' + \
                             '_'.join([dataset, 'inputInfo.mat'])
             peak_filename = '../../data/peaks/' + \
-                        '_'.join([dataset, 'targets-not-one_test.p'])
+                        '_'.join([dataset, 'corrections_test.p'])
 
             df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
             peak_df = pd.read_pickle(peak_filename)
@@ -134,7 +134,7 @@ if __name__=='__main__':
             #plt.subplot(1, len(datasets), i+1)
 
         all_plot_dfs = pd.concat(all_plot_dfs)
-        all_plot_dfs.to_pickle(plot_data_path)    
+        all_plot_dfs.to_pickle(plot_data_path)
 
     sns.pointplot(x='Reference', y='r^2', data=all_plot_dfs, hue='Monkey', linewidth=50, ci='sd')
     #sns.pointplot(x='Reference', y='r^2', data=plot_df.query('`Movement Type` == "Initial"'))
@@ -145,10 +145,8 @@ if __name__=='__main__':
     plt.xlim([-.5,1.5])
     _,ymax = plt.ylim()
     plt.ylim([-0.1, ymax])
-    plt.title('Position Decoder')
+    plt.title('Direction Decoder')
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
-plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
-plt.savefig("../../figures/final_figures/hand_v_shoulder_target.svg")
-plt.savefig("../../figures/final_figures/numbered/5c.pdf")
+plt.savefig("../../figures/final_figures/numbered/6e.pdf")
     #plt.savefig(snakemake.output[0])

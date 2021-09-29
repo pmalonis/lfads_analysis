@@ -44,7 +44,8 @@ for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
         dt = utils.get_dt(h5file, input_info)
         trial_len = utils.get_trial_len(h5file, input_info)
 
-    fm = pd.read_pickle('../data/peaks/%s_new-firstmove_all.p'%(dataset))
+    #fm = pd.read_pickle('../data/peaks/%s_new-firstmove_all.p'%(dataset))
+    fm = pd.read_pickle('../data/peaks/%s_first-accel_all.p'%(dataset))
     c = pd.read_pickle('../data/peaks/%s_new-corrections_all.p'%(dataset))
 
     n_trials = df.index[-1][0] + 1

@@ -243,6 +243,20 @@ rule firstmove_split:
     script:
         "src/firstmove_train-test_split.py"
 
+rule first_accel_split:
+    input:
+        INTERMEDIATE_DIR + "{dataset}.p",
+        "src/first-accel_train-test_split.py",
+        #"config.yml"
+
+    output:
+        train_data = PEAK_DIR + "{dataset}_first-accel_train.p",
+        test_data = PEAK_DIR + "{dataset}_first-accel_test.p",
+        all_data = PEAK_DIR + "{dataset}_first-accel_all.p"
+
+    script:
+        "src/first-accel_train-test_split.py"
+
 rule firstmove_not_one_split:
     input:
         INTERMEDIATE_DIR + "{dataset}.p",
@@ -283,6 +297,30 @@ rule optimize_target_prediction:
         PEAK_DIR + "params_search_{event_type}.csv"
     script:
         "src/optimize_target_prediction.py"
+
+rule window_comparison: #need to change config file from above
+    input:
+        #"config.yml",
+        "src/optimize_target_prediction.py",
+        selection_files = expand_filename(PEAK_DIR + 
+        "{dataset}_selected_param_%s.txt"%config['selection_metric']),
+        targets_files = expand_filename(PEAK_DIR + 
+        "{dataset}_{event_type}_train.p")
+    output:
+        PEAK_DIR + "raju_window_comparison_{event_type}.csv"
+    script:
+        "src/raju_optimize_target_prediction.py"
+
+rule raju_target_prediction: #need to change config file from above
+    input:
+        #"config.yml",
+        "src/optimize_target_prediction.py",
+        PEAK_DIR + "/raju-M1-no-bad-trials_{event_type}_train.p"
+    output:
+        PEAK_DIR + "raju_params_search_{event_type}.csv"
+    script:
+        "src/raju_optimize_target_prediction.py"
+
 
 rule download_model:
     params:
