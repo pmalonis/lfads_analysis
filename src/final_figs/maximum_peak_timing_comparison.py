@@ -25,7 +25,7 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 
 selection_metric = cfg['selection_metric']
 
-def permutation_spread_test(samples, func, n=10000):
+def permutation_spread_test(samples, func, n=1000):
     '''Permutation test for whether value of function is 
     significantly different between two distributions
     

@@ -9,7 +9,42 @@ import utils
 import matplotlib.pyplot as plt
 import os
 import yaml
+from sklearn.utils import resample
 plt.rcParams['font.size'] = 18
+
+roc_bootstrap_repeats: 200
+background_subsample: 0.05 
+
+config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+cfg = yaml.safe_load(open(config_path, 'r'))
+
+def bootstrap_ci(background, event, n=cfg['roc_bootstrap_repeats'], 
+                                    background_p=cfg['background_subsample'],
+                                    alpha=cfg['roc_ci_alpha']):
+    '''
+    background: background controller window magnitudes
+    event: event controller window magnitudes
+    n: number of repeated resamplings to perform
+    alpha: confidence interval level
+    background_p: proportion of background in resampled set sizze 
+
+    returns
+    confidence interval of auc roc estimate
+    '''
+    dist = np.zeros(n)
+    n_samples_bg= int(len(background)*background_p)
+    for i in range(n):
+        #resample(background)
+        #resample(event)
+        background_sample = resample(background, n_samples=n_samples_bg)
+        event_sample = resample(event)
+        dist[i] = rocauc(background_sample, event_sample)
+                        
+    dist = np.sort(dist)
+    idx_lower = np.round(n*alpha/2).astype(int) - 1
+    idx_upper = np.round(n*(1-alpha/2)).astype(int)
+    
+    return dist[idx_lower], dist[idx_upper]
 
 def get_background_co(_df, corr_df, co, dt, trial_len, win_start=-0.2, win_stop=0.0):
     #_df is trial dataframe of firstmove_df
@@ -86,6 +121,13 @@ def all_rocauc(background, firstmove, corrections, maxima):
 
     return firstmove_score, corrections_score, maxima_score
 
+def all_ci(background, firstmove, corrections, maxima):
+    firstmove_ci = bootstrap_ci(background, firstmove)
+    corrections_ci = bootstrap_ci(background, corrections)
+    maxima_ci = bootstrap_ci(background, maxima)
+
+    return firstmove_ci, corrections_ci, maxima_ci
+
 def co_power_ecdf(co, win):
     co_power = [np.abs(co[trial, i:i+win, :]).sum()
         for i in range(0, co.shape[1]-win)
@@ -112,15 +154,17 @@ if __name__=='__main__':
     cfg = yaml.safe_load(open(config_path, 'r'))
 
     run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+    datasets = list(run_info.keys())
     win_lims = [literal_eval(w) for w in cfg['target_auc_win_lims']]
     win_centers = [1000*(start + (stop-start)/2) for start,stop in win_lims]
     all_dataset_scores = {}
+    all_dataset_ci = {}
     all_background = {}
     all_firstmove = {}
     all_corrections = {}
     all_maxima = {}
     all_controllers = []
-    for dataset in run_info.keys():
+    for dataset in datasets:
         param = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
     
         data = pd.read_pickle('../data/intermediate/%s.p'%dataset)                  
@@ -139,16 +183,20 @@ if __name__=='__main__':
         all_corrections[run_info[dataset]['name']] = []
         all_maxima[run_info[dataset]['name']] = []
         dataset_scores = []
+        dataset_ci = []
         for win_start, win_stop in win_lims:
             background, firstmove, corrections, maxima = all_event_data(data, firstmove_df, corr_df, maxima_df, co, dt, trial_len, win_start, win_stop)
             win_score = all_rocauc(background, firstmove, corrections, maxima)
+            win_ci = all_ci(background, firstmove, corrections, maxima)
             dataset_scores.append(win_score)
+            dataset_ci.append(win_ci)
             all_background[run_info[dataset]['name']].append(background)
             all_firstmove[run_info[dataset]['name']].append(firstmove)
             all_corrections[run_info[dataset]['name']].append(corrections)
             all_maxima[run_info[dataset]['name']].append(maxima)
 
         all_dataset_scores[run_info[dataset]['name']] = np.array(dataset_scores)
+        all_dataset_ci[run_info[dataset]['name']] = np.array(dataset_ci)
         all_controllers.append(co)
 
     plot_idx = 0
@@ -158,7 +206,10 @@ if __name__=='__main__':
         dset_names = [d['name'] for d in run_info.values()]
         for i, dset_name in enumerate(dset_names):
             plt.subplot(1, 3, plot_idx+1)
+            win_rocs = np.array(all_dataset_scores[dset_name][:,event_idx])
+            win_cis = np.array(all_dataset_ci[dset_name][:,event_idx])
             plt.plot(win_centers, all_dataset_scores[dset_name][:,event_idx])
+            plt.fill_between(win_centers, win_cis[:,0], win_cis[:,1], alpha=0.2)
             print('%s peak ROC: %f'%(dset_name, np.max(all_dataset_scores[dset_name][:,event_idx])))
             if i == 0:
                 plt.ylabel("ROC AUC")

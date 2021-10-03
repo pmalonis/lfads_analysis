@@ -15,7 +15,8 @@ if __name__=='__main__':
     run_info = yaml.safe_load(open('../../lfads_file_locations.yml', 'r'))
     datasets = run_info.keys()
     params = []
-    win = .2
+    win_start = .0
+    win_stop = .2
     for dataset in datasets:
         param = open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read()
         target_df = pd.read_pickle(os.path.dirname(__file__) + '/../../data/peaks/%s_targets_all.p'%dataset)
@@ -40,8 +41,8 @@ if __name__=='__main__':
         assert(ntrials == target_df.index[-1][0] + 1)
         #assert(ntrials == corrections_df.index[-1][0] + 1)
         for i in range(ntrials):
-            t_targets = target_df.loc[i].index.values
-            t_firstmoves = firstmove_df.loc[i].index.values
+            t_targets = target_df.loc[i].loc[:trial_len].index.values
+            t_firstmoves = firstmove_df.loc[i].loc[:trial_len].index.values
             t_targets = np.array([t_targets[t_targets < t][-1] 
                                     for t in t_firstmoves])
             if i in corrections_df.index:
@@ -50,16 +51,19 @@ if __name__=='__main__':
                 t_corrections = np.array([])
             for j in range(nsamples):
                 t = dt*j
-                if np.any((t - t_targets > 0) & (t - t_targets < win)): #within win seconds after target
-                    target_power += (np.abs(co[i,j,:])).sum(0) #(co[i,j,:]**2).sum(0)
+                if np.any((t - t_targets > win_start) & (t - t_targets < win_stop)): #within win seconds after target
+                    #target_power += (np.abs(co[i,j,:])).sum(0) #(co[i,j,:]**2).sum(0)
+                    target_power += np.linalg.norm(co[i,j,:]) #(co[i,j,:]**2).sum(0)
                     n_target_samples += 1
-                elif np.any((t_corrections - t > 0) & (t_corrections - t < win)): #within win seconds before correction
-                    corrections_power += (np.abs(co[i,j,:])).sum(0)#(co[i,j,:]**2).sum(0)
+                elif np.any((t_corrections - t > win_start) & (t_corrections - t < win_stop)): #within win seconds before correction
+                    #corrections_power += (np.abs(co[i,j,:])).sum(0)#(co[i,j,:]**2).sum(0)
+                    corrections_power += np.linalg.norm(co[i,j,:])#(co[i,j,:]**2).sum(0)
                     n_correction_samples += 1
                     
-        total_samples = co.size
+        total_samples = co[:,:,0].size
         #total_power = np.sum(co**2)
-        total_power = np.sum(np.abs(co))
+        #total_power = np.sum(np.abs(co))
+        total_power = np.sum(np.linalg.norm(co, axis=2))
         target_power_p = target_power/total_power
         correction_power_p = corrections_power/total_power
         target_time_p = n_target_samples/total_samples

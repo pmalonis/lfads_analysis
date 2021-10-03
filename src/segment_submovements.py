@@ -199,6 +199,54 @@ def trial_firstmoves(trial_df, exclude_post_target=None, exclude_pre_target=None
 
     return minima
 
+def trial_maxima(trial_df, exclude_post_target=None, exclude_pre_target=None):
+    '''Calculates submovement transitions from single trial, based on 
+    speed profile
+    
+    Parameters
+    trial_df: single-trial dataframe
+    
+    Returns
+    trial_transitions: List of minima defining starts/ends of submovements, in index
+    '''
+    threshold = cfg['firstmove_speed_transition_thresh']
+    prominence = cfg['firstmove_min_speed_prominence']
+    distance = cfg['firstmove_min_distance']
+
+    x_vel, y_vel = trial_df.kinematic[['x_vel', 'y_vel']].values.T
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    idx_targets = [trial_df.index.get_loc(t_targets[i]) for i in range(len(t_targets))]
+    minima = speed_minima(x_vel, y_vel, threshold, prominence, distance, idx_targets)
+    speed = utils.get_speed(x_vel, y_vel)
+    targets = trial_df.kinematic.query('hit_target')
+    t_targets = targets.index.values
+    t = trial_df.index.values
+    maxima = []
+    for i in range(len(targets)-1):
+        target_moves = [m for m in minima if t[m] > t_targets[i] and t[m] < t_targets[i+1]]
+        if len(target_moves) > 0:
+            target_firstmove = target_moves[0]
+            p,_ = signal.find_peaks(speed[target_firstmove:])
+            if len(p) > 0:
+                maximum = target_firstmove + p[0]
+                maxima.append(maximum)
+
+    maxima = np.array(maxima)
+    if exclude_post_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((x - targets.index < exclude_post_target) & (x - targets.index >= 0))
+        non_post_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
+        maxima = maxima[non_post_target_events]
+    
+    if exclude_pre_target is not None:
+        #determine whether event time is in window post target
+        event_filter = lambda x: not np.any((targets.index - x < exclude_pre_target) & (targets.index - x >= 0))
+        non_pre_target_events = [event_filter(ev) for ev in trial_df.iloc[maxima].index]
+        maxima = maxima[non_pre_target_events]
+
+    return maxima
+
 def trial_first_accel(trial_df, exclude_post_target=None, exclude_pre_target=None):
     '''Calculates submovement transitions from single trial, based on 
     speed profile

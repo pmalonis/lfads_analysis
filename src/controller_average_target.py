@@ -99,11 +99,13 @@ if __name__=='__main__':
             for i in range(-nbins//2, nbins//2):
                 min_theta = i * bin_theta
                 max_theta = (i+1) * bin_theta
-                co_av = X[:,j*win_size:(j+1)*win_size][(theta > min_theta) & (theta <= max_theta)].mean(0)
-
+                direction_co = X[:,j*win_size:(j+1)*win_size][(theta > min_theta) & (theta <= max_theta)]
+                co_av = direction_co.mean(0)
+                co_sem = direction_co.std(0)/np.sqrt(direction_co.shape[0])
                 color = colors[i+nbins//2]
                 plt.sca(axes[j])
                 plt.plot(t_ms, co_av, color=color)
+                plt.fill_between(t_ms, co_av-co_sem, co_av+co_sem, color=color, alpha=0.2)
 
                 if j == n_co - 1:
                     plt.xlabel('Time From Target Presentation (ms)')

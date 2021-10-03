@@ -53,7 +53,6 @@ if __name__=='__main__':
             co = h5file['controller_outputs'][:]
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
-
         
         peak_df_train = pd.read_pickle('../data/peaks/%s_firstmove_train.p'%(dataset))
         peak_df_test = pd.read_pickle('../data/peaks/%s_firstmove_test.p'%(dataset))

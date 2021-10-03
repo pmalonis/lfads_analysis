@@ -58,7 +58,7 @@ def plot_average(event_name, win_start, win_stop, event_label,
         if dataset == "firstmove":
             plt.twiny()
         #co = savgol_filter(co, 11, 2, axis=1)
-        co = zscore(co, axis=(0,1))
+        co = np.sum(np.abs(co), axis=2, keepdims=True)
         #co = np.abs(co).sum(2, keepdims=True)
         n_co = co.shape[2]
         peak_df_train = pd.read_pickle('../data/peaks/%s_%s_train.p'%(dataset, event_name))
@@ -78,12 +78,15 @@ def plot_average(event_name, win_start, win_stop, event_label,
         bin_theta = np.pi / (nbins/2)
         colors = sns.color_palette('hls', nbins)
         t_ms = np.arange(win_start, win_stop, dt) * 1000
-        abs_av = np.mean(np.abs(co).sum(2))
+
+        # abs_av = np.mean(np.abs(co).sum(2))
         
-        co_mag_sum = np.zeros(win_size)
-        for j in range(n_co):
-            co_mag_sum += np.sum(np.abs(X[:,j*win_size:(j+1)*win_size]), axis=0)
-            co_mag_av = co_mag_sum/X.shape[0] - abs_av
+        # co_mag_sum = np.zeros(win_size)
+        # for j in range(n_co):
+        #     co_mag_sum += np.sum(np.abs(X[:,j*win_size:(j+1)*win_size]), axis=0)
+        #     co_mag_av = co_mag_sum/X.shape[0] - abs_av
+        co_mag_av = X.mean(0) - co.mean()
+        co_mag_sem = X.std(0)/np.sqrt(X.shape[0])
 
         if axes is None:
             plt.subplot(1, 3, dset_idx + 1)
@@ -94,6 +97,7 @@ def plot_average(event_name, win_start, win_stop, event_label,
                 plt.sca(axes)
     
         plt.plot(t_ms, co_mag_av)
+        plt.fill_between(t_ms, co_mag_av-co_mag_sem, co_mag_av+co_mag_sem, alpha=0.2)
         width,_,_,_ = peak_widths(co_mag_av, [np.argmax(co_mag_av)])
         dset_name = run_info[dataset]['name']
         dset_names.append(dset_name)
@@ -101,7 +105,7 @@ def plot_average(event_name, win_start, win_stop, event_label,
         #plt.title("Monkey %s"%dset_name)
         if label_plot == True:
             if dset_idx == 0:
-                plt.ylabel('Controller Magnitude (Z-Score)')
+                plt.ylabel('Controller Magnitude (a.u.)')
 
         plt.xticks([0, 100, 200])
         # if 'raju' in dataset:

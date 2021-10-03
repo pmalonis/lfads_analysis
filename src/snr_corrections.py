@@ -9,6 +9,7 @@ import utils
 import matplotlib.pyplot as plt
 import os
 import yaml
+from snr_targets import bootstrap_ci, all_ci
 plt.rcParams['font.size'] = 18
 
 def get_background_co(_df, corr_df, co, dt, trial_len, win_start=-0.2, win_stop=0.0):
@@ -108,28 +109,29 @@ def combined_dataset_score(backgrounds, events, controllers, win):
     return rocauc(np.concatenate(p_background), np.concatenate(p_event))
 
 if __name__=='__main__':
-    config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+    config_path = os.path.join('../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
 
-    run_info = yaml.safe_load(open(os.path.dirname(__file__) + '../lfads_file_locations.yml', 'r'))
+    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
     win_lims = [literal_eval(w) for w in cfg['movement_auc_win_lims']]
     win_centers = [1000*(start + (stop-start)/2) for start,stop in win_lims]
     all_dataset_scores = {}
+    all_dataset_ci = {}
     all_background = {}
     all_firstmove = {}
     all_corrections = {}
     all_maxima = {}
     all_controllers = []
     for dataset in run_info.keys():
-        param = open(os.path.dirname(__file__) + '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
+        param = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
     
-        data = pd.read_pickle(os.path.dirname(__file__) + '../data/intermediate/%s.p'%dataset)                  
-        firstmove_df = pd.read_pickle(os.path.dirname(__file__) + '../data/peaks/%s_firstmove_all.p'%dataset)
-        corr_df = pd.read_pickle(os.path.dirname(__file__) + '../data/peaks/%s_corrections_all.p'%dataset)
-        maxima_df = pd.read_pickle(os.path.dirname(__file__) + '../data/peaks/%s_maxima_all.p'%dataset)
-        input_info = io.loadmat(os.path.dirname(__file__) + '../data/model_output/%s_inputInfo.mat'%dataset)
+        data = pd.read_pickle('../data/intermediate/%s.p'%dataset)                  
+        firstmove_df = pd.read_pickle('../data/peaks/%s_firstmove_all.p'%dataset)
+        corr_df = pd.read_pickle('../data/peaks/%s_corrections_all.p'%dataset)
+        maxima_df = pd.read_pickle('../data/peaks/%s_maxima_all.p'%dataset)
+        input_info = io.loadmat('../data/model_output/%s_inputInfo.mat'%dataset)
         
-        with h5py.File(os.path.dirname(__file__) + '../data/model_output/%s_%s_all.h5'%(dataset,param),'r') as h5file:
+        with h5py.File('../data/model_output/%s_%s_all.h5'%(dataset,param),'r') as h5file:
             co = h5file['controller_outputs'][:]
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
@@ -139,16 +141,20 @@ if __name__=='__main__':
         all_corrections[run_info[dataset]['name']] = []
         all_maxima[run_info[dataset]['name']] = []
         dataset_scores = []
+        dataset_ci = []
         for win_start, win_stop in win_lims:
             background, firstmove, corrections, maxima = all_event_data(data, firstmove_df, corr_df, maxima_df, co, dt, trial_len, win_start, win_stop)
             win_score = all_rocauc(background, firstmove, corrections, maxima)
+            win_ci = all_ci(background, firstmove, corrections, maxima)
             dataset_scores.append(win_score)
+            dataset_ci.append(win_ci)
             all_background[run_info[dataset]['name']].append(background)
             all_firstmove[run_info[dataset]['name']].append(firstmove)
             all_corrections[run_info[dataset]['name']].append(corrections)
             all_maxima[run_info[dataset]['name']].append(maxima)
 
         all_dataset_scores[run_info[dataset]['name']] = np.array(dataset_scores)
+        all_dataset_ci[run_info[dataset]['name']] = np.array(dataset_ci)
         all_controllers.append(co)
 
     plot_idx = 0
@@ -159,6 +165,8 @@ if __name__=='__main__':
         for i, dset_name in enumerate(dset_names):
             plt.subplot(2, 3, plot_idx+1)
             plt.plot(win_centers, all_dataset_scores[dset_name][:,event_idx])
+            win_cis = np.array(all_dataset_ci[dset_name][:,event_idx])
+            plt.fill_between(win_centers, win_cis[:,0], win_cis[:,1], alpha=0.2)
             plt.plot(win_centers, np.ones_like(win_centers)*0.5, 'k')
             plt.ylim([0.2, 0.9])
             if plot_idx < 3:
@@ -183,7 +191,7 @@ if __name__=='__main__':
     plt.subplots_adjust(left=.1,right=.75)
     #fig.savefig(snakemake.output.firstmove_corrections)
     fig.savefig('auc_corrections_firstmove.svg')
-    fig.savefig('../figures/final_figures/numbered/6c.pdf')
+    fig.savefig('../figures/final_figures/numbered/6d.pdf')
 
     # combined_scores = []
     # for win_idx,(win_start, win_stop) in enumerate(win_lims):

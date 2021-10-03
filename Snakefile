@@ -211,8 +211,9 @@ rule random_split:
 
     output:
         train_data = PEAK_DIR + "{dataset}_random_train.p",
-        test_data = PEAK_DIR + "{dataset}_random_test.p"
-
+        test_data = PEAK_DIR + "{dataset}_random_test.p",
+        all_data = PEAK_DIR + "{dataset}_random_all.p"
+    
     script:
         "src/random_train-test_split.py"
 

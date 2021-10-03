@@ -112,14 +112,21 @@ if __name__=='__main__':
             for i in range(-nbins//2, nbins//2):
                 min_theta = i * bin_theta
                 max_theta = (i+1) * bin_theta
-                co_av = X[:,j*win_size:(j+1)*win_size][(theta > min_theta) & (theta <= max_theta)].mean(0)
-                fb_co_av = fb_X[:,j*fb_win_size:(j+1)*fb_win_size][(fb_theta > min_theta) & (fb_theta <= max_theta)].mean(0) 
+                direction_co = X[:,j*win_size:(j+1)*win_size][(theta > min_theta) & (theta <= max_theta)]
+                direction_fb_co = fb_X[:,j*fb_win_size:(j+1)*fb_win_size][(fb_theta > min_theta) & (fb_theta <= max_theta)]
+                co_av = direction_co.mean(0)
+                fb_co_av = direction_fb_co.mean(0)
+                co_sem = direction_co.std(0)/np.sqrt(direction_co.shape[0])
+                fb_co_sem = direction_fb_co.std(0)/np.sqrt(direction_fb_co.shape[0])
 
                 color = colors[i+nbins//2]
                 fb_inset.hist([(i+0.5) * bin_theta], [min_theta, max_theta], color=color)
         
                 axplot[j,0].plot(t_ms, co_av, color=color)
                 axplot[j,1].plot(fb_t_ms, fb_co_av, color=color)
+
+                axplot[j,0].fill_between(t_ms, co_av-co_sem, co_av+co_sem, color=color, alpha=0.2)
+                axplot[j,1].fill_between(fb_t_ms, fb_co_av-fb_co_sem, fb_co_av+fb_co_sem, color=color, alpha=0.2)
 
             if j == 0:
                 fig.text(0.9, 0.75, 'RS\nInput %d'%(j+1))

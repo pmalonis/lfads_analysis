@@ -148,5 +148,5 @@ if __name__=='__main__':
     plt.title('Magnititude Decoder')
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
-plt.savefig("../../figures/final_figures/numbered/6f.pdf")
+plt.savefig("../../figures/final_figures/numbered/6g.pdf")
     #plt.savefig(snakemake.output[0])

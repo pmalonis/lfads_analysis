@@ -115,10 +115,11 @@ if __name__=='__main__':
     #plt.errorbar([0,1], [hand_score.values[0], shoulder_score.values[0]], [hand_std.values[0], shoulder_std.values[0]], color=colors[0], linewidth=3)
     #plt.title("Monkey " + dset_name)
     #plt.ylim([-0.0,0.7])
+    plt.title('Position Decoder')
     plt.xlim([-.5,1.5])
     _,ymax = plt.ylim()
     plt.ylim([-0.1, ymax])
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
-plt.savefig("../../figures/final_figures/numbered/6d.pdf")
+plt.savefig("../../figures/final_figures/numbered/6e.pdf")
     #plt.savefig(snakemake.output[0])

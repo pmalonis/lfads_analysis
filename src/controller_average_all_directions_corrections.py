@@ -58,7 +58,7 @@ def plot_average(event_name, win_start, win_stop, event_label,
         if dataset == "firstmove":
             plt.twiny()
         #co = savgol_filter(co, 11, 2, axis=1)
-        co = zscore(co, axis=(0,1))
+        co = np.sum(np.abs(co), axis=2, keepdims=True)
         #co = np.abs(co).sum(2, keepdims=True)
         n_co = co.shape[2]
         peak_df_train = pd.read_pickle('../data/peaks/%s_%s_train.p'%(dataset, event_name))
@@ -78,13 +78,17 @@ def plot_average(event_name, win_start, win_stop, event_label,
         bin_theta = np.pi / (nbins/2)
         colors = sns.color_palette('hls', nbins)
         t_ms = np.arange(win_start, win_stop, dt) * 1000
-        abs_av = np.mean(np.abs(co).sum(2))
-        
-        co_mag_sum = np.zeros(win_size)
-        for j in range(n_co):
-            co_mag_sum += np.sum(np.abs(X[:,j*win_size:(j+1)*win_size]), axis=0)
-            co_mag_av = co_mag_sum/X.shape[0] - abs_av
 
+        # abs_av = np.mean(np.abs(co).sum(2))
+        
+        # co_mag_sum = np.zeros(win_size)
+        # for j in range(n_co):
+        #     co_mag_sum += np.sum(np.abs(X[:,j*win_size:(j+1)*win_size]), axis=0)
+        #     co_mag_av = co_mag_sum/X.shape[0] - abs_av
+        co_mag_av = X.mean(0) - co.mean()
+        co_mag_sem = X.std(0)/np.sqrt(X.shape[0])
+
+        print('%s: %f ms'%(dataset, t_ms[np.argmax(co_mag_av)]))
         if axes is None:
             plt.subplot(1, 3, dset_idx + 1)
         else:
@@ -92,8 +96,9 @@ def plot_average(event_name, win_start, win_stop, event_label,
                 plt.sca(axes[dset_idx])
             else:
                 plt.sca(axes)
-        
+    
         plt.plot(t_ms, co_mag_av)
+        plt.fill_between(t_ms, co_mag_av-co_mag_sem, co_mag_av+co_mag_sem, alpha=0.2)
         width,_,_,_ = peak_widths(co_mag_av, [np.argmax(co_mag_av)])
         dset_name = run_info[dataset]['name']
         dset_names.append(dset_name)
@@ -101,10 +106,9 @@ def plot_average(event_name, win_start, win_stop, event_label,
         #plt.title("Monkey %s"%dset_name)
         if label_plot == True:
             if dset_idx == 0:
-                plt.ylabel('Controller Magnitude (Z-Score)')
+                plt.ylabel('Controller Magnitude (a.u.)')
 
-        print("%s Peak: %f"%(dset_name,t_ms[np.argmax(co_mag_av)]))
-        plt.xticks([0, 100, 200])
+        plt.xticks([-400, -200, 0])
         # if 'raju' in dataset:
         #     plt.yticks([0, 0.2, 0.4])
         # else:
@@ -138,7 +142,7 @@ if __name__=='__main__':
             win_stop = 0.3
         else:
             win_start = -0.4
-            win_stop = 0
+            win_stop = 0.1
 
         width_df = plot_average(event_name, win_start, win_stop, event_label, axes=axes)
         if event_name in ["targets-not-one", "firstmove"]:
@@ -149,7 +153,7 @@ if __name__=='__main__':
         #plt.locator_params(num_ticks=4)
 
     plt.savefig('../figures/final_figures/co_average_all_dir_%s.svg'%event_name)
-    #plt.savefig('../figures/final_figures/numbered/4a.pdf')
+    plt.savefig('../figures/final_figures/numbered/6c.pdf')
     # plot_df = pd.concat(width_dfs)
     # sns.pointplot(data=plot_df, x='Reference Event', y='Peak Width (ms)', hue='Dataset')
     # plt.savefig('../figures/final_figures/co_av_widths.svg')

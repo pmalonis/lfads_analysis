@@ -24,6 +24,7 @@ reload(ta)
 
 train_filename = snakemake.output.train_data
 test_filename = snakemake.output.test_data
+all_filename = snakemake.output.all_data
 data_filename = snakemake.input[0]
 
 random_state = 1027
@@ -96,15 +97,16 @@ def get_random(_df, target_df, data):
     return rand_trial_df
 
 def split_df(df):
-    transition_df = ss.dataset_events(df, ss.trial_transitions, exclude_post_target=0,exclude_pre_target=0)
     target_df = df.kinematic.query('hit_target')
-    firstmove_df = transition_df.groupby('trial').apply(lambda _df: get_firstmove(_df, target_df, df))
-    firstmove_df = firstmove_df.groupby('trial').apply(lambda trial: get_next_target(trial, df))
+    transition_df = ss.dataset_events(df, ss.trial_firstmoves)#, exclude_post_target=0,exclude_pre_target=0)
+    firstmove_df = transition_df.groupby('trial').apply(lambda trial: get_next_target(trial, df))
+    firstmove_df.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].iloc[1:])
     rand_df = firstmove_df.groupby('trial').apply(lambda _df: get_random(_df, target_df, df))
     df_train, df_test = train_test_split(rand_df, test_size=train_test_ratio, random_state=random_state)
     df_train, df_test = (df_train.sort_index(), df_test.sort_index())
     df_train.to_pickle(train_filename)
     df_test.to_pickle(test_filename)
+    rand_df.to_pickle(all_filename)
 
     return df_train, df_test
 

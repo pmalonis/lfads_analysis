@@ -13,7 +13,7 @@ import utils
 plt.rcParams['font.size'] = 20
 plt.rcParams['pdf.fonttype'] = 42
 
-config_path = os.path.dirname(__file__) + '../../config.yml'
+config_path = '../../config.yml'
 cfg = yaml.safe_load(open(config_path, 'r'))
 
 if __name__=='__main__':
