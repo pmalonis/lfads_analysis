@@ -5,6 +5,7 @@ import seaborn as sns
 import optimize_target_prediction as opt
 import feedback_optimize_target_prediction as fotp
 import utils
+from scipy.signal import peak_widths
 from scipy.stats import zscore
 from scipy.signal import peak_widths
 from importlib import reload
