@@ -27,6 +27,8 @@ if __name__=='__main__':
     datasets = list(run_info.keys())
     example_filenames = ['../../data/intermediate/%s.p'%dataset for dataset in datasets]
     example_trials = [234, 43, 121]
+    example_filenames = [example_filenames[0]]
+    example_trials = [45]
     for idx, (example_filename, example_trial) in enumerate(zip(example_filenames, example_trials)):
         df = pd.read_pickle(example_filename)
         trial_df = df.loc[example_trial].loc[:4]

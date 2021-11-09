@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
+plt.rcParams['axes.spines.top'] = True
+plt.rcParams['axes.spines.right'] = True
 from matplotlib import animation
 from scipy import io
 import h5py
@@ -33,15 +35,12 @@ def update_target_pandas(trial_df, t):
 
     hit_target_idx = np.where(t_targets - t > 0)[0][0]
     t_next_target = t_targets[hit_target_idx]
-    try:
-        idx = np.argmin(np.abs(t_next_target - time_vec))
-    except:
-        import pdb;pdb.set_trace()
+    idx = np.argmin(np.abs(t_next_target - time_vec))
     target_pos = (x[idx], y[idx])
     return hit_target_idx, target_pos
 
 #TODO make scrolling plot optional
-def animate_trial_pandas(trial_df, scroll_data, scroll_dt, title='', fps=fps):
+def animate_trial_pandas(trial_df, scroll_data, scroll_dt, scroll_plot=True, title='', fps=fps):
     '''Creates matplotlib animation of data for single trial. The animation
     shows the cursor position over time as a dot, and the target positions as a square. 
     in addition, a scrolling plot of any variable is also plotted
@@ -152,6 +151,88 @@ def animate_trial_pandas(trial_df, scroll_data, scroll_dt, title='', fps=fps):
     anim = animation.FuncAnimation(fig, animate, frames=frames, 
                                     init_func=init, blit=True)
 
+    return anim, frames
+
+def animate_trial_pandas_no_scroll(trial_df, title='', fps=fps):
+    '''Creates matplotlib animation of data for single trial. The animation
+    shows the cursor position over time as a dot, and the target positions as a square. 
+    in addition, a scrolling plot of any variable is also plotted
+    
+    Parameters
+    mat_data:  data dictionary originating from raw data .mat file
+    trial_index: index of trial in mat_data['cpl_st_trial_rew'] to use
+    scroll_data: Data to include in scrolling plot. Each row represents a different time series
+    that will be included in the scrolling plot
+    variable_dt: Sampling time of the scrolled data
+    title: Title to display on animation from kinematics
+    '''
+
+    trial_t = trial_df.index.values
+    t_targets = trial_df.kinematic.query('hit_target').index.values[1:]
+    print(t_targets)
+    trial_len = t_targets[-1]
+    t_start = 0
+    t_end = t_start + trial_len
+    fig, ax = plt.subplots(1, 1, figsize=(5,5))
+
+    xmin = trial_df.kinematic['x'].min() - 5
+    xmax = trial_df.kinematic['x'].max() + 5
+    ymin = trial_df.kinematic['y'].min() - 5
+    ymax = trial_df.kinematic['y'].max() + 5
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title(title)
+    cursor_ln, = ax.plot([], [], 'r.', markersize=8)
+    target_ln, = ax.plot([], [], marker='s', color='b', markersize=8)
+
+    global target_pos, hit_target_idx, endmv_idx, st_trial_idx
+    hit_target_idx, target_pos = update_target_pandas(trial_df, t_start)
+
+    def init():
+        cursor_ln.set_data(trial_df.kinematic['x'].loc[0:].iloc[0], trial_df.kinematic['x'].loc[0:].iloc[0])
+        target_ln.set_data(trial_df.kinematic['x'].loc[t_targets[0]], trial_df.kinematic['x'].loc[t_targets[0]])
+        return cursor_ln, target_ln
+
+    def animate(t):
+        '''Animates kinematic frame at time t by plotting cursor position and, if t
+        is a time during a trial, the target position'''
+
+        global target_pos, hit_target_idx, endmv_idx, st_trial_idx
+
+        # plotting cursor
+        time_vec = trial_df.index.values
+        x = trial_df.kinematic['x'].values
+        y = trial_df.kinematic['y'].values
+
+        if 0 <= t < np.max(time_vec):
+            i = np.argmin(np.abs(t - time_vec))
+            cursor_ln.set_data(x[i], y[i])
+        else:
+            raise ValueError("t out of range of experiment time")
+
+        # # plotting target
+        # if np.sum(target_pos):
+        #     target_visible = True
+        # else:
+        #     target_visible = False
+
+        # if target_visible:
+        if t > t_targets[hit_target_idx]: #if target has been hit
+            print(t)
+            # sets conditions for end of trial, which depends on whether
+            # the current trial is the last one
+
+            hit_target_idx, target_pos = update_target_pandas(trial_df, t)
+
+        target_ln.set_data(*target_pos)
+        return (cursor_ln, target_ln)
+
+    frames = np.arange(t_start, t_end, 1./fps)
+    anim = animation.FuncAnimation(fig, animate, frames=frames, 
+                                    init_func=init, blit=True)
+    print('asdf')
     return anim, frames
 
 #TODO make scrolling plot optional

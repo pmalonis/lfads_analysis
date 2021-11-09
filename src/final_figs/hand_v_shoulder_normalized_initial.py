@@ -13,7 +13,7 @@ from sklearn.model_selection import RepeatedKFold, cross_val_score
 from sklearn.metrics import make_scorer,r2_score
 import os
 import sys
-sys.path.insert(0, os.path.dirname(__file__) +  '..')
+sys.path.insert(0, '..')
 import utils
 from optimize_target_prediction import get_inputs_to_model
 import optimize_target_prediction as opt

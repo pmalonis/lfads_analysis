@@ -100,6 +100,7 @@ if __name__=='__main__':
                 plt.ylabel('Probability Density')
                 ymin, ymax  = plt.yticks()[0][[0,-1]]
                 plt.yticks([0, 0.01])
+                plt.xticks([0, 50, 150, 250, 350])
                 plt.suptitle('Monkey %s'%dset_name)
                 plt.tight_layout()
         

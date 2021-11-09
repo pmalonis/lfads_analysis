@@ -651,7 +651,7 @@ def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
     '''
     trial_len = len(trial_co) * dt
     targets = trial_df.loc[:trial_len].kinematic.query('hit_target')[['x', 'y']].values.T
-    f, ax = plt.subplots(figsize=(10,8))
+    f, ax = plt.subplots(figsize=(5,4))
     ax.plot(*targets[:,0], 'ks', markersize=10)
     ax.plot(*targets[:,1:], 'ks', markersize=10)
     xs, ys = targets[:,:-1]
@@ -660,7 +660,7 @@ def plot_trajectory_co(trial_df, trial_co, dt, co_min=-1, co_max=1):
     for x, y, dx, dy in zip(xs, ys, dxs, dys):
         arrow_len = np.linalg.norm([dx, dy])
         c = (arrow_len - arrow_shorten)/arrow_len
-        plt.arrow(x, y, dx*c, dy*c, width=.00001, head_width=2, length_includes_head=True, alpha=.2)
+        plt.arrow(x, y, dx*c, dy*c, width=.00001, head_width=2, length_includes_head=True, alpha=.2, linewidth=2)
     
     t = np.arange(len(trial_co)) * dt
     idx = [trial_df.index.get_loc(time, method='nearest') for time in t]

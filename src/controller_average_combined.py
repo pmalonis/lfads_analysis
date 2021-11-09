@@ -31,9 +31,13 @@ for dataset in run_info.keys():
     params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
 
 nbins = 12
-fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
-fb_win_stop = 0.05 #0.3#0.1#cfg['post_target_win_stop']
-win_start = -0.25
+# fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
+# fb_win_stop = 0.05 #0.3#0.1#cfg['post_target_win_stop']
+# win_start = -0.25
+# win_stop = 0.0
+fb_win_start = -0.35#0.00#-0.1#cfg['post_target_win_start']
+fb_win_stop = 0.0 #0.3#0.1#cfg['post_target_win_stop']
+win_start = -0.3
 win_stop = 0.0
 
 lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])

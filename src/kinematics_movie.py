@@ -1,21 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
+plt.rcParams['axes.spines.top'] = True
+plt.rcParams['axes.spines.right'] = True
 from matplotlib import animation
 from scipy import io
 
-t_start = 85
-t_end = 120#5457
-filename = '../data/raw/rockstar.mat'
+t_start = 361.52
+t_end = 364.84
+filename = '../data/raw/mack_edited.mat'
 fps = 50 #frame rate of saved animation
 kinematic_fs = 500 #frame rame of kinematic data
 data = io.loadmat(filename)
 fig, ax = plt.subplots(figsize=(8,6))
 
-ax.set_xlim(-100, 100)
+ax.set_xlim(-250, 100)
 ax.set_ylim(100, 300)
 cursor_ln, = ax.plot([], [], 'b.', markersize=8)
-target_ln, = ax.plot([], [], marker='s', color='r', markersize=8)
+target_ln, = ax.plot([], [], marker='s', color='r', markersize=50)
 #target_ln, = ax.plot([], [], 'r.')
 
 target_pos = ([], [])
@@ -93,4 +95,4 @@ if __name__=='__main__':
     ax.set_yticks([])
 
     FFWriter = animation.FFMpegWriter(fps=50, extra_args=['-vcodec', 'libx264'])
-    anim.save('/home/pmalonis/presentation_clip.mp4', writer=FFWriter)
+    anim.save('../figures/presentation_clip.mp4', writer=FFWriter)

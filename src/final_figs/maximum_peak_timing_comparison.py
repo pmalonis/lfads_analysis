@@ -17,9 +17,6 @@ plt.rcParams['font.size'] = 16
 #plt.rcParams['axes.spines.top'] = False
 #plt.rcParams['axes.spines.right'] = False
 
-win_start = 0
-win_stop = 0.3
-
 config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
@@ -90,12 +87,12 @@ if __name__=='__main__':
         n_inputs = co.shape[2]
         all_n_inputs.append(n_inputs)
         peak_path = '../../data/peaks/%s_%s_post_target_maximum.p'%(dataset, param)
-        if False:#os.path.exists(peak_path):
+        if os.path.exists(peak_path):
             peak_df[dataset] = pd.read_pickle(peak_path)
         else:
             firstmove_df = pd.read_pickle('../../data/peaks/%s_firstmove_all.p'%(dataset))
             target_df = df.kinematic.query('hit_target')
-            peak_df[dataset] = ta.get_maximum_peaks(co, dt, df, firstmove_df)
+            peak_df[dataset] = ta.get_maximum_peaks(co, dt, df, firstmove_df, min_peak_time=0)
             peak_df[dataset].to_pickle(peak_path)
 
     events = ['target','firstmove']
@@ -133,7 +130,7 @@ if __name__=='__main__':
                 
 
         #print(levene(*samples))  
-        print("%s p-value: %f"%(dataset, permutation_spread_test(samples, dist_width)))
+        #print("%s p-value: %f"%(dataset, permutation_spread_test(samples, dist_width)))
 
         ymin, ymax  = plt.yticks()[0][[0,-1]]
         ymin = 0
@@ -149,5 +146,5 @@ if __name__=='__main__':
             #plt.legend(['Aligned to First Movement', 'Aligned to Target'])
 
     plt.tight_layout()
-    plt.savefig('../../figures/final_figures/target_vs_firstmove_peak_timing.svg')
+    #plt.savefig('../../figures/final_figures/target_vs_firstmove_peak_timing.svg')
     plt.savefig('../../figures/final_figures/numbered/4c.pdf')

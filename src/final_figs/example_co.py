@@ -13,7 +13,7 @@ plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['font.size'] = 20
 
-config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
+config_path = os.path.join('', '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 spike_dt = 0.001
 if __name__=='__main__':
@@ -28,11 +28,11 @@ if __name__=='__main__':
     label_ctrl_2 = [(0.7, -0.6), (0.52, 0.2), (1.1, -0.12)]
     panels = ['a', 'b', 'c']
     for i, (dataset, example_trial, lc1, lc2, ytick) in enumerate(zip(datasets, example_trials, label_ctrl_1, label_ctrl_2, yticks)):
-        example_filename = os.path.dirname(__file__) + '../../data/intermediate/%s.p'%dataset
-        param = open(os.path.dirname(__file__)+'../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
-        lfads_filename = os.path.dirname(__file__)+'../../data/model_output/' + \
+        example_filename = '../../data/intermediate/%s.p'%dataset
+        param = open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
+        lfads_filename = '../../data/model_output/' + \
                                 '_'.join([dataset, param, 'all.h5'])
-        inputInfo_filename = os.path.dirname(__file__)+'../../data/model_output/' + \
+        inputInfo_filename = '../../data/model_output/' + \
                         '_'.join([dataset, 'inputInfo.mat'])
         input_info = io.loadmat(inputInfo_filename)
         with h5py.File(lfads_filename) as h5file:

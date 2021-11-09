@@ -24,6 +24,7 @@ roc_bootstrap_repeats: 200
 background_subsample: 0.05 
 roc_ci_alpha: 0.05
 
+neural_offset: 0.05
 # speed_transition_thresh: 100
 # min_speed_prominence: 100
 # min_distance: 0
@@ -95,15 +96,15 @@ datasets:
   rockstar: 
     name: RS
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
-    adhoc_param: kl-co-dim-search-FDCWrX
+    adhoc_param: kl-co-dim-search-FDCWrX-offset
   mack:
     name: MK
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
-    adhoc_param: kl-co-dim-search-FDCWrX
+    adhoc_param: kl-co-dim-search-FDCWrX-offset
   raju-M1-no-bad-trials:
     name: RJ
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
-    adhoc_param: kl-co-dim-search-6p5E8J
+    adhoc_param: kl-co-dim-search-6p5E8J-offset
   #raju_M1: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_M1.mat
   #raju_PMd: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_PMd.mat
 

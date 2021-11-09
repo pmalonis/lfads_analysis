@@ -22,15 +22,18 @@ if __name__=='__main__':
     example_trial = 43
     df = pd.read_pickle(example_filename)
     trial_df = df.loc[example_trial]
-    x_vel, y_vel = trial_df.kinematic[['x_vel','y_vel']].values.T
+    offset_ms = np.round(cfg['neural_offset']/0.001).astype(int)
+    kin = trial_df.kinematic.iloc[:-offset_ms]
+    x_vel, y_vel = kin[['x_vel','y_vel']].values.T
     speed = utils.get_speed(x_vel, y_vel)
     sigma_bin = cfg['rate_sigma_example_plot']
     bin_cutoff = sigma_bin*5 #cutoff kernal at 5 sigmas
     neural_kernel = norm.pdf(np.arange(-bin_cutoff, bin_cutoff), scale=sigma_bin)
     neural_kernel /= np.sum(neural_kernel)*spike_dt
-    fr = np.apply_along_axis(np.convolve, 0, trial_df.neural.values, neural_kernel, mode='same')
+    spikes = trial_df.neural.iloc[offset_ms:].values
+    fr = np.apply_along_axis(np.convolve, 0, spikes, neural_kernel, mode='same')
     trial_pop_rate = fr.sum(1)
-    t = trial_df.index.values
+    t = trial_df.iloc[:-offset_ms].index.values
     t_targets = trial_df.kinematic.query('hit_target').index.values
     lns = []
     plt.figure(figsize=(18,6))
