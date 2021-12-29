@@ -1,6 +1,6 @@
 # lfads_analysis
 
-This is the repository for code used in the analysis used in the paper,
+This is the repository for code used in the analysis for the paper,
 
 >M1 dynamics share similar inputs for initiating and correcting movement
 >Peter J. Malonis, Nicholas G. Hatsopoulos, Jason N. MacLean, Matthew T. Kaufman
@@ -26,9 +26,9 @@ TODO: add info about setting up datasets
 `config.yml` contains the file paths to the data and lfads runs. Make the following edits to the file to specifiy a different LFADS run: 
 
 1. `lfads_file_server` should specify the hostname of the server that stores the LFADS runs (you'll need to set up [public key authorization](https://www.cyberciti.biz/faq/how-to-set-up-ssh-keys-on-linux-unix/) to that server). 
-2. `username` should be the username used to login to the server
-3. `lfads_dir_path` should be the path to the directory that holds the LFADS runs on the server
-4. `lfads_run_names` should be a list of the names of LFADS runs to use. Each should be a subdirectory of the `lfads_dir_path` directory
+2. `username` should be the username used to login to the server.
+3. `lfads_dir_path` should be the path to the directory that holds the LFADS runs on the server.
+4. `lfads_run_names` should be a list of the names of LFADS runs to use. Each should be a subdirectory of the `lfads_dir_path` directory.
 
 ## Running the code
 This analysis uses the [Snakemake](https://snakemake.readthedocs.io/en/stable/) workflow management system. To create the analysis figures, run the following:
