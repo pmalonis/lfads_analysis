@@ -21,20 +21,20 @@ plt.rcParams['font.size'] = 20
 reload(opt)
 reload(utils)
 
-config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
+config_path = os.path.join(os.path.dirname(__file__), os.path.join(os.path.dirname(__file__), '../config.yml'))
 cfg = yaml.safe_load(open(config_path, 'r'))
 
-run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml'), 'r'))
 datasets = list(run_info.keys())
 params = []
 for dataset in run_info.keys():
-    params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
+    params.append(open(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric']))).read())
 
 #datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
 nbins = 12
 
-lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
+lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5']))
 with h5py.File(lfads_filename, 'r+') as h5file:
     co = h5file['controller_outputs'][:]
     
@@ -44,9 +44,9 @@ def plot_average(event_name, win_start, win_stop, event_label,
     widths = []
     dset_names = []
     for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
-        data_filename = '../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
-        inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+        data_filename = os.path.join(os.path.dirname(__file__), '../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
         
         df = data_filename = pd.read_pickle(data_filename)
         input_info = io.loadmat(inputInfo_filename)
@@ -61,8 +61,8 @@ def plot_average(event_name, win_start, win_stop, event_label,
         co = np.sum(np.abs(co), axis=2, keepdims=True)
         #co = np.abs(co).sum(2, keepdims=True)
         n_co = co.shape[2]
-        peak_df_train = pd.read_pickle('../data/peaks/%s_%s_train.p'%(dataset, event_name))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_%s_test.p'%(dataset, event_name))
+        peak_df_train = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_%s_train.p'%(dataset, event_name)))
+        peak_df_test = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_%s_test.p'%(dataset, event_name)))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
@@ -152,8 +152,7 @@ if __name__=='__main__':
         #plt.text(-160, 0.009, 'Aligned to \n First Movement', color=colors[1], fontdict={'fontsize':16})
         #plt.locator_params(num_ticks=4)
 
-    plt.savefig('../figures/final_figures/co_average_all_dir_%s.svg'%event_name)
-    plt.savefig('../figures/final_figures/numbered/6c.pdf')
+    plt.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/6c.pdf'))
     # plot_df = pd.concat(width_dfs)
     # sns.pointplot(data=plot_df, x='Reference Event', y='Peak Width (ms)', hue='Dataset')
-    # plt.savefig('../figures/final_figures/co_av_widths.svg')
+    # plt.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/co_av_widths.svg'))

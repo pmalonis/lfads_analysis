@@ -153,7 +153,7 @@ if __name__=='__main__':
     config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
 
-    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+    run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml'), 'r'))
     datasets = list(run_info.keys())
     win_lims = [literal_eval(w) for w in cfg['target_auc_win_lims']]
     win_centers = [1000*(start + (stop-start)/2) for start,stop in win_lims]
@@ -165,15 +165,14 @@ if __name__=='__main__':
     all_maxima = {}
     all_controllers = []
     for dataset in datasets:
-        param = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
-    
-        data = pd.read_pickle('../data/intermediate/%s.p'%dataset)                  
-        firstmove_df = pd.read_pickle('../data/peaks/%s_targets-not-one_all.p'%dataset)
-        corr_df = pd.read_pickle('../data/peaks/%s_corrections_all.p'%dataset)
-        maxima_df = pd.read_pickle('../data/peaks/%s_maxima_all.p'%dataset)
-        input_info = io.loadmat('../data/model_output/%s_inputInfo.mat'%dataset)
+        param = open(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric']))).read().strip()
+        data = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/intermediate/%s.p'%dataset))
+        firstmove_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_targets-not-one_all.p'%dataset))
+        corr_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_corrections_all.p'%dataset))
+        maxima_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_maxima_all.p'%dataset))
+        input_info = io.loadmat(os.path.join(os.path.dirname(__file__), '../data/model_output/%s_inputInfo.mat'%dataset))
         
-        with h5py.File('../data/model_output/%s_%s_all.h5'%(dataset,param),'r') as h5file:
+        with h5py.File(os.path.join(os.path.dirname(__file__), '../data/model_output/%s_%s_all.h5'%(dataset,param)),'r') as h5file:
             co = h5file['controller_outputs'][:]
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
@@ -229,8 +228,8 @@ if __name__=='__main__':
     fig.text(0.5, 0.01, "Window Center Relative to Target Appearance (ms)", ha='center')
 
     fig.tight_layout()
-    fig.savefig('../figures/final_figures/auc_targets.svg')
-    fig.savefig('../figures/final_figures/numbered/4d.pdf')
+    fig.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/auc_targets.svg'))
+    fig.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/4d.pdf'))
 
     # combined_scores = []
     # for win_idx,(win_start, win_stop) in enumerate(win_lims):

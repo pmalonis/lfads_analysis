@@ -7,7 +7,7 @@ import yaml
 import sys
 import os
 from scipy import io
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import decode_lfads as dl
 import utils
 plt.rcParams['font.size'] = 20

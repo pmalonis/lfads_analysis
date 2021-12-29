@@ -6,7 +6,7 @@ from ast import literal_eval
 import os
 import sys
 import yaml
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 
 plt.rcParams['axes.spines.top'] = False

@@ -212,7 +212,8 @@ class Decode(Measure):
         self.datasets[dataset].measure[prior].append(m)
 
     def compute_measure(self, run):
-        lfads_filename = os.path.dirname(__file__) + '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
+        lfads_filename = os.path.join(os.path.dirname(__file__), 
+                        '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5']))
         with h5py.File(lfads_filename, 'r') as h5file:
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
@@ -402,19 +403,24 @@ if __name__=='__main__':
     for kl_weight in [2.0]:
         # measures = [m(filename='../figures/final_figures/%s_co_dim.svg'%k) for k,m in 
         #             metric_dict.items()]    
-        measures = [m(filename='../figures/final_figures/numbered/2e.pdf') for k,m in 
+        figure_dir = os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/') 
+        measures = [m(filename=figure_dir + '2e.pdf') for k,m in 
                     metric_dict.items()]    
         for dataset in run_info.keys():
-            df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
+            df = pd.read_pickle(os.path.join(os.path.dirname(__file__), 
+                                            '../data/intermediate/%s.p'%dataset))
             for param in run_info[dataset]['params'].keys():
-                lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
+                lfads_filename = os.path.join(os.path.dirname(__file__), 
+                                '../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
                 if 'raju' in dataset and not os.path.exists(lfads_filename):
                     continue
                 
                 if run_info[dataset]['params'][param]['param_values'].get('kl_co_weight') != kl_weight:
                     continue
 
-                inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+                inputInfo_filename = os.path.join(os.path.dirname(__file__), 
+                                            '../data/model_output/' + '_'.join([dataset, 
+                                                                                'inputInfo.mat']))
                 input_info = io.loadmat(inputInfo_filename)
                 with h5py.File(lfads_filename, 'r') as h5file:
                     dt = utils.get_dt(h5file, input_info)

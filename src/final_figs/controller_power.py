@@ -5,7 +5,7 @@ from scipy import io
 import yaml
 import os
 import sys
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 
 config_path = os.path.dirname(__file__) + '/../../config.yml'

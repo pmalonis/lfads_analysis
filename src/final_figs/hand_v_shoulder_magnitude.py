@@ -13,7 +13,7 @@ from sklearn.model_selection import RepeatedKFold, cross_val_score
 from sklearn.metrics import make_scorer
 import os
 import sys
-sys.path.insert(0, os.path.dirname(__file__) +  '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 from optimize_target_prediction import get_inputs_to_model
 import optimize_target_prediction as opt
@@ -80,12 +80,12 @@ def cross_val_test_reference(output, dset_name, test_peak_df, co, trial_len, dt,
 
 
 if __name__=='__main__':
-    plot_data_path = '../../data/model_output/hand_v_shoulder_initial_magnitude.p'
+    plot_data_path = os.path.join(os.path.dirname(__file__), '../../data/model_output/hand_v_shoulder_initial_magnitude.p')
     if os.path.exists(plot_data_path):
         all_plot_dfs = pd.read_pickle(plot_data_path)
     else:
 
-        output_filename = "../../data/peaks/params_search_targets-not-one.csv"
+        output_filename = os.path.join(os.path.dirname(__file__), "../../data/peaks/params_search_targets-not-one.csv")
             
         #output_filename = snakemake.input[0]
         #fb_output_filename = snakemake.input[1]
@@ -105,14 +105,11 @@ if __name__=='__main__':
         colors = utils.contrasting_colors(**cfg['colors']['correction_decode'])
         all_cv_results = []
         for dataset in datasets:
-            lfads_params = open('../../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read().strip()
-            data_filename = '../../data/intermediate/' + dataset + '.p'
-            lfads_filename = '../../data/model_output/' + \
-                        '_'.join([dataset, lfads_params, 'all.h5'])
-            inputInfo_filename = '../../data/model_output/' + \
-                            '_'.join([dataset, 'inputInfo.mat'])
-            peak_filename = '../../data/peaks/' + \
-                        '_'.join([dataset, 'targets-not-one_test.p'])
+            lfads_params = open(os.path.join(os.path.dirname(__file__), '../../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric']))).read().strip()
+            data_filename = os.path.join(os.path.dirname(__file__), '../../data/intermediate/' + dataset + '.p')
+            lfads_filename = os.path.join(os.path.dirname(__file__), '../../data/model_output/' + '_'.join([dataset, lfads_params, 'all.h5']))
+            inputInfo_filename = os.path.join(os.path.dirname(__file__), '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
+            peak_filename = os.path.join(os.path.dirname(__file__), '../../data/peaks/' + '_'.join([dataset, 'targets-not-one_test.p']))
 
             df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
             peak_df = pd.read_pickle(peak_filename)
@@ -149,7 +146,5 @@ if __name__=='__main__':
     plt.title('Magnititude Decoder')
     plt.ylabel('Decoding Performance ($\mathregular{r^2}$)')
 
-plt.savefig("../../figures/final_figures/hand_v_shoulder_corrective.png")
-plt.savefig("../../figures/final_figures/hand_v_shoulder_target.svg")
-plt.savefig("../../figures/final_figures/numbered/5e.pdf")
+    plt.savefig(os.path.join(os.path.dirname(__file__), "../../figures/final_figures/numbered/5e.pdf"))
     #plt.savefig(snakemake.output[0])

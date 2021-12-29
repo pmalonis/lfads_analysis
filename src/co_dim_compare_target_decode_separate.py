@@ -20,7 +20,8 @@ plt.rcParams['font.size'] = 20
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
-run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+run_info_path = os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml')
+run_info = yaml.safe_load(open(run_info_path, 'r'))
 datasets = run_info.keys()
 co_dims = range(1,5)
 all_mean_scores = []
@@ -29,24 +30,30 @@ for dataset in datasets:
     mean_scores = []
     std_scores = []
     for co_dim in co_dims:
-        output = pd.read_csv('../data/peaks/params_search_targets-not-one.csv')
+        output_filename = os.path.join(os.path.dirname(__file__), 
+                                    '../data/peaks/params_search_targets-not-one.csv')
+        output = pd.read_csv(output_filename)
         dset_name = run_info[dataset]['name']
         best_idx = output.query('dataset == @dset_name & ~fit_direction & ~use_rates')['mean_test_var_weighted_score'].idxmax()
         best_row = output.loc[best_idx]
         param_dict = run_info[dataset]['params']
         for param in param_dict:
-            selected_param = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read()
+            selected_param = open(os.path.join(os.path.dirname(__file__), 
+                            '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric']))).read()
+            selected_param = selected_param.replace('-offset','')
             selected_kl = param_dict[selected_param]['param_values']['kl_co_weight'] 
             kl_match = param_dict[param]['param_values']['kl_co_weight'] == selected_kl
             if kl_match and param_dict[param]['param_values']['co_dim'] == co_dim:
                 break
 
-        data_filename = '../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
-        inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
-
+        data_filename = os.path.join(os.path.dirname(__file__), '../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), 
+                                            '../data/model_output/' + '_'.join([dataset, 
+                                                                                'inputInfo.mat']))
         df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
-        test_peak_df = pd.read_pickle('../data/peaks/%s_targets-not-one_test.p'%dataset)
+        test_peak_df = pd.read_pickle(os.path.join(os.path.dirname(__file__),
+                        '../data/peaks/%s_targets-not-one_test.p'%dataset))
 
         preprocess_dict, model = me.get_row_params(best_row)
         X, y = otp.get_inputs_to_model(test_peak_df, co, trial_len, dt, df, **preprocess_dict)
@@ -70,4 +77,6 @@ for i in range(len(datasets)):
     plt.ylabel('Decoding Performance $\mathregular{r^2}$')
     plt.xticks(co_dims)
 
-plt.savefig('../figures/final_figures/numbered/2f.pdf')
+fig_filename = os.path.join(os.path.dirname(__file__), 
+                '../figures/final_figures/numbered/2f.pdf')
+plt.savefig(fig_filename)

@@ -109,10 +109,9 @@ def combined_dataset_score(backgrounds, events, controllers, win):
     return rocauc(np.concatenate(p_background), np.concatenate(p_event))
 
 if __name__=='__main__':
-    config_path = os.path.join('../config.yml')
+    config_path = os.path.join(os.path.join(os.path.dirname(__file__), '../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
-
-    run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+    run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml'), 'r'))
     win_lims = [literal_eval(w) for w in cfg['movement_auc_win_lims']]
     win_centers = [1000*(start + (stop-start)/2) for start,stop in win_lims]
     all_dataset_scores = {}
@@ -123,15 +122,15 @@ if __name__=='__main__':
     all_maxima = {}
     all_controllers = []
     for dataset in run_info.keys():
-        param = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
+        param = open(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric']))).read().strip()
     
-        data = pd.read_pickle('../data/intermediate/%s.p'%dataset)                  
-        firstmove_df = pd.read_pickle('../data/peaks/%s_firstmove_all.p'%dataset)
-        corr_df = pd.read_pickle('../data/peaks/%s_corrections_all.p'%dataset)
-        maxima_df = pd.read_pickle('../data/peaks/%s_maxima_all.p'%dataset)
-        input_info = io.loadmat('../data/model_output/%s_inputInfo.mat'%dataset)
+        data = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/intermediate/%s.p'%dataset)                  )
+        firstmove_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_firstmove_all.p'%dataset))
+        corr_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_corrections_all.p'%dataset))
+        maxima_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_maxima_all.p'%dataset))
+        input_info = io.loadmat(os.path.join(os.path.dirname(__file__), '../data/model_output/%s_inputInfo.mat'%dataset))
         
-        with h5py.File('../data/model_output/%s_%s_all.h5'%(dataset,param),'r') as h5file:
+        with h5py.File(os.path.join(os.path.dirname(__file__), '../data/model_output/%s_%s_all.h5'%(dataset,param)),'r') as h5file:
             co = h5file['controller_outputs'][:]
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
@@ -184,15 +183,14 @@ if __name__=='__main__':
              rotation='vertical')
 
     # fig2.text(0.5, 0.00, "Window Center Relative to Speed Maxima (ms)", 
-    #         ha='center')
+    #           ra='center')
     # fig2.text(0.08, 0.5, "ROC AUC", ha='center', 
     #          rotation='vertical')
     plt.tight_layout()
     plt.subplots_adjust(left=.1,right=.75)
     #fig.savefig(snakemake.output.firstmove_corrections)
-    fig.savefig('auc_corrections_firstmove.svg')
-    fig.savefig('../figures/final_figures/numbered/6d.pdf')
-
+    fig.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/6d.pdf'))
+    
     # combined_scores = []
     # for win_idx,(win_start, win_stop) in enumerate(win_lims):
     #     win = np.round((win_stop-win_start)/dt).astype(int)

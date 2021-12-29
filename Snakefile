@@ -5,6 +5,7 @@ import subprocess as sp
 import sys
 sys.path.insert(0, 'src')
 from get_lfads_filepaths import write_filepaths
+from correct_raw_matdata import correct_timing
 
 configfile: "config.yml"
 
@@ -340,6 +341,8 @@ rule download_model:
                 continue
             else:
                 going=False
+        
+        correct_timing(ouput[0], output[0])
 
 rule download_raw:
     params:
@@ -748,3 +751,308 @@ rule all_split_playback:
         "data/raw/Playback-NN/split_condition/mk080828_M1m/vis_pb.mat",
         "data/raw/Playback-NN/split_condition/mk080828_M1m/prop_pb.mat",
         "data/raw/Playback-NN/split_condition/mk080828_M1m/dual_pb.mat"
+
+##FINAL FIGURES
+rule make_all_figures:
+    input:
+        "figures/final_figures/numbered/1b.pdf",
+        "figures/final_figures/numbered/1c.pdf",
+        "figures/final_figures/numbered/2c.pdf",
+        "figures/final_figures/numbered/2e.pdf",
+        "figures/final_figures/numbered/2f.pdf",
+        "figures/final_figures/numbered/3a.pdf",
+        "figures/final_figures/numbered/4a.pdf",
+        "figures/final_figures/numbered/4b.pdf",
+        "figures/final_figures/numbered/4c.pdf",
+        "figures/final_figures/numbered/4d.pdf",
+        "figures/final_figures/numbered/5a.pdf",
+        "figures/final_figures/numbered/5b.pdf",
+        "figures/final_figures/numbered/5c.pdf",
+        "figures/final_figures/numbered/5d.pdf",
+        "figures/final_figures/numbered/5e.pdf",
+        "figures/final_figures/numbered/6a.pdf",
+        "figures/final_figures/numbered/6b.pdf",
+        "figures/final_figures/numbered/6c.pdf",
+        "figures/final_figures/numbered/6d.pdf",
+        "figures/final_figures/numbered/6e.pdf",
+        "figures/final_figures/numbered/7a.pdf",
+        "figures/final_figures/numbered/7b.pdf",
+        "figures/final_figures/numbered/7c.pdf",
+        "figures/final_figures/numbered/7d.pdf"
+        
+rule fig_1b:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p")
+    output:
+        "figures/final_figures/numbered/1b.pdf"
+    script:
+        "src/final_figs/example_trajectory.py"
+
+rule fig_1c:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p")
+    output:
+        "figures/final_figures/numbered/1c.pdf"
+    script:
+        "src/final_figs/example_firing_rates.py"
+
+rule fig_2cd:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/2c.pdf",
+        "figures/final_figures/numbered/2d.pdf"
+    script:
+        "src/plot_all_controller_metrics.py"
+
+rule fig_2e:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/2e.pdf"
+    script:
+        "src/plot_all_controller_metrics_co_dim.py"
+
+rule fig_2f:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_targets-not-one.csv"
+    output:
+        "figures/final_figures/numbered/2f.pdf"    
+    script:
+        "src/co_dim_compare_target_decode_separate.py"
+
+rule fig_3abc:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/3a.pdf",  
+        "figures/final_figures/numbered/3b.pdf", 
+        "figures/final_figures/numbered/3c.pdf"
+    script:
+        "src/final_figs/example_co.py"
+
+rule fig_4a:
+    input: #could add the peak pickles if you separate out the scripts
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/4a.pdf"
+    script:
+        "src/controller_average_all_directions.py"
+
+rule fig_4b:
+    input: #could add the peak pickles if you separate out the scripts
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/4b-1.pdf",
+        "figures/final_figures/numbered/4b-2.pdf",
+        "figures/final_figures/numbered/4b-3.pdf"
+    script:
+        "src/final_figs/peak_timing.py"
+
+rule fig_4c:
+    input: #could add the peak pickles if you separate out the scripts
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/4c.pdf"
+    script:
+        "src/final_figs/maximum_peak_timing_comparison.py"
+
+rule fig_4d:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/4d.pdf"
+    script:
+        "src/snr_targets.py"
+
+rule fig_5a:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/5a.pdf"
+    script:
+        "src/controller_average_target.py"
+
+rule fig_5b:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_targets-not-one.csv"
+    output:
+        "figures/final_figures/numbered/5b.pdf"
+
+    script:
+        "src/final_figs/plot_window_performance_initial.py"
+
+rule fig_5c:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_targets-not-one.csv"
+    output:
+        "figures/final_figures/numbered/5c.pdf"
+    script:
+        "src/final_figs/hand_v_shoulder_evaluation_initial.py"
+
+rule fig_5d:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_targets-not-one.csv"
+    output:
+        "figures/final_figures/numbered/5d.pdf"
+
+    script:
+        "src/final_figs/hand_v_shoulder_normalized_initial.py"
+
+rule fig_5e:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_targets-not-one.csv"
+    output:
+        "figures/final_figures/numbered/5e.pdf"
+
+    script:
+        "src/final_figs/hand_v_shoulder_magnitude.py"
+
+rule fig_6a:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p")
+    output:
+        "figures/final_figures/numbered/6a-1.pdf",
+        "figures/final_figures/numbered/6a-2.pdf",
+        "figures/final_figures/numbered/6a-3.pdf"
+    script:
+        "src/labeled_example_correction.py"
+
+rule fig_6b:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/6b-1.pdf",
+        "figures/final_figures/numbered/6b-2.pdf",
+        "figures/final_figures/numbered/6b-3.pdf"
+    script:
+        "src/labeled_example_traj_co.py"
+
+rule fig_6c:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/6c.pdf"
+    script:
+        "src/controller_average_all_directions_corrections.py"
+
+rule fig_6d:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/6d.pdf"
+    script:
+        "src/snr_corrections.py"
+
+rule fig_6e:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_corrections.csv"
+    output:
+        "figures/final_figures/numbered/6e.pdf"
+    script:
+        "src/final_figs/hand_v_shoulder_evaluation_correction.py"
+
+rule fig_6f:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_corrections.csv"
+    output:
+        "figures/final_figures/numbered/6f.pdf"
+    script:
+        "src/final_figs/hand_v_shoulder_normalized_corrections.py"
+
+rule fig_6g:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5"),
+        PEAK_DIR + "params_search_corrections.csv"
+    output:
+        "figures/final_figures/numbered/6g.pdf"
+    script:
+        "src/final_figs/hand_v_shoulder_magnitude_corrections.py"
+
+rule fig_7a:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    
+    output:
+        "figures/final_figures/numbered/7a.pdf"
+    script:
+        "src/controller_average_combined.py"
+
+rule fig_7b:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/7b.pdf"
+    script:
+        "src/direction-averages_correlation.py"
+
+rule fig_7c:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/7c-combined.pdf",
+        "figures/final_figures/numbered/7c-datasets.pdf"
+    script:
+        "src/direction-averages_correlation-rates.py"
+
+rule fig_7d:
+    input:
+        expand_filename(INTERMEDIATE_DIR + "{dataset}.p"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_inputInfo.mat"),
+        expand_filename(MODEL_OUTPUT_DIR + "{dataset}_{param}_all.h5")
+    output:
+        "figures/final_figures/numbered/7d-datasets.pdf",
+        "figures/final_figures/numbered/7d-combined.pdf"
+    script:
+        "src/maxima_vs_firstmove_direction-averages_correlation.py"

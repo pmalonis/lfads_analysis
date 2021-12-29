@@ -7,7 +7,7 @@ import os
 import yaml
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from segment_submovements import plot_trajectory_co
 import utils
 from matplotlib.patches import Rectangle,Circle
@@ -21,13 +21,9 @@ target_size = 10 #target size in millimeters
 cursor_size = 3
 if __name__=='__main__':
     dataset = 'rockstar'
-    example_filename = os.path.dirname(__file__) + '../../data/intermediate/%s.p'%dataset
+    example_filename = os.path.join(os.path.dirname(__file__),
+                                    '../../data/intermediate/%s.p'%dataset)
     example_trial = 22
-    param = open(os.path.dirname(__file__)+'../../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read().strip()
-    
-    inputInfo_filename = os.path.dirname(__file__)+'../../data/model_output/' + \
-                    '_'.join([dataset, 'inputInfo.mat'])
-    input_info = io.loadmat(inputInfo_filename)
 
     df = pd.read_pickle(example_filename)
     trial_df = df.loc[example_trial]
@@ -55,5 +51,6 @@ if __name__=='__main__':
     #plt.xlabel('X (mm)')
     #plt.ylabel('Y (mm)')
     #plt.show()
-    plt.savefig('../../figures/final_figures/example_trajectory.svg')
-    plt.savefig('../../figures/final_figures/numbered/1b.pdf')
+    fig_filename = os.path.join(os.path.dirname(__file__), 
+                                '../../figures/final_figures/numbered/1b.pdf') 
+    plt.savefig(fig_filename)

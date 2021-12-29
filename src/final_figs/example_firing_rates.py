@@ -6,7 +6,7 @@ import os
 import yaml
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = True
@@ -18,7 +18,8 @@ config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 spike_dt = 0.001
 if __name__=='__main__':
-    example_filename = '../../data/intermediate/mack.p'
+    example_filename = os.path.join(os.path.dirname(__file__),
+                                    '../../data/intermediate/mack.p')
     example_trial = 43
     df = pd.read_pickle(example_filename)
     trial_df = df.loc[example_trial]
@@ -55,7 +56,7 @@ if __name__=='__main__':
     
     plt.text(2.6, 450, 'Cursor Speed', color=lns[0].get_color(), fontsize=16)
     plt.text(2.5, 925, 'Population\nFiring Rate', color=lns[1].get_color(), fontsize=16)
-
-    plt.savefig('../../figures/final_figures/example_trial.svg')
-    plt.savefig('../../figures/final_figures/numbered/1c.pdf')
+    fig_filename = os.path.join(os.path.dirname(__file__), 
+                                '../../figures/final_figures/numbered/1c.pdf') 
+    plt.savefig(fig_filename)
     plt.show()

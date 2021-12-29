@@ -24,18 +24,18 @@ reload(utils)
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
-run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml'), 'r'))
 datasets = list(run_info.keys())
 datasets = [datasets[0]]
 params = []
 for dataset in run_info.keys():
-    params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read())
+    params.append(open(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric']))).read())
 
 nbins = 12
 win_start = 0.0
 win_stop = 0.3
 
-lfads_filename = '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5'])
+lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([datasets[0], params[0], 'all.h5']))
 with h5py.File(lfads_filename, 'r+') as h5file:
     co = h5file['controller_outputs'][:]
     
@@ -43,9 +43,9 @@ n_co = co.shape[2]
 
 if __name__=='__main__':
     for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
-        data_filename = '../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
-        inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+        data_filename = os.path.join(os.path.dirname(__file__), '../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
         
         df = data_filename = pd.read_pickle(data_filename)
         input_info = io.loadmat(inputInfo_filename)
@@ -55,8 +55,8 @@ if __name__=='__main__':
             trial_len = utils.get_trial_len(h5file, input_info)
 
         co = savgol_filter(co, 11, 2, axis=1)
-        peak_df_train = pd.read_pickle('../data/peaks/%s_targets-not-one_train.p'%(dataset))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_targets-not-one_test.p'%(dataset))
+        peak_df_train = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_targets-not-one_train.p'%(dataset)))
+        peak_df_test = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_targets-not-one_test.p'%(dataset)))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
@@ -116,5 +116,5 @@ if __name__=='__main__':
 
         fig.text(0.05,0.4, 'Inferred Input Value (a.u.)',ha='center',rotation='vertical')        
         plt.tight_layout(pad=3)
-        plt.savefig('../figures/final_figures/%s_controller_averages_initial.svg'%(dataset)) 
-        plt.savefig('../figures/final_figures/numbered/5a.pdf')
+        plt.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/%s_controller_averages_initial.svg'%(dataset)) )
+        plt.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/5a.pdf'))

@@ -25,11 +25,11 @@ reload(utils)
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r')) 
 
-run_info = yaml.safe_load(open('../lfads_file_locations.yml', 'r'))
+run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../lfads_file_locations.yml'), 'r'))
 datasets = list(run_info.keys())
 params = []
 for dataset in run_info.keys():
-    params.append(open('../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read())
+    params.append(open(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric']))).read())
 
 #datasets = ['rockstar', 'mack']#['rockstar','raju', 'mack']
 #params = ['all-early-stop-kl-sweep-yKzIQf', 'all-early-stop-kl-sweep-bMGCVf']#['mack-kl-co-sweep-0Wo8i9']#['final-fixed-2OLS24', 'final-fixed-2OLS24', 'mack-kl-co-sweep-0Wo8i9']
@@ -43,9 +43,9 @@ if __name__=='__main__':
     all_means = []
     fb_all_means = []
     for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
-        data_filename = '../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])
-        inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+        data_filename = os.path.join(os.path.dirname(__file__), '../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
         
         df = data_filename = pd.read_pickle(data_filename)
         input_info = io.loadmat(inputInfo_filename)
@@ -54,13 +54,13 @@ if __name__=='__main__':
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)
         
-        peak_df_train = pd.read_pickle('../data/peaks/%s_firstmove_train.p'%(dataset))
-        peak_df_test = pd.read_pickle('../data/peaks/%s_firstmove_test.p'%(dataset))
+        peak_df_train = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_firstmove_train.p'%(dataset)))
+        peak_df_test = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_firstmove_test.p'%(dataset)))
 
         peak_df = pd.concat([peak_df_train, peak_df_test]).sort_index()
 
-        fb_peak_df_train = pd.read_pickle('../data/peaks/%s_corrections_train.p'%(dataset))
-        fb_peak_df_test = pd.read_pickle('../data/peaks/%s_corrections_test.p'%(dataset))
+        fb_peak_df_train = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_corrections_train.p'%(dataset)))
+        fb_peak_df_test = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../data/peaks/%s_corrections_test.p'%(dataset)))
 
         fb_peak_df = pd.concat([fb_peak_df_train, fb_peak_df_test]).sort_index()
 
@@ -169,40 +169,4 @@ if __name__=='__main__':
     #fig.text(0.02, .75, 'Rate PC 1')
     #fig.text(00.02, .25, 'Rate PC 2')
     fig.set_size_inches(12,6)
-    plt.savefig('../figures/final_figures/co_averages_correlation-means.svg')
-    plt.savefig('../figures/final_figures/numbered/7b.pdf')
-    fig = plt.figure(2)
-    fig.text(0.02, .75, 'Rate PC 1')
-    fig.text(0.02, .25, 'Rate PC 2')
-    fig.set_size_inches(12,6)
-    plt.savefig('../figures/final_figures/co_averages_correlation-maxima.png')
-
-    plt.figure(figsize=(8,6))
-    #plt.tight_layout(pad=2)
-    #plt.tight_layout()
-    sns.regplot(np.concatenate(all_means), np.concatenate(fb_all_means))
-    plt.xlabel('Initial Movement Direction-Mean (z-scored)')
-    plt.ylabel('Corrective Movement Direction-Mean (z-scored)')
-
-    if j==0:
-        plt.title(run_info[dataset]['name'])
-    xmin, xmax = plt.xlim()
-    ymin, ymax = plt.ylim()
-    xpos = xmin + .1*(xmax-xmin)
-    ypos = ymax - .1*(ymax-ymin)
-    r_value, p_value = pearsonr(np.concatenate(all_means), np.concatenate(fb_all_means))
-    if 0.01 <= p_value < 0.05:
-        p_str = 'p = %0.2f'%p_value
-    elif 0.001 <= p_value < 0.01:
-        p_str = 'p < 0.01'
-    elif p_value < 0.001:
-        p_str = 'p < 0.001'
-    else:
-        p_str = 'p > 0.05'
-
-    plt.text(xpos,ypos,
-            'r = %0.2f, %s'%(r_value, p_str), fontsize=13)
-
-    plt.yticks([-2, -1, 0, 1, 2])
-    plt.xticks([-2, -1, 0, 1, 2])
-    plt.savefig('../figures/final_figures/co_averages_correlation_with_corrections_means_all.svg')
+    plt.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/7b.pdf'))

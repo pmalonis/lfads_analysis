@@ -7,7 +7,7 @@ import os
 import yaml
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from segment_submovements import plot_trajectory_co
 import utils
 plt.rcParams['axes.spines.top'] = False

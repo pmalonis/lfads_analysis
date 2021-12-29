@@ -8,7 +8,7 @@ import sys
 import yaml
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 import model_evaluation as me
 import optimize_target_prediction as otp
@@ -21,7 +21,7 @@ plt.rcParams['font.size'] = 20
 config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 
-run_info = yaml.safe_load(open(os.path.dirname(__file__) + '../../lfads_file_locations.yml', 'r'))
+run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../../lfads_file_locations.yml'), 'r'))
 # def plot_window_perf(output, use_rates, event_label, color):
 #     #output['total_test_score'] = output[['mean_test_x_score','mean_test_y_score']].mean(1)
 #     #output['std_total_test_score'] = output[['std_test_x_score','std_test_y_score']].mean(1)
@@ -81,16 +81,13 @@ def plot_window_perf(output, use_rates, event_label, color):
     dts = []
     datasets = list(run_info.keys())
     for dataset in datasets:
-        lfads_params = open('../../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric'])).read().strip()
-        data_filename = '../../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../../data/model_output/' + \
-                    '_'.join([dataset, lfads_params, 'all.h5'])
-        inputInfo_filename = '../../data/model_output/' + \
-                        '_'.join([dataset, 'inputInfo.mat'])
-        peak_filename = '../../data/peaks/' + \
-                    '_'.join([dataset, 'targets-not-one_test.p'])
+        lfads_params = open(os.path.join(os.path.dirname(__file__), '../../data/peaks/%s_selected_param_%s.txt'%(dataset, cfg['selection_metric']))).read().strip()
+        data_filename = os.path.join(os.path.dirname(__file__), '../../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__), '../../data/model_output/' + '_'.join([dataset, lfads_params, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
+        peak_filename = os.path.join(os.path.dirname(__file__), '../../data/peaks/' + '_'.join([dataset, 'targets-not-one_test.p']))
         df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
-        test_peak_dfs.append(pd.read_pickle('../../data/peaks/%s_targets-not-one_test.p'%dataset))
+        test_peak_dfs.append(pd.read_pickle(os.path.join(os.path.dirname(__file__), '../../data/peaks/%s_targets-not-one_test.p'%dataset)))
         dfs.append(df)
         cos.append(co)
         trial_lens.append(trial_len)
@@ -142,7 +139,7 @@ def plot_window_perf(output, use_rates, event_label, color):
     #plt.ylim([0, .8])
     
 if __name__=='__main__':
-    initial_filename = "../../data/peaks/window_comparison_targets-not-one.csv"#snakemake.input[0]
+    initial_filename = os.path.join(os.path.dirname(__file__), "../../data/peaks/window_comparison_targets-not-one.csv")
     initial_output = pd.read_csv(initial_filename)
     config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
@@ -160,6 +157,4 @@ if __name__=='__main__':
     fig.text(0.6, .45, 'Inferred Inputs', color=colors[0])
     fig.text(0.7, .83, 'Firing Rates', color=colors[1])
 
-    plt.savefig('../../figures/final_figures/window_performance_initial.svg')
-    plt.savefig('../../figures/final_figures/numbered/5b.pdf')
-    #plt.savefig(snakemake.output[0])
+    plt.savefig(os.path.join(os.path.dirname(__file__), '../../figures/final_figures/numbered/5b.pdf'))

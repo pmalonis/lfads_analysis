@@ -6,7 +6,7 @@ import os
 import yaml
 import matplotlib.pyplot as plt
 import numpy as np
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = True

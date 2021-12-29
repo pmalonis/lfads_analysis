@@ -6,7 +6,7 @@ import yaml
 import sys
 import os
 from scipy.signal import savgol_filter
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 import timing_analysis as ta
 import seaborn as sns
@@ -23,7 +23,8 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 selection_metric = cfg['selection_metric']
 
 if __name__=='__main__':
-    run_info = yaml.safe_load(open('../../lfads_file_locations.yml', 'r'))
+    run_info_path = os.path.join(os.path.dirname(__file__),'../../lfads_file_locations.yml')
+    run_info = yaml.safe_load(open(run_info_path, 'r'))
     datasets = list(run_info.keys())
     params = []
 
@@ -32,12 +33,16 @@ if __name__=='__main__':
     event = 'targets-not-one'
     all_peak_times = {}
     for dataset in datasets:
-        params.append(open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric)).read())
+        param_filename = os.path.join(os.path.dirname(__file__),
+                '../../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric))
+        params.append(open(param_filename).read())
 
     for dataset, param in zip(datasets, params):
-        data_filename = '../../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
-        inputInfo_filename = '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+        data_filename = os.path.join(os.path.dirname(__file__),'../../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__),
+                        '../../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), 
+                            '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
 
         df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
         n_inputs = co.shape[2]
@@ -50,7 +55,8 @@ if __name__=='__main__':
 
         peak_times = [[[] for thresh_idx in range(len(thresholds))] for i in range(n_inputs)]
         for thresh_idx,threshold in enumerate(thresholds):
-            peak_path = '../../data/peaks/separated_%s_%s_%s_all_thresh=%0.4f.p'%(dataset, param, event, threshold)
+            peak_path = os.path.join(os.path.dirname(__file__),
+                        '../../data/peaks/separated_%s_%s_%s_all_thresh=%0.4f.p'%(dataset, param, event, threshold))
             if os.path.exists(peak_path):
                 peak_df = pd.read_pickle(peak_path)
             else:
@@ -105,6 +111,9 @@ if __name__=='__main__':
                 plt.tight_layout()
         
         #plt.savefig('../../figures/final_figures/peak_timing.svg')
+        print("FIGNUMS: %s"%plt.get_fignums())
         for fignum in plt.get_fignums():
             plt.figure(fignum)
-            plt.savefig('../../figures/final_figures/numbered/4b-%d.pdf'%fignum)
+            fig_filename = os.path.join(os.path.dirname(__file__), 
+                            '../../figures/final_figures/numbered/4b-%d.pdf'%fignum)        
+            plt.savefig(fig_filename)

@@ -8,7 +8,7 @@ import os
 from scipy.signal import savgol_filter, peak_widths
 from scipy.stats import levene, gaussian_kde
 import seaborn as sns
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 import timing_analysis as ta
 from importlib import reload

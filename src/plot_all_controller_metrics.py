@@ -104,6 +104,7 @@ class Measure():
     def savefig(self):
         if self.filename is not None and self.fig is not None:
             self.fig.savefig(self.filename)
+            print(self.filename)
         else:
             print("fig is None, nothing was saved")
 
@@ -213,7 +214,8 @@ class Decode(Measure):
         self.datasets[dataset].measure[prior].append(m)
 
     def compute_measure(self, run):
-        lfads_filename = os.path.dirname(__file__) + '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5'])
+        lfads_filename = os.path.join(os.path.dirname(__file__), 
+                        '../data/model_output/' + '_'.join([run.dataset, run.param, 'all.h5']))
         with h5py.File(lfads_filename, 'r') as h5file:
             X = dl.get_lfads_predictor(h5file['factors'][:])
 
@@ -400,25 +402,34 @@ metric_dict = {'gini': Gini,
 
 if __name__=='__main__':
     #measures = [m(filename='../figures/final_figures/%s.svg'%k) for k,m in metric_dict.items()]    
-    measures = [Decode(filename='../figures/final_figures/numbered/2c.pdf'), 
-                Gini(filename='../figures/final_figures/numbered/2d.pdf')]
+    figure_dir = os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/') 
+    measures = [Decode(filename= figure_dir + '2c.pdf'), 
+                Gini(filename=figure_dir + '2d.pdf')]
     config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
-
     
     for dataset in run_info.keys():
-        df = pd.read_pickle('../data/intermediate/%s.p'%dataset)
+        dataset_path = os.path.join(os.path.dirname(__file__), 
+                                    '../data/intermediate/%s.p'%dataset)
+        df = pd.read_pickle(dataset_path)
         
         for param in run_info[dataset]['params'].keys():
-            lfads_filename = '../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
-            selected_params = open('../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric'])).read()
+            lfads_filename =  os.path.join(os.path.dirname(__file__), 
+                                            '../data/model_output/' + '_'.join([dataset, 
+                                                                                param, 'all.h5']))
+            selected_params = open(os.path.join(os.path.dirname(__file__), 
+                            '../data/peaks/%s_selected_param_%s.txt'%(dataset,cfg['selection_metric']))).read()
+            selected_params = selected_params.replace('-offset','')
             co_dim = run_info[dataset]['params'][selected_params]['param_values']['co_dim']
 
             if run_info[dataset]['params'][param]['param_values'].get('co_dim') != co_dim:
                 continue
 
-            inputInfo_filename = '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+            inputInfo_filename = os.path.join(os.path.dirname(__file__), 
+                                            '../data/model_output/' + '_'.join([dataset, 
+                                                                                'inputInfo.mat']))
             input_info = io.loadmat(inputInfo_filename)
+            
             with h5py.File(lfads_filename, 'r') as h5file:
                 dt = utils.get_dt(h5file, input_info)
                 trial_len = utils.get_trial_len(h5file, input_info)
@@ -426,8 +437,6 @@ if __name__=='__main__':
                     co = h5file['controller_outputs'][:]
                 else:
                     co = np.zeros((df.index[-1][0], int(trial_len/dt), 2))
-
-            
             prior = run_info[dataset]['params'][param]['param_values'].get('ar_prior_dist')
             if prior is None:
                 prior = 'gaussian'

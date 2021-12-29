@@ -8,7 +8,7 @@ import os
 from scipy.signal import savgol_filter, peak_widths
 from scipy.stats import levene, gaussian_kde
 import seaborn as sns
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import utils
 import timing_analysis as ta
 from importlib import reload
@@ -63,7 +63,7 @@ def dist_width(sample):
     return width[0]
 
 if __name__=='__main__':
-    run_info = yaml.safe_load(open('../../lfads_file_locations.yml', 'r'))
+    run_info = yaml.safe_load(open(os.path.join(os.path.dirname(__file__), '../../lfads_file_locations.yml'), 'r'))
     datasets = run_info.keys()
     params = []
     #cfg['selected_co_dim']
@@ -72,25 +72,25 @@ if __name__=='__main__':
     colors = utils.contrasting_colors(**cfg['colors']['target_vs_firstmove'])
     colors[0] = tuple(colors[0] - np.array([0, 0.2, 0.2]))
     for dataset in datasets:
-        params.append(open('../../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric)).read())
+        params.append(open(os.path.join(os.path.dirname(__file__), '../../data/peaks/%s_selected_param_%s.txt'%(dataset,selection_metric))).read())
 
     plt.figure(figsize=(15,6))
     peak_df = {}
     all_n_inputs = []
     for dset_idx, (dataset, param) in enumerate(zip(datasets, params)):
-        data_filename = '../../data/intermediate/' + dataset + '.p'
-        lfads_filename = '../../data/model_output/' + '_'.join([dataset, param, 'all.h5'])        
-        inputInfo_filename = '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat'])
+        data_filename = os.path.join(os.path.dirname(__file__), '../../data/intermediate/' + dataset + '.p')
+        lfads_filename = os.path.join(os.path.dirname(__file__), '../../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
+        inputInfo_filename = os.path.join(os.path.dirname(__file__), '../../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
 
         df, co, trial_len, dt = utils.load_data(data_filename, lfads_filename, inputInfo_filename)
         co = np.abs(co).sum(2, keepdims=True)
         n_inputs = co.shape[2]
         all_n_inputs.append(n_inputs)
-        peak_path = '../../data/peaks/%s_%s_post_target_maximum.p'%(dataset, param)
+        peak_path = os.path.join(os.path.dirname(__file__), '../../data/peaks/%s_%s_post_target_maximum.p'%(dataset, param))
         if os.path.exists(peak_path):
             peak_df[dataset] = pd.read_pickle(peak_path)
         else:
-            firstmove_df = pd.read_pickle('../../data/peaks/%s_firstmove_all.p'%(dataset))
+            firstmove_df = pd.read_pickle(os.path.join(os.path.dirname(__file__), '../../data/peaks/%s_firstmove_all.p'%(dataset)))
             target_df = df.kinematic.query('hit_target')
             peak_df[dataset] = ta.get_maximum_peaks(co, dt, df, firstmove_df, min_peak_time=0)
             peak_df[dataset].to_pickle(peak_path)
@@ -146,5 +146,4 @@ if __name__=='__main__':
             #plt.legend(['Aligned to First Movement', 'Aligned to Target'])
 
     plt.tight_layout()
-    #plt.savefig('../../figures/final_figures/target_vs_firstmove_peak_timing.svg')
-    plt.savefig('../../figures/final_figures/numbered/4c.pdf')
+    plt.savefig(os.path.join(os.path.dirname(__file__), '../../figures/final_figures/numbered/4c.pdf'))
