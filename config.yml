@@ -1,3 +1,38 @@
+lfads_file_server: 205.208.22.225
+lfads_dir_path: ~/peter/lfads_analysis/data/model_output/
+lfads_run_names: ['kl-co-dim-search']
+username: macleanlab
+selection_metric: adhoc
+
+# order will be preserved in lfads yaml file
+datasets:
+  rockstar: 
+    name: RS
+    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
+    adhoc_param: kl-co-dim-search-FDCWrX-offset
+  mack:
+    name: MK
+    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
+    adhoc_param: kl-co-dim-search-FDCWrX-offset
+  raju-M1-no-bad-trials:
+    name: RJ
+    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
+    adhoc_param: kl-co-dim-search-6p5E8J-offset
+
+target_preprocessing_search:
+  fit_direction: [True, False]
+  reference: ['hand','shoulder']
+  corr: ['ca']
+  poly_features: [False]
+  reduce_time: [False]
+  use_rates: [False]
+  reduce_neurons: [False]
+  filter_co: [False]
+  win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)',
+            '(0.15,0.4)']
+  hand_time: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
+  rate_pcs: [2]
+
 #submovement transitions
 firstmove_speed_transition_thresh: 1000
 firstmove_min_speed_prominence: 25
@@ -31,6 +66,7 @@ neural_offset: 0.05
 
 center_out:
   rockstar: pmalonis@205.208.57.121:~/center_out/rs1050225_clean_SNRgt4.mat
+
 integration_win_size: 0.2
 peri_target_kinematics_start: -0.1
 peri_target_kinematics_stop: 0
@@ -77,36 +113,6 @@ colors:
     start_hue: 0.12
     saturation: 0.7
     reverse: True
-
-# lfads_file_server: cri-syncmon.cri.uchicago.edu
-# lfads_dir_path: /gpfs/data/nicho-lab/pmalonis/data/model_output/
-# username: pmalonis
-lfads_file_server: 205.208.22.225
-lfads_dir_path: ~/peter/lfads_analysis/data/model_output/
-username: macleanlab
-#lfads_file_pattern: */*/*/*/model_runs_*.h5*_posterior_sample_and_average # will work for other patterns as long as first wildcard corresponds to the dataset and the second is "train" or "valid"
-
-# select which metric to use to select model
-selection_metric: adhoc ##decode
-#selected_co_dim: 2
-#selected_kl_weight: 2.0
-
-# order will be preserved in lfads yaml file
-datasets:
-  rockstar: 
-    name: RS
-    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
-    adhoc_param: kl-co-dim-search-FDCWrX-offset
-  mack:
-    name: MK
-    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
-    adhoc_param: kl-co-dim-search-FDCWrX-offset
-  raju-M1-no-bad-trials:
-    name: RJ
-    raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
-    adhoc_param: kl-co-dim-search-6p5E8J-offset
-  #raju_M1: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_M1.mat
-  #raju_PMd: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju_PMd.mat
 
 event_split_ratio: 0.2
 
@@ -162,36 +168,6 @@ maximum_win_stop: 0.15
 #   win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)',
 #             '(0.15,0.4)']
 #   hand_time: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
-#   rate_pcs: [2]
-
-#mag dir search
-target_preprocessing_search:
-  fit_direction: [True, False]
-  reference: ['hand','shoulder']
-  corr: ['ca']
-  poly_features: [False]
-  reduce_time: [False]
-  use_rates: [False]
-  reduce_neurons: [False]
-  filter_co: [False]
-  win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)',
-            '(0.15,0.4)']
-  hand_time: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
-  rate_pcs: [2]
-
-#window search
-# target_preprocessing_search:
-#   fit_direction: [False]
-#   reference: ['hand']
-#   corr: ['ca']
-#   poly_features: [False]
-#   reduce_time: [False]
-#   use_rates: [False]
-#   reduce_neurons: [False]
-#   filter_co: [False]
-#   win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)',
-#              '(0.15,0.4)', '(0.2,0.45)', '(0.25,0.5)', '(0.3, 0.55)']
-#   hand_time: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
 #   rate_pcs: [2]
 
 svr_parameters: 

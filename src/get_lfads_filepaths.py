@@ -13,25 +13,13 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 
 def write_filepaths(output_filename):
     common_param_filename = os.path.dirname(__file__) + '/../lfads_common_parameters.yml'
-    # file_pattern = 'mack_large_bin/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    # file_pattern = cfg['lfads_dir_path'] + file_pattern
-    # file_pattern = 'mack_fixed_tau_2co/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    # file_pattern = cfg['lfads_dir_path'] + file_pattern
-    #file_pattern = 'test_fixed_tau/*/single*k*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern = cfg['lfads_dir_path'] + file_pattern
-    
-    #file_pattern = 'gaussian_kl_sweep/*/single*k*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern = cfg['lfads_dir_path'] + file_pattern
-    #file_pattern += ' ' + cfg['lfads_dir_path'] + 'laplace_kl_sweep/*/single_*k*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern += ' ' + cfg['lfads_dir_path'] + 'raju_wide_kl_range/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern += ' ' + cfg['lfads_dir_path'] + 'wide_kl_range/*/single_rockstar/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern += ' ' + cfg['lfads_dir_path'] + 'wide_kl_range/*/single_mack/*/model_runs_*.h5*_posterior_sample_and_average'
-    file_pattern = cfg['lfads_dir_path'] + 'kl_co_dim_search/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern = cfg['lfads_dir_path'] + 'final_kl_co_dim_search/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern += ' ' + cfg['lfads_dir_path'] + 'low_learning_rate_stop/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern = cfg['lfads_dir_path'] + 'dense_lfads_co_dim_sweep/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern += ' ' + cfg['lfads_dir_path'] + 'greater_co_dim_sweep/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-    #file_pattern = cfg['lfads_dir_path'] + 'low_learning_rate_stop/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
+    file_pattern = []
+    for i, run in enumerate(cfg['lfads_run_names']):
+        if i > 0:
+            file_pattern += ' '
+        file_pattern += cfg['lfads_dir_path'] + run + '/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
+
+
     files = sp.check_output(['ssh', cfg['username'] + "@" + cfg['lfads_file_server'], 'ls', file_pattern]).decode().split()
     hp_files=[dirname(f)+ '/hyperparameters-0.txt'
               for f in files if '.h5_train_posterior_sample_and_average' in f]
