@@ -134,7 +134,6 @@ def raw_to_dataframe(data, input_info):
 
     return df
 
-
 if __name__=='__main__':
     data = io.loadmat(snakemake.input[0])
     input_info = io.loadmat(snakemake.input[1])

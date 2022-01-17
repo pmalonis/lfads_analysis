@@ -2,7 +2,6 @@ lfads_file_server: 205.208.22.225
 lfads_dir_path: ~/peter/lfads_analysis/data/model_output/
 lfads_run_names: ['kl-co-dim-search']
 username: macleanlab
-selection_metric: adhoc
 
 # order will be preserved in lfads yaml file
 datasets:
@@ -18,6 +17,16 @@ datasets:
     name: RJ
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
     adhoc_param: kl-co-dim-search-6p5E8J-offset
+
+data_chunking:
+  chunk_length: 0.6
+  overlap: 0.2
+
+truncate_autolfads_chunks: True
+
+autolfads_time_bin: 0.01
+
+selection_metric: adhoc
 
 target_preprocessing_search:
   fit_direction: [True, False]

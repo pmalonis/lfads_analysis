@@ -63,24 +63,29 @@ def get_indices(input_info, trial_type):
 
 def get_dt(lfads_h5file, input_info):
     '''Gets LFADS time bin size'''
-
-    trial_len_ms = input_info['seq_timeVector'][0][-1]
-    if 'factors' in lfads_h5file.keys():
-        nbins = lfads_h5file['factors'].shape[1]
-    elif 'controller_outputs' in lfads_h5file.keys():
-        nbins = lfads_h5file['controller_outputs'].shape[1]
-        
-    dt_ms = np.round(trial_len_ms/nbins)
-    dt = dt_ms/1000
+    if input_info.get('autolfads'):
+        return cfg['autolfads_time_bin']
+    else:
+        trial_len_ms = input_info['seq_timeVector'][0][-1]
+        if 'factors' in lfads_h5file.keys():
+            nbins = lfads_h5file['factors'].shape[1]
+        elif 'controller_outputs' in lfads_h5file.keys():
+            nbins = lfads_h5file['controller_outputs'].shape[1]
+            
+        dt_ms = np.round(trial_len_ms/nbins)
+        dt = dt_ms/1000
 
     return dt
 
 def get_trial_len(lfads_h5file, input_info):
     '''Gets trial length'''
-    dt = get_dt(lfads_h5file, input_info)
-    trial_len_ms = input_info['seq_timeVector'][-1][-1]
-    trial_len = trial_len_ms/1000
-    trial_len = np.floor(trial_len/dt)*dt
+    if input_info.get('autolads'):
+        return input_info['trial_len']
+    else:        
+        dt = get_dt(lfads_h5file, input_info)
+        trial_len_ms = input_info['seq_timeVector'][-1][-1]
+        trial_len = trial_len_ms/1000
+        trial_len = np.floor(trial_len/dt)*dt
 
     return trial_len
 
