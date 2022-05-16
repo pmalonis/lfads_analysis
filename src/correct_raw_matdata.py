@@ -12,7 +12,7 @@ def correct_timing(filename, output):
     
     filename: filename of mat file to correct
     output: filename of output file'''
-
+    
     matdata = io.loadmat(filename)
 
     if matdata.get('timing_corrected'):

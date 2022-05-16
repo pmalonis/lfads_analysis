@@ -78,8 +78,6 @@ def raw_to_dataframe(data, input_info):
     for i in range(ntrials):
         start = data['cpl_st_trial_rew'][i,0].real
         stop = data['cpl_st_trial_rew'][i,1].real 
-        if stop - start < trial_len:
-            continue
 
         stop += cfg['preprocess']['post_trial_pad']
 
@@ -139,7 +137,16 @@ def raw_to_dataframe(data, input_info):
     return df
 
 if __name__=='__main__':
-    data = io.loadmat(snakemake.input[0])
-    input_info = io.loadmat(snakemake.input[1])
+
+    # raw_filename = snakemake.input[0]
+    # inputInfo_filename = snakemake.input[1]
+    # output_filename = snakemake.output[0]
+
+    raw_filename = '../data/raw/rockstar.mat'
+    inputInfo_filename = '../data/model_output/rockstar_inputInfo.mat'
+    output_filename = '../data/intermediate/rockstar_full.p'
+    
+    data = io.loadmat(raw_filename)
+    input_info = io.loadmat(inputInfo_filename)
     df = raw_to_dataframe(data, input_info)
-    df.to_pickle(snakemake.output[0])
+    df.to_pickle(output_filename)

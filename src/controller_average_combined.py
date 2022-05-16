@@ -35,7 +35,7 @@ nbins = 12
 # fb_win_stop = 0.05 #0.3#0.1#cfg['post_target_win_stop']
 # win_start = -0.25
 # win_stop = 0.0
-fb_win_start = -0.35#0.00#-0.1#cfg['post_target_win_start']
+fb_win_start = -0.3#0.00#-0.1#cfg['post_target_win_start']
 fb_win_stop = 0.0 #0.3#0.1#cfg['post_target_win_stop']
 win_start = -0.3
 win_stop = 0.0
@@ -51,7 +51,7 @@ if __name__=='__main__':
         data_filename = os.path.join(os.path.dirname(__file__), '../data/intermediate/' + dataset + '.p')
         lfads_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, param, 'all.h5']))
         inputInfo_filename = os.path.join(os.path.dirname(__file__), '../data/model_output/' + '_'.join([dataset, 'inputInfo.mat']))
-        
+
         df = data_filename = pd.read_pickle(data_filename)
         input_info = io.loadmat(inputInfo_filename)
         with h5py.File(lfads_filename, 'r+') as h5file:
@@ -92,8 +92,7 @@ if __name__=='__main__':
         t_ms = np.arange(win_start, win_stop, dt) * 1000
         fb_t_ms = np.arange(fb_win_start, fb_win_stop, dt) * 1000
 
-        for j in range(n_co):
-                                         
+        for j in range(n_co):          
             #plt.suptitle('%s Inferred Input %s'%(run_info[dataset]['name'],(j+1)))
             ymin, ymax = (np.min(X[:,j*win_size:(j+1)*win_size]), np.max(X[:,j*win_size:(j+1)*win_size]))
             if j == 0:
@@ -142,6 +141,6 @@ if __name__=='__main__':
 
         fig.text(0.05,0.4, 'Inferred Input Value (a.u.)',ha='center',rotation='vertical')        
         fig.text(0.5, 0.03, 'Time from Movement (ms)',ha='center')
-        #plt.tight_layout()     
+        #plt.tight_layout()
         fig.subplots_adjust(right=.88)
         plt.savefig(os.path.join(os.path.dirname(__file__), '../figures/final_figures/numbered/7a.pdf'))

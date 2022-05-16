@@ -342,7 +342,7 @@ rule download_model:
             else:
                 going=False
         
-        correct_timing(ouput[0], output[0])
+        #orrect_timing(output[0], output[0])
 
 rule download_raw:
     params:

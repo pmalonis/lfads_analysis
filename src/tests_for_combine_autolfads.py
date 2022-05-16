@@ -27,13 +27,17 @@ if __name__ == '__main__':
             float_size = 8 #float size in bytes
             step = chunk_size - overlap
             n_chunks = np.round((trial_size - overlap)/step).astype(int)
-            chunked_data = as_strided(data, (n_chunks*n_trials, chunk_size, n_dim), (step*float_size*n_dim, float_size*n_dim, float_size))
+            # dimensions -- trial, chunk, time, data dimension
+            chunked_data = as_strided(data, (n_trials, n_chunks, chunk_size, n_dim), 
+                                            (trial_size*n_dim*float_size, step*n_dim*float_size, float_size*n_dim, float_size))
+            #stacking chunks across trials
+            chunked_data = np.vstack(chunked_data)
             return chunked_data, data
 
         n_chunks = np.round((trial_size - overlap)/(chunk_size-overlap)).astype(int)
         inds = np.arange(n_chunks*n_trials)
         train_inds, valid_inds = train_test_split(inds, test_size=0.2)
-        input_file['train_inds'] = train_inds
+        input_file['train_inds'] = train_inds 
         input_file['valid_inds'] = valid_inds
         trials = np.concatenate([[i]*n_chunks for i in range(n_trials)])
         input_file['train_trials'] = trials[train_inds]

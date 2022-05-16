@@ -67,7 +67,7 @@ if __name__ == '__main__':
         valid_trials = valid_trials[order_valid]
         train_inds = train_inds[order_train]
         valid_inds = valid_inds[order_valid]
-        with h5py.File('../data/raw/for_autolfads/%s.h5'%dataset,'w') as h5file:
+        with h5py.File('../data/raw/for_autolfads/rockstar_full_600ms/lfads_%s.h5'%dataset,'w') as h5file:
             h5file.create_dataset('train_data', data=data[train_inds,:,:])
             h5file.create_dataset('valid_data', data=data[valid_inds,:,:])
             h5file.create_dataset('train_inds', data=train_inds)
@@ -76,3 +76,4 @@ if __name__ == '__main__':
             h5file.create_dataset('valid_trials', data=valid_trials)
             h5file.create_dataset('all_trials', data=trials)
             h5file.close()
+            

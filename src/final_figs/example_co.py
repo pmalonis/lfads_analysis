@@ -38,7 +38,7 @@ if __name__=='__main__':
         inputInfo_filename = os.path.join(os.path.dirname(__file__),'../../data/model_output/' + \
                             '_'.join([dataset, 'inputInfo.mat']))
         input_info = io.loadmat(inputInfo_filename)
-        with h5py.File(lfads_filename) as h5file:
+        with h5py.File(lfads_filename,'r') as h5file:
             co = h5file['controller_outputs'][:]
             dt = utils.get_dt(h5file, input_info)
             trial_len = utils.get_trial_len(h5file, input_info)

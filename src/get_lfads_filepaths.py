@@ -13,12 +13,11 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 
 def write_filepaths(output_filename):
     common_param_filename = os.path.dirname(__file__) + '/../lfads_common_parameters.yml'
-    file_pattern = []
+    file_pattern = ''
     for i, run in enumerate(cfg['lfads_run_names']):
         if i > 0:
             file_pattern += ' '
         file_pattern += cfg['lfads_dir_path'] + run + '/*/*/*/model_runs_*.h5*_posterior_sample_and_average'
-
 
     files = sp.check_output(['ssh', cfg['username'] + "@" + cfg['lfads_file_server'], 'ls', file_pattern]).decode().split()
     hp_files=[dirname(f)+ '/hyperparameters-0.txt'

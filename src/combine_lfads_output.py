@@ -4,11 +4,17 @@ from scipy.io import loadmat
 
 if __name__=='__main__':
 
-    train_filename = snakemake.input[0]
-    valid_filename = snakemake.input[1]
-    inputInfo_filename = snakemake.input[2]
-    output_filename = snakemake.output[0]
+    #train_filename = snakemake.input[0]
+    #valid_filename = snakemake.input[1]
+    #inputInfo_filename = snakemake.input[2]
+    #output_filename = snakemake.output[0]
 
+    
+    train_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_fit-direction-Transient-posture-serial-2targ-FDCWrX_train.h5'
+    valid_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_fit-direction-Transient-posture-serial-2targ-FDCWrX_valid.h5'
+    inputInfo_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_inputInfo.mat'
+    output_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_fit-direction-Transient-posture-serial-2targ-FDCWrX_all.h5'
+    
     input_info = loadmat(inputInfo_filename)
     valid_inds = input_info['validInds'][0] - 1
     train_inds = input_info['trainInds'][0] - 1
@@ -25,5 +31,3 @@ if __name__=='__main__':
             output_file.create_dataset(dataset, shape=(n_trials,)+train_file[dataset].shape[1:])
             output_file[dataset][valid_inds,:,:] = valid_file[dataset][:,:,:]
             output_file[dataset][train_inds,:,:] = train_file[dataset][:,:,:]
-
-        

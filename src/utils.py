@@ -79,8 +79,8 @@ def get_dt(lfads_h5file, input_info):
 
 def get_trial_len(lfads_h5file, input_info):
     '''Gets trial length'''
-    if input_info.get('autolads'):
-        return input_info['trial_len']
+    if input_info.get('autolfads'):
+        return input_info['trial_len'][0][0]
     else:        
         dt = get_dt(lfads_h5file, input_info)
         trial_len_ms = input_info['seq_timeVector'][-1][-1]

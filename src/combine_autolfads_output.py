@@ -30,7 +30,6 @@ def create_end_window(chunk_length_bins, overlap_bins):
 
     return np.concatenate([pad, end])
 
-
 if __name__=='__main__':
 
     # train_filename = snakemake.input[0]
@@ -38,17 +37,17 @@ if __name__=='__main__':
     # input_filename = snakemake.input[2]
     # output_filename = snakemake.output[0]
     
-    # train_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/new_autolfads/rockstar_split_trunc/lfadsOutput/model_runs_rockstar-truncated.h5_train_posterior_sample_and_average'
-    # valid_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/new_autolfads/rockstar_split_trunc/lfadsOutput/model_runs_rockstar-truncated.h5_valid_posterior_sample_and_average'
-    # input_filename = '/home/macleanlab/peter/lfads_analysis/data/raw/for_autolfads/rockstar/lfads_rockstar-truncated.h5'
-    # output_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_autolfads-split-trunc-01_all.h5'
-    # matInfo_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_inputInfo.mat'
+    train_filename = '../data/model_output/new_autolfads/600msChunk200msOverlap_full_data_3_epochs/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average'
+    valid_filename = '../data/model_output/new_autolfads/600msChunk200msOverlap_full_data_3_epochs/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average'
+    input_filename = '../data/raw/for_autolfads/rockstar_full_600ms/lfads_rockstar.h5'
+    output_filename = '../data/model_output/rockstar_autolfads-full-data-3-epochs_all.h5'
+    matInfo_filename = '../data/model_output/long_rockstar_inputInfo.mat'
 
-    train_filename = '/home/macleanlab/peter/lfads_analysis/src/temp_train.h5'
-    valid_filename = '/home/macleanlab/peter/lfads_analysis/src/temp_valid.h5'
-    input_filename = '/home/macleanlab/peter/lfads_analysis/src/temp_input.h5'
-    output_filename = '/home/macleanlab/peter/lfads_analysis/src/test_combine.h5'
-    matInfo_filename = '/home/macleanlab/peter/temp.mat'
+    # train_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/split_rockstar_full_600ms200ms_overlap/param_FDCWrX/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average'
+    # valid_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/split_rockstar_full_600ms200ms_overlap/param_FDCWrX/single_rockstar/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average'
+    # input_filename = '/home/macleanlab/peter/lfads_analysis/data/raw/for_autolfads/rockstar_full_600ms/lfads_rockstar.h5'
+    # output_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_lfads-full-data_all.h5'
+    # matInfo_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/full_lfads_rockstar_inputInfo.mat'
 
     config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
     cfg = yaml.safe_load(open(config_path, 'r'))
@@ -67,7 +66,7 @@ if __name__=='__main__':
 
     n_trials = np.max(np.concatenate([valid_inds, train_inds])) + 1
 
-    copy_datasets = ['controller_outputs', 'output_dist_params', 'factors'] #datasets to copy
+    copy_datasets = ['controller_outputs', 'output_dist_params', 'factors', 'gen_states'] #datasets to copy
     with h5py.File(train_filename, 'r') as train_file, \
     h5py.File(valid_filename, 'r') as valid_file, \
     h5py.File(output_filename, 'w') as output_file,\
@@ -99,7 +98,7 @@ if __name__=='__main__':
             
             for trial_idx in range(n_trials):
                 trial_data = all_data_chunked[trial_idx == trials, :, :].copy()
-                #applying windows 
+                # applying windows 
                 trial_data[1:,:] = (trial_data[1:,:].swapaxes(1,2) * begin_window).swapaxes(1,2)
                 trial_data[:-1,:] = (trial_data[:-1,:].swapaxes(1,2) * end_window).swapaxes(1,2)
                 n_chunks = trial_data.shape[0]
@@ -114,8 +113,17 @@ if __name__=='__main__':
                 else:
                     combined_data.create_dataset('trial_%03d'%trial_idx, data=combined_trial)
 
-            output_file.create_dataset(dataset, data=combined_data)
+            if are_trials_equal:
+                output_file.create_dataset(dataset, data=combined_data)
         
         if are_trials_equal:
-            input_info = {'trial_len':trial_len_bins * dt, 'autolfads':True}
+            input_info = {'trial_len':trial_len_bins * dt, 
+                            'autolfads':True,
+                            'trial_cutoff':3.86,
+                            'trainInds': train_inds+1,
+                            'validInds': valid_inds+1,
+                            'seq_binSizeMs': np.array([[1]], dtype=np.uint8),
+                            'conditionID': np.ones((all_data_chunked.shape[0],1), dtype=np.uint8),
+                            'seq_timeVector': np.arange(0, all_data_chunked.shape[1]*dt, dt/1000)}
+
             savemat(matInfo_filename, input_info)

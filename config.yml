@@ -1,6 +1,6 @@
 lfads_file_server: 205.208.22.225
 lfads_dir_path: ~/peter/lfads_analysis/data/model_output/
-lfads_run_names: ['kl-co-dim-search']
+lfads_run_names: ['fit_direction_Transient_posture_serial_2targ'] #['kl_co_dim_search', 'split_rockstar_1000ms200ms_overlap']
 username: macleanlab
 
 # order will be preserved in lfads yaml file
@@ -8,7 +8,7 @@ datasets:
   rockstar: 
     name: RS
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/rockstar.mat
-    adhoc_param: kl-co-dim-search-FDCWrX-offset
+    adhoc_param: autolfads-split-trunc-02 #kl-co-dim-search-FDCWrX-offset
   mack:
     name: MK
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/mack.mat
@@ -16,6 +16,10 @@ datasets:
   raju-M1-no-bad-trials:
     name: RJ
     raw: pmalonis@cri-syncmon.cri.uchicago.edu:/gpfs/data/nicho-lab/pmalonis/data/raw/raju-M1-no-bad-trials.mat
+    adhoc_param: kl-co-dim-search-6p5E8J-offset
+  fit-direction-Transient-posture-serial-2targ:
+    name: RNN
+    raw: macleanlab@205.208.22.225:~/peter/lfads_analysis/data/raw/fit-direction-Transient-posture-serial-2targ.raw
     adhoc_param: kl-co-dim-search-6p5E8J-offset
 
 data_chunking:
@@ -37,8 +41,7 @@ target_preprocessing_search:
   use_rates: [False]
   reduce_neurons: [False]
   filter_co: [False]
-  win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)',
-            '(0.15,0.4)']
+  win_lim: ['(0,0.25)','(0.05,0.3)','(0.10,0.35)','(0.15,0.4)']
   hand_time: [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
   rate_pcs: [2]
 

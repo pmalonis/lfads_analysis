@@ -19,6 +19,7 @@ cfg = yaml.safe_load(open(config_path, 'r'))
 spike_dt = 0.001
 target_size = 10 #target size in millimeters
 cursor_size = 3
+
 if __name__=='__main__':
     dataset = 'rockstar'
     example_filename = os.path.join(os.path.dirname(__file__),

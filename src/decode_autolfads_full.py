@@ -14,6 +14,7 @@ from utils import get_indices
 import utils
 from sklearn.linear_model import Ridge, Lasso, LinearRegression
 from sklearn.metrics import r2_score
+from chunking_split_data_for_autolfads import get_n_chunks
 
 config_path = os.path.join(os.path.dirname(__file__), '../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
@@ -26,11 +27,8 @@ dt = 0.010
 kin_dt = 0.001
 win = int(dt/kin_dt)
 
-def get_rs(X, Y, n_splits, trial_len, dt, n_trials, kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], 
+def get_rs(X, Y, groups, n_splits, dt, kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], 
            use_reg=False, regularizer='ridge', alpha=1, random_state=None):
-    
-    T_trial = np.round(trial_len/dt).astype(int)
-    groups = np.repeat(np.arange(n_trials), T_trial)
 
     rs = {k:np.zeros(n_splits) for k in kinematic_vars} 
     kf = GroupKFold(n_splits=n_splits)
@@ -82,20 +80,39 @@ def get_smoothed_rates(data, trial_len, dt, kinematic_vars = ['x', 'y', 'x_vel',
 
     return X
 
-def get_kinematics(data, trial_len, dt, kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], used_inds=None):
+def get_kinematics(data, dt, kinematic_vars=['x', 'y', 'x_vel', 'y_vel'], used_inds=None):
     if used_inds == None:
         used_inds = np.arange(data.index[-1][0]+1)
 
     kin_dt = 0.001 #dt of kinematics
     win = int(dt/kin_dt)
     midpoint_idx = win//2 - 1  #midpoint of lfads time step to take for downsampling kinematics
-    downsampled_kinematics = data.groupby('trial').apply(lambda _df: _df.loc[_df.index[0][0]].loc[offset:trial_len+offset].kinematic[kinematic_vars].iloc[midpoint_idx::win])
+    def downsample_offset(_df):
+        trial_idx = _df.index[0][0]
+        trial_df = _df.loc[trial_idx]
+
+        trial_len = trial_df.index[-1] - cfg['preprocess']['post_trial_pad']
+        n_chunks = get_n_chunks(trial_len)
+        chunked_trial_len = n_chunks * cfg['data_chunking']['chunk_length'] - (n_chunks-1)*cfg['data_chunking']['overlap']
+        offset_trial = trial_df.loc[offset:chunked_trial_len+offset]
+        downsampled = offset_trial.kinematic[kinematic_vars].iloc[midpoint_idx::win]
+        return downsampled
+
+    downsampled_kinematics = data.groupby('trial').apply(downsample_offset)
+
     Y = downsampled_kinematics.loc[used_inds].values
 
     return Y
 
+
 def get_lfads_predictor(predictor):
-    return predictor.reshape((predictor.shape[0]*predictor.shape[1], -1))
+    n_trials = len(predictor.keys())
+    trial_data = [predictor['trial_%03d'%i][:] for i in range(n_trials)]
+    groups = [[i]*d.shape[0] for i,d in enumerate(trial_data)]
+    trial_data = np.concatenate(trial_data)
+    groups = np.concatenate(groups)
+    
+    return trial_data, groups
 
 if __name__=='__main__':
 
@@ -105,23 +122,25 @@ if __name__=='__main__':
     # output_files = snakemake.output
     # trial_type = snakemake.wildcards.trial_type
 
-    experiment_file = '../data/intermediate/rockstar.p'
+    experiment_file = '../data/intermediate/rockstar_full.p'
     #lfads_file = '../data/model_output/rockstar_autolfads-1000msChunk200msOverlap-keep-ratio-low-range_all.h5'#'../data/model_output/rockstar_autolfads-split-trunc-01_all.h5'
     #inputInfo_file = '../data/model_output/rockstar_inputInfo.mat'
     #lfads_file = '../data/model_output/rockstar_split-rockstar-1000ms200ms-overlap-FDCWrX_all.h5'
+    
     #inputInfo_file = '../data/model_output/splitlfads_rockstar_inputInfo.mat'
     #lfads_file = '../data/model_output/rockstar_kl-co-dim-search-FDCWrX_all.h5'
     #inputInfo_file = '../data/model_output/bu_rockstar_inputInfo.mat'
     
-    lfads_file = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_autolfads-1000msChunk200msOverlap-low-CD_all.h5'
-    
-    #lfads_file = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_autolfads-1000msChunk200msOverlap-low-CD_all.h5'
-    #inputInfo_file = '../data/model_output/rockstar_inputInfo.mat'
-    #lfads_file = '../data/model_output/rockstar_autolfads-split-trunc-02_all.h5'#'../data/model_output/rockstar_autolfads-split-trunc-01_all.h5'
+    #lfads_file = '../data/model_output/rockstar_lfads-full-data_all.h5'
+
+    lfads_file = '../data/model_output/rockstar_autolfads-full-data-3-epochs_all.h5'
+    #lfads_file = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_autolfads-trunc-1000msChunk200msOverlap_all.h5'
     inputInfo_file = '../data/model_output/long_rockstar_inputInfo.mat'
+    #lfads_file = '../data/model_output/rockstar_autolfads-split-trunc-02_all.h5'#'../data/model_output/rockstar_autolfads-split-trunc-01_all.h5'
+    #inputInfo_file = '../data/model_output/autolfads_rockstar_inputInfo.mat'
     
-    output_files = ['../figures/rockstar_autolfads-1000ms200ms-overlap-FDCWrX_rate-decode.pdf',
-                    '../figures/rockstar_autolfads-1000ms200ms-overlap-FDCWrX_factor-decode.pdf']
+    output_files = ['../figures/rockstar_autolfads-full_rate-decode.pdf',
+                    '../figures/rockstar_autolfads-full_factor-decode.pdf']
     trial_type = 'all'
 
     # experiment_file = '../data/intermediate/rockstar.p'
@@ -135,23 +154,17 @@ if __name__=='__main__':
 
     input_info = io.loadmat(inputInfo_file)
     df = pd.read_pickle(experiment_file)
-    if trial_type == 'all':
-        used_inds = list(range(df.index[-1][0] + 1))
-    else:
-        used_inds = get_indices(input_info, trial_type)
 
-    n_trials = len(used_inds)
-    kinematic_vars = ['x', 'y', 'x_vel', 'y_vel']
+    kinematic_vars = ['x_vel', 'y_vel']
     n_splits = cfg['kin_decoding_cv_splits']
     with h5py.File(lfads_file,'r') as h5_file:
         dt = utils.get_dt(h5_file, input_info)
-        trial_len = utils.get_trial_len(h5_file, input_info)
-        Y = get_kinematics(df, trial_len, dt)
+        Y = get_kinematics(df, dt)
         #X_smoothed = get_smoothed_rates(df, trial_len, dt)
         for fig_idx, predictor in enumerate(['output_dist_params']): #enumerate(['output_dist_params', 'factors']):
-            X_lfads = get_lfads_predictor(h5_file[predictor][:])
+            X_lfads, groups = get_lfads_predictor(h5_file[predictor])
             #smoothed_rs,_ = get_rs(X_smoothed, Y, n_splits, trial_len, dt, n_trials)
-            lfads_rs,_ = get_rs(X_lfads, Y, n_splits, trial_len, dt, n_trials)
+            lfads_rs,_ = get_rs(X_lfads, Y, groups, n_splits, dt, kinematic_vars=kinematic_vars)
 
             # ## Plotting
             # commit = sp.check_output(['git', 'rev-parse', 'HEAD']).strip()

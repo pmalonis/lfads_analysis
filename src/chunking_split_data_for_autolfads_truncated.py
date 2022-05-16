@@ -78,14 +78,18 @@ if __name__ == '__main__':
         train_inds, valid_inds = train_test_split(np.arange(data.shape[0]),
                                                             test_size=0.2, 
                                                             random_state=random_state)
-
+        import pdb;pdb.set_trace()
         order_train = np.argsort(train_inds)
         order_valid = np.argsort(valid_inds)
-        train_trials = train_trials[order_train]
-        valid_trials = valid_trials[order_valid]
+        train_trials = trials[order_train]
+        valid_trials = trials[order_valid]
         train_inds = train_inds[order_train]
         valid_inds = valid_inds[order_valid]
-        with h5py.File('../data/raw/for_autolfads/%s/lfads_%s-truncated.h5'%(dataset,dataset),'w') as h5file:
+        chunk_ms = np.round(chunk_length * 1000).astype(int)
+        overlap_ms = np.round(overlap * 1000).astype(int)
+        output_dir = '../data/raw/for_autolfads/%s/debug_%dmsChunk%dmsOverlap/'%(dataset,chunk_ms ,overlap_ms)
+        os.mkdir(output_dir)
+        with h5py.File(output_dir + 'lfads_%s-truncated.h5'%(dataset),'w') as h5file:
             h5file.create_dataset('train_data', data=data[train_inds,:,:])
             h5file.create_dataset('valid_data', data=data[valid_inds,:,:])
             h5file.create_dataset('train_inds', data=train_inds)
