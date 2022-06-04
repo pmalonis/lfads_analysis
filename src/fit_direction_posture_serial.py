@@ -5,11 +5,15 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from scipy import integrate
 
+tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[2:],'GPU') 
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 def smoothmax(x, a):
     return tf.reduce_sum(tf.math.multiply(x,  tf.math.exp(x*a)), axis=-1) / tf.reduce_sum(tf.math.exp(x*a), axis=-1)
 
 def fit_bell_shaped(T, C, N, epochs, loc, scale, optimizer, input_activation, 
-                    output_activation, rate_regularization, weight_regularization, tau=0.1, final_state_regularization=0, smoothmax_param=3, recurrent_init_var=None, input_init_var=None):
+                    output_activation, rate_regularization, weight_regularization, tau=0.1, final_state_regularization=0, smoothmax_param=3, recurrent_init_var=None, input_init_var=None, normalize=True):
     '''
     Parameters:
         T: number of time bins
@@ -44,6 +48,7 @@ def fit_bell_shaped(T, C, N, epochs, loc, scale, optimizer, input_activation,
     input_layer = tf.keras.layers.Dense(C, activation=input_activation, name='input_weights', kernel_regularizer=weight_regularizer, kernel_initializer=input_initializer)
     output_layer = tf.keras.layers.Dense(n_outputs, activation=output_activation, name='output_weights', kernel_regularizer=weight_regularizer, kernel_initializer='zeros')
     recurrent_layer = tf.keras.layers.Dense(C, activation='linear', name='recurrent_weights', use_bias=False, kernel_initializer=recurrent_initializer)
+    layer_norm = tf.keras.layers.LayerNormalization()
     if False:#learn_init:
         #add_initial_state = tf.keras.layers.Lambda(lambda x: x + K.variable(np.random.randn(1,C).astype(np.float32), 
             #                                           name='initial_state'))                                           
@@ -67,7 +72,12 @@ def fit_bell_shaped(T, C, N, epochs, loc, scale, optimizer, input_activation,
         h_a_from_h_r = recurrent_layer(h_r)
         h_a_from_h_a = (1 - dt/tau) * h_a
         h_a = h_a_from_x + h_a_from_h_r + h_a_from_h_a
-        h_r = activation(h_a)
+        if normalize == True:
+            h_a_norm = layer_norm(h_a)
+            h_r = activation(h_a_norm)
+        else:
+            h_r = activation(h_a)
+
         o = output_layer(h_r)
         all_inputs.append(x)
         all_outputs.append(tf.expand_dims(o, axis=-1))
@@ -89,7 +99,7 @@ def fit_bell_shaped(T, C, N, epochs, loc, scale, optimizer, input_activation,
     y_pos *= np.mean(np.abs(y_vel))/np.mean(np.abs(y_pos))
     y_train = np.concatenate([y_vel, y_pos],axis=1)
 
-    rate_train = np.zeros((N,C,T)) #padding zeros for rate outputs
+    rate_train = np.zeros((N,C,T)) #padding zeros for rate outputsplot
     TBCallback = tf.keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,  
             write_graph=True, write_images=True)
 
@@ -101,26 +111,31 @@ def fit_bell_shaped(T, C, N, epochs, loc, scale, optimizer, input_activation,
     model.compile(optimizer=optimizer, loss=[loss_fn, rate_regularizer])
     #tf.keras.utils.plot_model(model, 'rnn_plot.png')
 
-    model.fit(x_train, [y_train, rate_train], epochs=epochs, verbose=0, callbacks=[TBCallback])
+    model.fit(x_train, [y_train, rate_train], epochs=epochs, verbose=0, batch_size=1024)
     predicted,rates = model(x_train)
 
     return predicted, rates, y_train, model
+
 rate_regularization = 0
 weight_regularization = 1e-5
 
 C=200
-epochs = 1000
+epochs = 512
 T = 40
-N = 300
+N = 4096
 loc = [.3*T, .7*T]
 scale = [.05*T, .05*T]
 optimizer = 'adam'
 input_activation = 'linear'
-output_activation='linear'
+output_activation = 'linear'
 input_init_var = 1
 recurrent_init_var = 2
 input_noise=0.00
+import time
+tic = time.time()
 predicted, rates, y_train, model = fit_bell_shaped(T, C, N, epochs, loc, scale, optimizer, input_activation, 
                    output_activation, rate_regularization, weight_regularization, final_state_regularization=0, smoothmax_param=3, recurrent_init_var=None, input_init_var=None)
+t = time.time() - tic
+print(t)
 
 from scipy import integrate

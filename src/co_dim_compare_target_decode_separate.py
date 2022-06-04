@@ -80,3 +80,13 @@ for i in range(len(datasets)):
 fig_filename = os.path.join(os.path.dirname(__file__), 
                 '../figures/final_figures/numbered/2f.pdf')
 plt.savefig(fig_filename)
+
+plot_data_path = os.path.join(os.path.dirname(__file__), '../figures/plot_data/2f.p')
+plot_data_dict = {}
+plot_data_dict['co_dims'] = co_dims
+plot_data_dict['all_mean_scores'] = all_mean_scores
+plot_data_dict['all_std_scores'] = all_std_scores
+plot_data_dict['datasets'] = datasets
+
+import pickle
+pickle.dump(plot_data_dict, plot_data_path)

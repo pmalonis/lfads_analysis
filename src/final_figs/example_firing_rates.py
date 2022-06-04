@@ -17,7 +17,8 @@ plt.rcParams['font.size'] = 18
 config_path = os.path.join(os.path.dirname(__file__), '../../config.yml')
 cfg = yaml.safe_load(open(config_path, 'r'))
 spike_dt = 0.001
-if __name__=='__main__':
+
+def create_subfig():
     example_filename = os.path.join(os.path.dirname(__file__),
                                     '../../data/intermediate/mack.p')
     example_trial = 43
@@ -56,7 +57,9 @@ if __name__=='__main__':
     
     plt.text(2.6, 450, 'Cursor Speed', color=lns[0].get_color(), fontsize=16)
     plt.text(2.5, 925, 'Population\nFiring Rate', color=lns[1].get_color(), fontsize=16)
-    fig_filename = os.path.join(os.path.dirname(__file__), 
+
+
+fig_filename = os.path.join(os.path.dirname(__file__), 
                                 '../../figures/final_figures/numbered/1c.pdf') 
-    plt.savefig(fig_filename)
-    plt.show()
+plt.savefig(fig_filename)
+plt.show()

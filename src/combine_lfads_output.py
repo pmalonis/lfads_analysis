@@ -10,10 +10,10 @@ if __name__=='__main__':
     #output_filename = snakemake.output[0]
 
     
-    train_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_fit-direction-Transient-posture-serial-2targ-FDCWrX_train.h5'
-    valid_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_fit-direction-Transient-posture-serial-2targ-FDCWrX_valid.h5'
-    inputInfo_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_inputInfo.mat'
-    output_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ_fit-direction-Transient-posture-serial-2targ-FDCWrX_all.h5'
+    train_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ-75-units_fit-direction-Transient-posture-serial-2targ-75-units-FDCWrX_train.h5'
+    valid_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ-75-units_fit-direction-Transient-posture-serial-2targ-75-units-FDCWrX_valid.h5'
+    inputInfo_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ-75-units_inputInfo.mat'
+    output_filename = '../data/model_output/fit-direction-Transient-posture-serial-2targ-75-units_fit-direction-Transient-posture-serial-2targ-75-units-FDCWrX_all.h5'
     
     input_info = loadmat(inputInfo_filename)
     valid_inds = input_info['validInds'][0] - 1

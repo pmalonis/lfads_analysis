@@ -7,6 +7,7 @@ import yaml
 import sys
 import os
 from scipy import io
+import pickle
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import decode_lfads as dl
 import utils
@@ -108,3 +109,6 @@ if __name__=='__main__':
     plt.savefig("../../figures/final_figures/kinematic_decoding.svg")
     plt.savefig("../../figures/final_figures/numbered/2b.pdf")
     plt.savefig("../../figures/final_figures/kinematic_decoding.png")
+    
+    plot_data_path = os.path.join(os.path.dirname(__file__), '../figures/plot_data/2b.p')
+    pickle.dump(all_plot_df, open(plot_data_path, 'wb'))

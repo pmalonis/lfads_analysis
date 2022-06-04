@@ -37,10 +37,10 @@ if __name__=='__main__':
     # input_filename = snakemake.input[2]
     # output_filename = snakemake.output[0]
     
-    train_filename = '../data/model_output/new_autolfads/600msChunk200msOverlap_full_data_3_epochs/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average'
-    valid_filename = '../data/model_output/new_autolfads/600msChunk200msOverlap_full_data_3_epochs/lfadsOutput/model_runs_rockstar.h5_valid_posterior_sample_and_average'
+    train_filename = '/home/macleanlab/ARCHIVE/peter/every-lfad-thing/lfads_analysis/data/model_output/new_autolfads/rnn/fit_short_direction_sustained/lfadsOutput/model_runs_fit_short_direction_sustained_posture_serial_2targ_200_units_1000_rate.h5_train_posterior_sample_and_average'
+    valid_filename = '/home/macleanlab/ARCHIVE/peter/every-lfad-thing/lfads_analysis/data/model_output/new_autolfads/rnn/fit_short_direction_sustained/lfadsOutput/model_runs_fit_short_direction_sustained_posture_serial_2targ_200_units_1000_rate.h5_valid_posterior_sample_and_average'
     input_filename = '../data/raw/for_autolfads/rockstar_full_600ms/lfads_rockstar.h5'
-    output_filename = '../data/model_output/rockstar_autolfads-full-data-3-epochs_all.h5'
+    output_filename = '../data/model_output/rockstar_rnn-short-sustained_all.h5'
     matInfo_filename = '../data/model_output/long_rockstar_inputInfo.mat'
 
     # train_filename = '/home/macleanlab/peter/lfads_analysis/data/model_output/split_rockstar_full_600ms200ms_overlap/param_FDCWrX/single_rockstar/lfadsOutput/model_runs_rockstar.h5_train_posterior_sample_and_average'

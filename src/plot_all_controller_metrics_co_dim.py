@@ -445,3 +445,6 @@ if __name__=='__main__':
             plt.xticks([0,1,2,3,4])
             plt.tight_layout()
             measure.savefig()
+    
+    plot_data_path = os.path.join(os.path.dirname(__file__), '../figures/plot_data/2e.p')
+    pickle.dump(measures, open(plot_data_path, 'wb'))

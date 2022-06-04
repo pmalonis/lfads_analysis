@@ -132,8 +132,9 @@ if __name__=='__main__':
     #inputInfo_file = '../data/model_output/bu_rockstar_inputInfo.mat'
     
     #lfads_file = '../data/model_output/rockstar_lfads-full-data_all.h5'
-
-    lfads_file = '../data/model_output/rockstar_autolfads-full-data-3-epochs_all.h5'
+    
+    lfads_file = '../data/model_output/rockstar_autolfads-full-data-kl=6.5to7.0e-5_all.h5'
+    #lfads_file = '../data/model_output/rockstar_lfads-full-data_all.h5'
     #lfads_file = '/home/macleanlab/peter/lfads_analysis/data/model_output/rockstar_autolfads-trunc-1000msChunk200msOverlap_all.h5'
     inputInfo_file = '../data/model_output/long_rockstar_inputInfo.mat'
     #lfads_file = '../data/model_output/rockstar_autolfads-split-trunc-02_all.h5'#'../data/model_output/rockstar_autolfads-split-trunc-01_all.h5'

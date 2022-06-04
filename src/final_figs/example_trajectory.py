@@ -20,7 +20,7 @@ spike_dt = 0.001
 target_size = 10 #target size in millimeters
 cursor_size = 3
 
-if __name__=='__main__':
+def create_subfig():
     dataset = 'rockstar'
     example_filename = os.path.join(os.path.dirname(__file__),
                                     '../../data/intermediate/%s.p'%dataset)
@@ -52,6 +52,8 @@ if __name__=='__main__':
     #plt.xlabel('X (mm)')
     #plt.ylabel('Y (mm)')
     #plt.show()
+
+if __name__=='__main__':
     fig_filename = os.path.join(os.path.dirname(__file__), 
                                 '../../figures/final_figures/numbered/1b.pdf') 
     plt.savefig(fig_filename)
