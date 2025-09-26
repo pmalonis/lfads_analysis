@@ -1,10 +1,10 @@
 # lfads_analysis
 
-This is the repository for code used in the analysis for the paper,
+This is the repository of code used in the analysis for the paper,
 
->M1 dynamics share similar inputs for initiating and correcting movement
->Peter J. Malonis, Nicholas G. Hatsopoulos, Jason N. MacLean, Matthew T. Kaufman
->bioRxiv 2021.10.18.464704; doi: [https://doi.org/10.1101/2021.10.18.464704](https://doi.org/10.>1101/2021.10.18.464704).
+>Combatting nonidentifiability to infer motor cortex inputs yields similar encoding of initial and corrective movements
+>Peter J. Malonis, Ankit Vishnubhotla, Nicholas G. Hatsopoulos, Jason N. MacLean, Matthew T. Kaufman
+>bioRxiv 2021.10.18.464704; doi: [https://doi.org/10.1101/2021.10.18.464704](https://doi.org/10.1101/2021.10.18.464704).
 
 ## Installation
 1. Install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
